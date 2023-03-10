@@ -1,10 +1,12 @@
 import { Lexer } from '../../parser/lexer'
+import { Statement } from '../statement/statement'
 import { FunctionCall } from './functionCall'
 
-export class Expression {
+export class Expression extends Statement {
   private elements: (string | number | FunctionCall)[]
 
   constructor(elements: (string | number | FunctionCall)[]) {
+    super()
     this.elements = elements
   }
 
@@ -68,5 +70,17 @@ export class Expression {
     const result: (string | number | FunctionCall)[] = []
     this.recurParseNumericalExpression(lexer, result)
     return new Expression(result)
+  }
+
+  isIdentifier(): boolean {
+    return this.elements.length == 1 && typeof(this.elements[0]) == 'string';
+  }
+
+  toIdentifier(): string {
+    if (this.elements.length != 1 || typeof(this.elements[0]) != 'string') {
+      throw new Error(String(this.elements) + ' is not an identifier')
+    }
+    
+    return this.elements[0];
   }
 }
