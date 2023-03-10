@@ -1,10 +1,3 @@
-import { Lexer } from '../../parser/lexer'
-import { Assignment } from './assignment'
-import { Declaration } from './declaration'
-import { Return } from './return'
-import { Break, Continue } from './simpleStatement'
-import { While } from './while'
-
 export abstract class Statement {
   static parse(lexer: Lexer): Statement {
     if (lexer.matchKeyword('while')) {
@@ -22,3 +15,10 @@ export abstract class Statement {
     }
   }
 }
+
+import { Lexer } from '../../parser/lexer'
+import { Assignment } from './assignment'
+import { Declaration } from './declaration'
+import { Return } from './return'
+import { Break, Continue } from './simpleStatement'
+import { While } from './while'
