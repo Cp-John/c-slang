@@ -74,6 +74,10 @@ export class Lexer {
     return parseFloat(match[0])
   }
 
+  matchIdentifier(): boolean {
+    return this.hasNext() && IDENTIFIER_REGEX.exec(this.currentLine) != null
+  }
+
   eatIdentifier(): string {
     if (!this.hasNext()) {
       throw new Error(this.formatError('expected an identifier'))

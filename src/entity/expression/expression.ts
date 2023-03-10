@@ -73,11 +73,19 @@ export class Expression extends Statement {
   }
 
   isIdentifier(): boolean {
-    return this.elements.length == 1 && typeof this.elements[0] == 'string'
+    return (
+      this.elements.length == 1 &&
+      typeof this.elements[0] == 'string' &&
+      new Lexer(this.elements[0]).matchIdentifier()
+    )
   }
 
   toIdentifier(): string {
-    if (this.elements.length != 1 || typeof this.elements[0] != 'string') {
+    if (
+      this.elements.length != 1 ||
+      typeof this.elements[0] != 'string' ||
+      !new Lexer(this.elements[0]).matchIdentifier()
+    ) {
       throw new Error(String(this.elements) + ' is not an identifier')
     }
 
