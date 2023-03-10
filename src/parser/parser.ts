@@ -5,6 +5,7 @@ import { ParseTree } from 'antlr4ts/tree/ParseTree'
 import { RuleNode } from 'antlr4ts/tree/RuleNode'
 import { TerminalNode } from 'antlr4ts/tree/TerminalNode'
 import * as es from 'estree'
+import { Declaration } from '../entity/statement/declaration'
 
 import { CalcLexer } from '../lang/CalcLexer'
 import {
@@ -22,6 +23,7 @@ import {
 import { CalcVisitor } from '../lang/CalcVisitor'
 import { Context, ErrorSeverity, ErrorType, SourceError } from '../types'
 import { stripIndent } from '../utils/formatters'
+import { Lexer } from './lexer'
 
 export class DisallowedConstructError implements SourceError {
   public type = ErrorType.SYNTAX
@@ -262,5 +264,14 @@ export function parse(source: string, context: Context) {
     }
   } else {
     return undefined
+  }
+}
+
+export class Parser {
+  static parse(source: string) {
+    const lexer = new Lexer(source);
+    while (lexer.hasNext()) {
+      console.log(Declaration.parse(lexer));
+    }
   }
 }
