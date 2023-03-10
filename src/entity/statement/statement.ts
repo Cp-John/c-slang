@@ -1,5 +1,5 @@
 export abstract class Statement {
-  static parseExpressionOrAssignment(lexer: Lexer): Expression | Assignment {
+  static parseOrAssignment(lexer: Lexer): ExpressionStatement | Assignment {
     const expr = Expression.parse(lexer)
     if (expr.isIdentifier() && lexer.matchDelimiter('=')) {
       lexer.eatDelimiter('=')
@@ -8,11 +8,11 @@ export abstract class Statement {
       return new Assignment(expr.toIdentifier(), right)
     } else {
       lexer.eatDelimiter(';')
-      return expr
+      return new ExpressionStatement(expr)
     }
   }
 
-  static parse(lexer: Lexer): Statement {
+  static parse(lexer: Lexer): Statement[] {
     if (lexer.matchKeyword('while')) {
       return While.parse(lexer)
     } else if (lexer.matchKeyword('return')) {
@@ -24,7 +24,7 @@ export abstract class Statement {
     } else if (lexer.matchDataType()) {
       return Declaration.parse(lexer)
     } else {
-      return this.parseExpressionOrAssignment(lexer)
+      return [this.parseOrAssignment(lexer)]
     }
   }
 }
@@ -33,6 +33,7 @@ import { Lexer } from '../../parser/lexer'
 import { Expression } from '../expression/expression'
 import { Assignment } from './assignment'
 import { Declaration } from './declaration'
+import { ExpressionStatement } from './expressionStatement'
 import { Return } from './return'
 import { Break, Continue } from './simpleStatement'
 import { While } from './while'

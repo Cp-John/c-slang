@@ -10,10 +10,10 @@ export class Return extends Statement {
     this.expression = expression
   }
 
-  static parse(lexer: Lexer): Return {
+  static parse(lexer: Lexer): [Return] {
     lexer.eatKeyword('return')
     const expression = Expression.parse(lexer)
     lexer.eatDelimiter(';')
-    return new Return(expression)
+    return [new Return(expression)]
   }
 }

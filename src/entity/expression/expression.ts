@@ -1,12 +1,10 @@
 import { Lexer } from '../../parser/lexer'
-import { Statement } from '../statement/statement'
 import { FunctionCall } from './functionCall'
 
-export class Expression extends Statement {
+export class Expression {
   private elements: (string | number | FunctionCall)[]
 
   constructor(elements: (string | number | FunctionCall)[]) {
-    super()
     this.elements = elements
   }
 

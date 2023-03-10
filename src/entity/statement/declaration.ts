@@ -1,6 +1,7 @@
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
 import { Expression } from '../expression/expression'
+import { Assignment } from './assignment'
 import { Statement } from './statement'
 
 export abstract class Declaration extends Statement {
@@ -18,24 +19,44 @@ export abstract class Declaration extends Statement {
     return result
   }
 
-  static parse(lexer: Lexer): Declaration {
+  private static parseDeclaredVariables(
+    dataType: string,
+    firstVariable: string,
+    lexer: Lexer
+  ): Statement[] {
+    const statements: Statement[] = [new VariableDeclaration(dataType, firstVariable)]
+
+    let declaredVariable = firstVariable
+    while (true) {
+      if (lexer.matchDelimiter('=')) {
+        lexer.eatDelimiter('=')
+        statements.push(new Assignment(declaredVariable, Expression.parse(lexer)))
+      }
+      if (!lexer.matchDelimiter(',')) {
+        break
+      }
+      lexer.eatDelimiter(',')
+      declaredVariable = lexer.eatIdentifier()
+      statements.push(new VariableDeclaration(dataType, declaredVariable))
+    }
+    lexer.eatDelimiter(';')
+    return statements
+  }
+
+  static parse(lexer: Lexer): Statement[] {
     const dataType = lexer.eatDataType()
     const identifier = lexer.eatIdentifier()
     if (lexer.matchDelimiter('(')) {
-      return new FunctionDeclaration(
-        dataType,
-        identifier,
-        Declaration.parseFormalParameterList(lexer),
-        Block.parse(lexer)
-      )
+      return [
+        new FunctionDeclaration(
+          dataType,
+          identifier,
+          Declaration.parseFormalParameterList(lexer),
+          Block.parse(lexer)
+        )
+      ]
     } else {
-      let initialValue: Expression | undefined = undefined
-      if (!lexer.matchDelimiter(';')) {
-        lexer.eatDelimiter('=')
-        initialValue = Expression.parse(lexer)
-      }
-      lexer.eatDelimiter(';')
-      return new VariableDeclaration(dataType, identifier, initialValue)
+      return this.parseDeclaredVariables(dataType, identifier, lexer)
     }
   }
 }
@@ -43,17 +64,11 @@ export abstract class Declaration extends Statement {
 class VariableDeclaration extends Declaration {
   private variableType: string
   private variableName: string
-  private initialValue: Expression | undefined
 
-  constructor(
-    variableType: string,
-    variableName: string,
-    initialValue: Expression | undefined = undefined
-  ) {
+  constructor(variableType: string, variableName: string) {
     super()
     this.variableType = variableType
     this.variableName = variableName
-    this.initialValue = initialValue
   }
 }
 

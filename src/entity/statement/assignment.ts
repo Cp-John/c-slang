@@ -9,13 +9,14 @@ export class Assignment extends Statement {
   constructor(variable: string, expression: Expression) {
     super()
     this.variable = variable
+    this.expression = expression
   }
 
-  static parse(lexer: Lexer): Assignment {
+  static parse(lexer: Lexer): Assignment[] {
     const variable = lexer.eatIdentifier()
     lexer.eatDelimiter('=')
     const expression = Expression.parse(lexer)
     lexer.eatDelimiter(';')
-    return new Assignment(variable, expression)
+    return [new Assignment(variable, expression)]
   }
 }

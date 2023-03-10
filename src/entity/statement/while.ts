@@ -13,12 +13,12 @@ export class While extends Statement {
     this.body = body
   }
 
-  static parse(lexer: Lexer) {
+  static parse(lexer: Lexer): While[] {
     lexer.eatKeyword('while')
     lexer.eatDelimiter('(')
     const expression = Expression.parse(lexer)
     lexer.eatDelimiter(')')
     const body = Block.parse(lexer)
-    return new While(expression, body)
+    return [new While(expression, body)]
   }
 }
