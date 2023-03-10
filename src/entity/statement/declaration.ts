@@ -1,5 +1,6 @@
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
+import { Expression } from '../expression/expression'
 import { Statement } from './statement'
 
 export abstract class Declaration extends Statement {
@@ -28,8 +29,12 @@ export abstract class Declaration extends Statement {
         Block.parse(lexer)
       )
     } else {
+      let initialValue: Expression | undefined = undefined
+      if (!lexer.matchDelimiter(';')) {
+        initialValue = Expression.parse(lexer)
+      }
       lexer.eatDelimiter(';')
-      return new VariableDeclaration(dataType, identifier)
+      return new VariableDeclaration(dataType, identifier, initialValue)
     }
   }
 }
@@ -37,11 +42,17 @@ export abstract class Declaration extends Statement {
 class VariableDeclaration extends Declaration {
   private variableType: string
   private variableName: string
+  private initialValue: Expression | undefined
 
-  constructor(variableType: string, variableName: string) {
+  constructor(
+    variableType: string,
+    variableName: string,
+    initialValue: Expression | undefined = undefined
+  ) {
     super()
     this.variableType = variableType
     this.variableName = variableName
+    this.initialValue = initialValue
   }
 }
 
