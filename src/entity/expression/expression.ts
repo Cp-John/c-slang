@@ -26,7 +26,11 @@ export class Expression {
     lexer: Lexer,
     result: (string | number | FunctionCall)[]
   ): void {
-    if (lexer.matchDelimiter('(')) {
+    if (lexer.matchDelimiter('!')) {
+      lexer.eatDelimiter('!')
+      this.recurParseNumericTerm(lexer, result)
+      result.push("!")
+    } else if (lexer.matchDelimiter('(')) {
       lexer.eatDelimiter('(')
       Expression.recurParseNumericalExpression(lexer, result)
       lexer.eatDelimiter(')')
