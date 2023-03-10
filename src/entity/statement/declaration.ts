@@ -51,7 +51,12 @@ export class FunctionDeclaration extends Declaration {
   private parameterList: [string, string][]
   private body: Block
 
-  constructor(returnType: string, functionName: string, parameterList: [string, string][], body: Block) {
+  constructor(
+    returnType: string,
+    functionName: string,
+    parameterList: [string, string][],
+    body: Block
+  ) {
     super()
     this.returnType = returnType
     this.functionName = functionName

@@ -240,7 +240,7 @@ function convertSource(expression: ExpressionContext): es.Program {
 export function parse(source: string, context: Context) {
   let program: es.Program | undefined
   console.log('source:', source)
-  Parser.parse(source);
+  Parser.parse(source)
   // if (context.variant === 'calc') {
   //   const inputStream = CharStreams.fromString(source)
   //   const lexer = new CalcLexer(inputStream)
@@ -266,7 +266,7 @@ export function parse(source: string, context: Context) {
   // } else {
   //   return undefined
   // }
-  return undefined;
+  return undefined
 }
 
 export class Parser {
