@@ -9,9 +9,9 @@ export class Program {
   }
 
   static parse(lexer: Lexer): Program {
-    const statements = []
+    const statements: Statement[] = []
     while (lexer.hasNext()) {
-      statements.push(Statement.parse(lexer))
+      Statement.parse(lexer).forEach(statement => statements.push(statement))
     }
     return new Program(statements)
   }

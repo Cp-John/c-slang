@@ -1,10 +1,20 @@
 import { Lexer } from '../../parser/lexer'
 import { FunctionCall } from './functionCall'
 
-export class Expression {
-  private elements: (string | number | FunctionCall)[]
+class Jump {
+  jumpOnTrue: boolean
+  jumpToPosition: number
 
-  constructor(elements: (string | number | FunctionCall)[]) {
+  constructor(jumpOnTrue: boolean, jumpToPosition: number = 0) {
+    this.jumpOnTrue = jumpOnTrue
+    this.jumpToPosition = jumpToPosition
+  }
+}
+
+export class Expression {
+  private elements: (string | number | FunctionCall | Jump)[]
+
+  constructor(elements: (string | number | FunctionCall | Jump)[]) {
     this.elements = elements
   }
 
@@ -24,7 +34,7 @@ export class Expression {
 
   private static recurParseNumericTerm(
     lexer: Lexer,
-    result: (string | number | FunctionCall)[]
+    result: (string | number | FunctionCall | Jump)[]
   ): void {
     if (lexer.matchDelimiter('!')) {
       lexer.eatDelimiter('!')
@@ -52,7 +62,7 @@ export class Expression {
 
   private static recurParsePrioritizedNumericTerm(
     lexer: Lexer,
-    result: (string | number | FunctionCall)[]
+    result: (string | number | FunctionCall | Jump)[]
   ): void {
     this.recurParseNumericTerm(lexer, result)
     while (!lexer.matchAssignmentOperator() && lexer.matchPrioritizedOperator()) {
@@ -64,7 +74,7 @@ export class Expression {
 
   private static recurParseNumericalExpression(
     lexer: Lexer,
-    result: (string | number | FunctionCall)[]
+    result: (string | number | FunctionCall | Jump)[]
   ): void {
     this.recurParsePrioritizedNumericTerm(lexer, result)
     while (!lexer.matchAssignmentOperator() && lexer.matchOperator()) {
@@ -76,7 +86,7 @@ export class Expression {
 
   private static recurParsePrioritizedRelationalTerm(
     lexer: Lexer,
-    result: (string | number | FunctionCall)[]
+    result: (string | number | FunctionCall | Jump)[]
   ) {
     this.recurParseNumericalExpression(lexer, result)
     while (lexer.matchPrioritizedRelationalOperator()) {
@@ -88,7 +98,7 @@ export class Expression {
 
   private static recurParseRelationalExpression(
     lexer: Lexer,
-    result: (string | number | FunctionCall)[]
+    result: (string | number | FunctionCall | Jump)[]
   ): void {
     this.recurParsePrioritizedRelationalTerm(lexer, result)
     while (lexer.matchRelationalOperator()) {
@@ -100,30 +110,38 @@ export class Expression {
 
   private static recurParsePrioritizedLogicalTerm(
     lexer: Lexer,
-    result: (string | number | FunctionCall)[]
+    result: (string | number | FunctionCall | Jump)[]
   ): void {
     this.recurParseRelationalExpression(lexer, result)
+    const jumps: Jump[] = []
     while (lexer.matchDelimiter('&&')) {
+      jumps.push(new Jump(false))
+      result.push(jumps[jumps.length - 1])
       lexer.eatDelimiter('&&')
       this.recurParseRelationalExpression(lexer, result)
       result.push('&&')
     }
+    jumps.forEach(jump => (jump.jumpToPosition = result.length))
   }
 
   private static recurParseLogicalExpression(
     lexer: Lexer,
-    result: (string | number | FunctionCall)[]
+    result: (string | number | FunctionCall | Jump)[]
   ): void {
     this.recurParsePrioritizedLogicalTerm(lexer, result)
+    const jumps: Jump[] = []
     while (lexer.matchDelimiter('||')) {
+      jumps.push(new Jump(true))
+      result.push(jumps[jumps.length - 1])
       lexer.eatDelimiter('||')
       this.recurParsePrioritizedLogicalTerm(lexer, result)
       result.push('||')
     }
+    jumps.forEach(jump => (jump.jumpToPosition = result.length))
   }
 
   static parse(lexer: Lexer): Expression {
-    const result: (string | number | FunctionCall)[] = []
+    const result: (string | number | FunctionCall | Jump)[] = []
     this.recurParseLogicalExpression(lexer, result)
     return new Expression(result)
   }
