@@ -32,7 +32,7 @@ export class Expression {
       result.push('!')
     } else if (lexer.matchDelimiter('(')) {
       lexer.eatDelimiter('(')
-      Expression.recurParseNumericalExpression(lexer, result)
+      this.recurParseLogicalExpression(lexer, result)
       lexer.eatDelimiter(')')
     } else if (lexer.matchNumber()) {
       result.push(lexer.eatNumber())
@@ -74,9 +74,57 @@ export class Expression {
     }
   }
 
+  private static recurParsePrioritizedRelationalTerm(
+    lexer: Lexer,
+    result: (string | number | FunctionCall)[]
+  ) {
+    this.recurParseNumericalExpression(lexer, result)
+    while (lexer.matchPrioritizedRelationalOperator()) {
+      const opr = lexer.eatRelationalOperator()
+      this.recurParseNumericalExpression(lexer, result)
+      result.push(opr)
+    }
+  }
+
+  private static recurParseRelationalExpression(
+    lexer: Lexer,
+    result: (string | number | FunctionCall)[]
+  ): void {
+    this.recurParsePrioritizedRelationalTerm(lexer, result)
+    while (lexer.matchRelationalOperator()) {
+      const opr = lexer.eatRelationalOperator()
+      this.recurParsePrioritizedRelationalTerm(lexer, result)
+      result.push(opr)
+    }
+  }
+
+  private static recurParsePrioritizedLogicalTerm(
+    lexer: Lexer,
+    result: (string | number | FunctionCall)[]
+  ): void {
+    this.recurParseRelationalExpression(lexer, result)
+    while (lexer.matchDelimiter('&&')) {
+      lexer.eatDelimiter('&&')
+      this.recurParseRelationalExpression(lexer, result)
+      result.push('&&')
+    }
+  }
+
+  private static recurParseLogicalExpression(
+    lexer: Lexer,
+    result: (string | number | FunctionCall)[]
+  ): void {
+    this.recurParsePrioritizedLogicalTerm(lexer, result)
+    while (lexer.matchDelimiter('||')) {
+      lexer.eatDelimiter('||')
+      this.recurParsePrioritizedLogicalTerm(lexer, result)
+      result.push('||')
+    }
+  }
+
   static parse(lexer: Lexer): Expression {
     const result: (string | number | FunctionCall)[] = []
-    this.recurParseNumericalExpression(lexer, result)
+    this.recurParseLogicalExpression(lexer, result)
     return new Expression(result)
   }
 

@@ -6,6 +6,8 @@ const SPACE_REGEX = /^\s+/
 const PRIORITIZED_OPERATOR_REGEX = /^[*\/%]/
 const OPERATOR_REGEX = /^[*\/%\+-]/
 const INCREMENT_DECREMENT_REGEX = /^\+\+|^--/
+const RELATIONAL_OPERATOR_RETEX = /^>=|^<=|^>|^<|^==|^!=/
+const PRIORITIZED_RELATIONAL_OPERATOR_REGEX = /^>=|^<=|^>|^</
 
 const RESERVED_KEYWORDS = new Set([
   'int',
@@ -167,6 +169,27 @@ export class Lexer {
     const match = INCREMENT_DECREMENT_REGEX.exec(this.currentLine)
     if (!match) {
       throw new Error(this.formatError('expected an increment or decrement operator'))
+    }
+    this.currentLine = this.currentLine.substring(match[0].length)
+    this.col += match[0].length
+    return match[0]
+  }
+
+  matchPrioritizedRelationalOperator(): boolean {
+    return this.hasNext() && PRIORITIZED_RELATIONAL_OPERATOR_REGEX.test(this.currentLine)
+  }
+
+  matchRelationalOperator(): boolean {
+    return this.hasNext() && RELATIONAL_OPERATOR_RETEX.test(this.currentLine)
+  }
+
+  eatRelationalOperator(): string {
+    if (!this.hasNext()) {
+      throw new Error(this.formatError('expected a relational operator'))
+    }
+    const match = RELATIONAL_OPERATOR_RETEX.exec(this.currentLine)
+    if (!match) {
+      throw new Error(this.formatError('expected a relational operator'))
     }
     this.currentLine = this.currentLine.substring(match[0].length)
     this.col += match[0].length
