@@ -32,6 +32,8 @@ export class Expression {
       lexer.eatDelimiter(')')
     } else if (lexer.matchNumber()) {
       result.push(lexer.eatNumber())
+    } else if (lexer.matchDelimiter('"')) {
+      result.push(lexer.eatStringLiteral())
     } else {
       result.push(lexer.eatIdentifier())
       if (lexer.matchDelimiter('(')) {

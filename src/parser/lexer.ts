@@ -155,6 +155,19 @@ export class Lexer {
     return match[0]
   }
 
+  eatStringLiteral(): string {
+    if (!this.hasNext()) {
+      throw new Error(this.formatError('expected a string literal'))
+    }
+    const match = STRING_LITERAL_REGEX.exec(this.currentLine)
+    if (!match) {
+      throw new Error(this.formatError('expected a string literal'))
+    }
+    this.currentLine = this.currentLine.substring(match[0].length)
+    this.col += match[0].length
+    return match[0]
+  }
+
   assertEndOfLine() {
     const currentRow = this.row
     if (this.hasNext() && this.row == currentRow) {
