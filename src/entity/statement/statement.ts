@@ -1,16 +1,16 @@
 export abstract class Statement {
-    static parseExpressionOrAssignment(lexer: Lexer): Expression|Assignment {
-        const expr = Expression.parse(lexer);
-        if (expr.isIdentifier() && lexer.matchDelimiter('=')) {
-            lexer.eatDelimiter('=');
-            const right = Expression.parse(lexer);
-            lexer.eatDelimiter(';');
-            return new Assignment(expr.toIdentifier(), right);
-        } else {
-            lexer.eatDelimiter(';');
-            return expr;
-        }
+  static parseExpressionOrAssignment(lexer: Lexer): Expression | Assignment {
+    const expr = Expression.parse(lexer)
+    if (expr.isIdentifier() && lexer.matchDelimiter('=')) {
+      lexer.eatDelimiter('=')
+      const right = Expression.parse(lexer)
+      lexer.eatDelimiter(';')
+      return new Assignment(expr.toIdentifier(), right)
+    } else {
+      lexer.eatDelimiter(';')
+      return expr
     }
+  }
 
   static parse(lexer: Lexer): Statement {
     if (lexer.matchKeyword('while')) {
@@ -24,7 +24,7 @@ export abstract class Statement {
     } else if (lexer.matchDataType()) {
       return Declaration.parse(lexer)
     } else {
-        return this.parseExpressionOrAssignment(lexer)
+      return this.parseExpressionOrAssignment(lexer)
     }
   }
 }

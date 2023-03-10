@@ -73,14 +73,14 @@ export class Expression extends Statement {
   }
 
   isIdentifier(): boolean {
-    return this.elements.length == 1 && typeof(this.elements[0]) == 'string';
+    return this.elements.length == 1 && typeof this.elements[0] == 'string'
   }
 
   toIdentifier(): string {
-    if (this.elements.length != 1 || typeof(this.elements[0]) != 'string') {
+    if (this.elements.length != 1 || typeof this.elements[0] != 'string') {
       throw new Error(String(this.elements) + ' is not an identifier')
     }
-    
-    return this.elements[0];
+
+    return this.elements[0]
   }
 }
