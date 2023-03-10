@@ -56,6 +56,16 @@ export class Lexer {
     return this.currentLine.length > 0
   }
 
+  skipToNextLine() {
+    if (this.row < this.lines.length) {
+      this.currentLine = this.lines[this.row]
+      this.row += 1
+    } else {
+      this.col += this.currentLine.length
+      this.currentLine = ''
+    }
+  }
+
   private formatError(msg: string): string {
     return 'parsing error: ' + msg + ' at (' + this.row + ', ' + this.col + ')'
   }

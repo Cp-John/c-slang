@@ -1,13 +1,12 @@
 /* tslint:disable:max-classes-per-file */
-import { CharStreams, CommonTokenStream } from 'antlr4ts'
 import { ErrorNode } from 'antlr4ts/tree/ErrorNode'
 import { ParseTree } from 'antlr4ts/tree/ParseTree'
 import { RuleNode } from 'antlr4ts/tree/RuleNode'
 import { TerminalNode } from 'antlr4ts/tree/TerminalNode'
 import * as es from 'estree'
 
-import { Declaration } from '../entity/statement/declaration'
-import { CalcLexer } from '../lang/CalcLexer'
+import { Program } from '../entity/program'
+import { Statement } from '../entity/statement/statement'
 import {
   AdditionContext,
   CalcParser,
@@ -271,9 +270,6 @@ export function parse(source: string, context: Context) {
 
 export class Parser {
   static parse(source: string) {
-    const lexer = new Lexer(source)
-    while (lexer.hasNext()) {
-      console.log(Declaration.parse(lexer))
-    }
+    console.log(Program.parse(new Lexer(source)))
   }
 }
