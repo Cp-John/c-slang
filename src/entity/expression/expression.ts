@@ -29,7 +29,7 @@ export class Expression {
     if (lexer.matchDelimiter('!')) {
       lexer.eatDelimiter('!')
       this.recurParseNumericTerm(lexer, result)
-      result.push("!")
+      result.push('!')
     } else if (lexer.matchDelimiter('(')) {
       lexer.eatDelimiter('(')
       Expression.recurParseNumericalExpression(lexer, result)
