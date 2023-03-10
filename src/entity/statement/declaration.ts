@@ -30,7 +30,7 @@ export abstract class Declaration extends Statement {
     while (true) {
       if (lexer.matchDelimiter('=')) {
         lexer.eatDelimiter('=')
-        statements.push(new Assignment(declaredVariable, Expression.parse(lexer)))
+        statements.push(new Assignment(declaredVariable, '=', Expression.parse(lexer)))
       }
       if (!lexer.matchDelimiter(',')) {
         break

@@ -8,6 +8,7 @@ const OPERATOR_REGEX = /^[*\/%\+-]/
 const INCREMENT_DECREMENT_REGEX = /^\+\+|^--/
 const RELATIONAL_OPERATOR_RETEX = /^>=|^<=|^>|^<|^==|^!=/
 const PRIORITIZED_RELATIONAL_OPERATOR_REGEX = /^>=|^<=|^>|^</
+const ASSIGNMENT_OPERATOR_REGEX = /^\+=|^-=|^\*=|^\/=|^%=|^=/
 
 const RESERVED_KEYWORDS = new Set([
   'int',
@@ -51,6 +52,7 @@ export class Lexer {
     while (this.row < this.lines.length && this.currentLine.length === 0) {
       this.currentLine = this.lines[this.row]
       this.row += 1
+      this.col = 1
       this.trimHead()
     }
     return this.currentLine.length > 0
@@ -60,6 +62,7 @@ export class Lexer {
     if (this.row < this.lines.length) {
       this.currentLine = this.lines[this.row]
       this.row += 1
+      this.col = 1
     } else {
       this.col += this.currentLine.length
       this.currentLine = ''
@@ -67,7 +70,19 @@ export class Lexer {
   }
 
   private formatError(msg: string): string {
-    return 'parsing error: ' + msg + ' at (' + this.row + ', ' + this.col + ')'
+    return (
+      'parsing error: ' +
+      msg +
+      ' at (' +
+      this.row +
+      ', ' +
+      this.col +
+      ')\n\t' +
+      this.lines[this.row - 1] +
+      '\n\t' +
+      ' '.repeat(this.col - 1) +
+      '^'
+    )
   }
 
   matchNumber(): boolean {
@@ -200,6 +215,23 @@ export class Lexer {
     const match = RELATIONAL_OPERATOR_RETEX.exec(this.currentLine)
     if (!match) {
       throw new Error(this.formatError('expected a relational operator'))
+    }
+    this.currentLine = this.currentLine.substring(match[0].length)
+    this.col += match[0].length
+    return match[0]
+  }
+
+  matchAssignmentOperator(): boolean {
+    return this.hasNext() && ASSIGNMENT_OPERATOR_REGEX.test(this.currentLine)
+  }
+
+  eatAssignmentOperator(): string {
+    if (!this.hasNext()) {
+      throw new Error(this.formatError('expected an assignment operator'))
+    }
+    const match = ASSIGNMENT_OPERATOR_REGEX.exec(this.currentLine)
+    if (!match) {
+      throw new Error(this.formatError('expected an assignment operator'))
     }
     this.currentLine = this.currentLine.substring(match[0].length)
     this.col += match[0].length

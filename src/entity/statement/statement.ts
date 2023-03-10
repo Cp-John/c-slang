@@ -1,11 +1,11 @@
 export abstract class Statement {
-  static parseOrAssignment(lexer: Lexer): ExpressionStatement | Assignment {
+  static parseExpressionOrAssignment(lexer: Lexer): ExpressionStatement | Assignment {
     const expr = Expression.parse(lexer)
-    if (expr.isIdentifier() && lexer.matchDelimiter('=')) {
-      lexer.eatDelimiter('=')
+    if (expr.isIdentifier() && lexer.matchAssignmentOperator()) {
+      const opr = lexer.eatAssignmentOperator()
       const right = Expression.parse(lexer)
       lexer.eatDelimiter(';')
-      return new Assignment(expr.toIdentifier(), right)
+      return new Assignment(expr.toIdentifier(), opr, right)
     } else {
       lexer.eatDelimiter(';')
       return new ExpressionStatement(expr)
@@ -29,7 +29,7 @@ export abstract class Statement {
     } else if (lexer.matchDataType()) {
       return Declaration.parse(lexer)
     } else {
-      return [this.parseOrAssignment(lexer)]
+      return [this.parseExpressionOrAssignment(lexer)]
     }
   }
 }
