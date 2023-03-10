@@ -1,9 +1,11 @@
+import { Expression } from "./expression"
+
 export class FunctionCall {
   private functionName: string
-  private parameterList: string[]
+  private actualParameterList: Expression[]
 
-  constructor(functionName: string, parameterList: string[]) {
+  constructor(functionName: string, actualParameterList: Expression[]) {
     this.functionName = functionName
-    this.parameterList = parameterList
+    this.actualParameterList = actualParameterList
   }
 }

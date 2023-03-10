@@ -8,15 +8,15 @@ export class Expression {
     this.elements = elements
   }
 
-  private static parseActualParameterList(lexer: Lexer): string[] {
+  private static parseActualParameterList(lexer: Lexer): Expression[] {
     const result = []
     lexer.eatDelimiter('(')
     if (!lexer.matchDelimiter(')')) {
-      result.push(lexer.eatIdentifier())
+      result.push(Expression.parse(lexer))
     }
     while (!lexer.matchDelimiter(')')) {
       lexer.eatDelimiter(',')
-      result.push(lexer.eatIdentifier())
+      result.push(Expression.parse(lexer))
     }
     lexer.eatDelimiter(')')
     return result
