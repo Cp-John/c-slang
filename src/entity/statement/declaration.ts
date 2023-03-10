@@ -31,6 +31,7 @@ export abstract class Declaration extends Statement {
     } else {
       let initialValue: Expression | undefined = undefined
       if (!lexer.matchDelimiter(';')) {
+        lexer.eatDelimiter('=')
         initialValue = Expression.parse(lexer)
       }
       lexer.eatDelimiter(';')
