@@ -5,6 +5,7 @@ const DATA_TYPE_REGEX = /^int|^char|^float/
 const SPACE_REGEX = /^\s+/
 const PRIORITIZED_OPERATOR_REGEX = /^[*\/%]/
 const OPERATOR_REGEX = /^[*\/%\+-]/
+const INCREMENT_DECREMENT_REGEX = /^\+\+|^--/
 
 const RESERVED_KEYWORDS = new Set([
   'int',
@@ -58,7 +59,7 @@ export class Lexer {
   }
 
   matchNumber(): boolean {
-    return this.hasNext() && NUMBER_REGEX.exec(this.currentLine) != null
+    return this.hasNext() && NUMBER_REGEX.test(this.currentLine)
   }
 
   eatNumber(): number {
@@ -75,7 +76,7 @@ export class Lexer {
   }
 
   matchIdentifier(): boolean {
-    return this.hasNext() && IDENTIFIER_REGEX.exec(this.currentLine) != null
+    return this.hasNext() && IDENTIFIER_REGEX.test(this.currentLine)
   }
 
   eatIdentifier(): string {
@@ -118,7 +119,7 @@ export class Lexer {
   }
 
   matchDataType(): boolean {
-    return this.hasNext() && DATA_TYPE_REGEX.exec(this.currentLine) != null
+    return this.hasNext() && DATA_TYPE_REGEX.test(this.currentLine)
   }
 
   eatDataType(): string {
@@ -135,11 +136,11 @@ export class Lexer {
   }
 
   matchPrioritizedOperator(): boolean {
-    return this.hasNext() && PRIORITIZED_OPERATOR_REGEX.exec(this.currentLine) != null
+    return this.hasNext() && PRIORITIZED_OPERATOR_REGEX.test(this.currentLine)
   }
 
   matchOperator(): boolean {
-    return this.hasNext() && OPERATOR_REGEX.exec(this.currentLine) != null
+    return this.hasNext() && OPERATOR_REGEX.test(this.currentLine)
   }
 
   eatOperator(): string {
@@ -149,6 +150,23 @@ export class Lexer {
     const match = OPERATOR_REGEX.exec(this.currentLine)
     if (!match) {
       throw new Error(this.formatError('expected a operator'))
+    }
+    this.currentLine = this.currentLine.substring(match[0].length)
+    this.col += match[0].length
+    return match[0]
+  }
+
+  matchIncrementDecrementOperator(): boolean {
+    return this.hasNext() && INCREMENT_DECREMENT_REGEX.test(this.currentLine)
+  }
+
+  eatIncrementDecrementOperator(): string {
+    if (!this.hasNext()) {
+      throw new Error(this.formatError('expected an increment or decrement operator'))
+    }
+    const match = INCREMENT_DECREMENT_REGEX.exec(this.currentLine)
+    if (!match) {
+      throw new Error(this.formatError('expected an increment or decrement operator'))
     }
     this.currentLine = this.currentLine.substring(match[0].length)
     this.col += match[0].length

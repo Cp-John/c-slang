@@ -38,10 +38,14 @@ export class Expression {
       result.push(lexer.eatNumber())
     } else if (lexer.matchDelimiter('"')) {
       result.push(lexer.eatStringLiteral())
+    } else if (lexer.matchIncrementDecrementOperator()) {
+      result.push(lexer.eatIncrementDecrementOperator() + ' ' + lexer.eatIdentifier())
     } else {
       result.push(lexer.eatIdentifier())
       if (lexer.matchDelimiter('(')) {
         result.push(new FunctionCall(String(result.pop()), this.parseActualParameterList(lexer)))
+      } else if (lexer.matchIncrementDecrementOperator()) {
+        result[result.length - 1] += ' ' + lexer.eatIncrementDecrementOperator()
       }
     }
   }
