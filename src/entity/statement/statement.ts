@@ -13,7 +13,9 @@ export abstract class Statement {
   }
 
   static parse(lexer: Lexer): Statement[] {
-    if (lexer.matchKeyword('while')) {
+    if (lexer.matchKeyword('if')) {
+      return ConditionalStatement.parse(lexer)
+    } else if (lexer.matchKeyword('while')) {
       return While.parse(lexer)
     } else if (lexer.matchKeyword('return')) {
       return Return.parse(lexer)
@@ -32,6 +34,7 @@ export abstract class Statement {
 import { Lexer } from '../../parser/lexer'
 import { Expression } from '../expression/expression'
 import { Assignment } from './assignment'
+import { ConditionalStatement } from './conditionalStatement'
 import { Declaration } from './declaration'
 import { ExpressionStatement } from './expressionStatement'
 import { Return } from './return'
