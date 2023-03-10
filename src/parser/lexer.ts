@@ -1,8 +1,8 @@
 const NUMBER_REGEX = /^[+-]?([0-9]*[.])?[0-9]+/
-const IDENTIFIER_REGEX = /^[_a-zA-Z][_a-zA-Z0-9]/
+const IDENTIFIER_REGEX = /^[_a-zA-Z][_a-zA-Z0-9]*/
 const STRING_LITERAL_REGEX = /^".*?"/
 const DATA_TYPE_REGEX = /^int|^char|^float/
-const SPACE_REGEX = /^\s*/
+const SPACE_REGEX = /^\s+/
 const PRIORITIZED_OPERATOR_REGEX = /^[*\/%]/
 const OPERATOR_REGEX = /^[*\/%\+-]/
 
@@ -39,7 +39,7 @@ export class Lexer {
     const spaces = SPACE_REGEX.exec(this.currentLine)
     if (spaces) {
       this.col += spaces[0].length
-      this.currentLine = this.currentLine.substring(spaces.length)
+      this.currentLine = this.currentLine.substring(spaces[0].length)
     }
   }
 
@@ -82,7 +82,7 @@ export class Lexer {
     if (!match) {
       throw new Error(this.formatError('expected an identifier'))
     } else if (RESERVED_KEYWORDS.has(match[0])) {
-      throw new Error(this.formatError(match[0] + ' is a reserved keyword'))
+      throw new Error(this.formatError('"' + match[0] + '" is a reserved keyword'))
     }
     this.currentLine = this.currentLine.substring(match[0].length)
     this.col += match[0].length

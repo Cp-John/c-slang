@@ -239,32 +239,34 @@ function convertSource(expression: ExpressionContext): es.Program {
 
 export function parse(source: string, context: Context) {
   let program: es.Program | undefined
-
-  if (context.variant === 'calc') {
-    const inputStream = CharStreams.fromString(source)
-    const lexer = new CalcLexer(inputStream)
-    const tokenStream = new CommonTokenStream(lexer)
-    const parser = new CalcParser(tokenStream)
-    parser.buildParseTree = true
-    try {
-      const tree = parser.expression()
-      program = convertSource(tree)
-    } catch (error) {
-      if (error instanceof FatalSyntaxError) {
-        context.errors.push(error)
-      } else {
-        throw error
-      }
-    }
-    const hasErrors = context.errors.find(m => m.severity === ErrorSeverity.ERROR)
-    if (program && !hasErrors) {
-      return program
-    } else {
-      return undefined
-    }
-  } else {
-    return undefined
-  }
+  console.log('source:', source)
+  Parser.parse(source);
+  // if (context.variant === 'calc') {
+  //   const inputStream = CharStreams.fromString(source)
+  //   const lexer = new CalcLexer(inputStream)
+  //   const tokenStream = new CommonTokenStream(lexer)
+  //   const parser = new CalcParser(tokenStream)
+  //   parser.buildParseTree = true
+  //   try {
+  //     const tree = parser.expression()
+  //     program = convertSource(tree)
+  //   } catch (error) {
+  //     if (error instanceof FatalSyntaxError) {
+  //       context.errors.push(error)
+  //     } else {
+  //       throw error
+  //     }
+  //   }
+  //   const hasErrors = context.errors.find(m => m.severity === ErrorSeverity.ERROR)
+  //   if (program && !hasErrors) {
+  //     return program
+  //   } else {
+  //     return undefined
+  //   }
+  // } else {
+  //   return undefined
+  // }
+  return undefined;
 }
 
 export class Parser {

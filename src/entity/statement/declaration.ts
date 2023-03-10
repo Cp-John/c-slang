@@ -1,4 +1,5 @@
 import { Lexer } from '../../parser/lexer'
+import { Block } from '../block'
 import { Statement } from './statement'
 
 export abstract class Declaration extends Statement {
@@ -23,7 +24,8 @@ export abstract class Declaration extends Statement {
       return new FunctionDeclaration(
         dataType,
         identifier,
-        Declaration.parseFormalParameterList(lexer)
+        Declaration.parseFormalParameterList(lexer),
+        Block.parse(lexer)
       )
     } else {
       lexer.eatDelimiter(';')
@@ -47,11 +49,13 @@ export class FunctionDeclaration extends Declaration {
   private returnType: string
   private functionName: string
   private parameterList: [string, string][]
+  private body: Block
 
-  constructor(returnType: string, functionName: string, parameterList: [string, string][]) {
+  constructor(returnType: string, functionName: string, parameterList: [string, string][], body: Block) {
     super()
     this.returnType = returnType
     this.functionName = functionName
     this.parameterList = parameterList
+    this.body = body
   }
 }
