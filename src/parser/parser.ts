@@ -5,8 +5,8 @@ import { ParseTree } from 'antlr4ts/tree/ParseTree'
 import { RuleNode } from 'antlr4ts/tree/RuleNode'
 import { TerminalNode } from 'antlr4ts/tree/TerminalNode'
 import * as es from 'estree'
-import { Declaration } from '../entity/statement/declaration'
 
+import { Declaration } from '../entity/statement/declaration'
 import { CalcLexer } from '../lang/CalcLexer'
 import {
   AdditionContext,
@@ -269,9 +269,9 @@ export function parse(source: string, context: Context) {
 
 export class Parser {
   static parse(source: string) {
-    const lexer = new Lexer(source);
+    const lexer = new Lexer(source)
     while (lexer.hasNext()) {
-      console.log(Declaration.parse(lexer));
+      console.log(Declaration.parse(lexer))
     }
   }
 }
