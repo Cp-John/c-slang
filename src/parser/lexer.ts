@@ -1,10 +1,10 @@
 const NUMBER_REGEX = /^[+-]?([0-9]*[.])?[0-9]+/
 const IDENTIFIER_REGEX = /^[_a-zA-Z][_a-zA-Z0-9]*/
 const STRING_LITERAL_REGEX = /^".*?"/
-const DATA_TYPE_REGEX = /^int|^char|^float/
+const DATA_TYPE_REGEX = /^int\b|^char\b|^float\b/
 const SPACE_REGEX = /^\s+/
-const PRIORITIZED_OPERATOR_REGEX = /^[*\/%]/
-const OPERATOR_REGEX = /^[*\/%\+-]/
+const PRIORITIZED_ARITHMETIC_OPERATOR_REGEX = /^[*\/%](?!=)/
+const ARITHMETIC_OPERATOR_REGEX = /^[*\/%\+-](?!=)/
 const INCREMENT_DECREMENT_REGEX = /^\+\+|^--/
 const RELATIONAL_OPERATOR_RETEX = /^>=|^<=|^>|^<|^==|^!=/
 const PRIORITIZED_RELATIONAL_OPERATOR_REGEX = /^>=|^<=|^>|^</
@@ -47,18 +47,20 @@ export class Lexer {
     }
   }
 
-  hasNext() {
+  hasNext(): boolean {
     this.trimHead()
     while (this.row < this.lines.length && this.currentLine.length === 0) {
-      this.currentLine = this.lines[this.row]
-      this.row += 1
-      this.col = 1
+      this.skipToNextLine()
       this.trimHead()
+    }
+    if (this.currentLine.startsWith('//')) {
+      this.skipToNextLine()
+      return this.hasNext()
     }
     return this.currentLine.length > 0
   }
 
-  skipToNextLine() {
+  private skipToNextLine(): void {
     if (this.row < this.lines.length) {
       this.currentLine = this.lines[this.row]
       this.row += 1
@@ -162,19 +164,19 @@ export class Lexer {
     return match[0]
   }
 
-  matchPrioritizedOperator(): boolean {
-    return this.hasNext() && PRIORITIZED_OPERATOR_REGEX.test(this.currentLine)
+  matchPrioritizedArithmeticOperator(): boolean {
+    return this.hasNext() && PRIORITIZED_ARITHMETIC_OPERATOR_REGEX.test(this.currentLine)
   }
 
-  matchOperator(): boolean {
-    return this.hasNext() && OPERATOR_REGEX.test(this.currentLine)
+  matchArithmeticOperator(): boolean {
+    return this.hasNext() && ARITHMETIC_OPERATOR_REGEX.test(this.currentLine)
   }
 
-  eatOperator(): string {
+  eatArithmeticOperator(): string {
     if (!this.hasNext()) {
       throw new Error(this.formatError('expected an operator'))
     }
-    const match = OPERATOR_REGEX.exec(this.currentLine)
+    const match = ARITHMETIC_OPERATOR_REGEX.exec(this.currentLine)
     if (!match) {
       throw new Error(this.formatError('expected a operator'))
     }

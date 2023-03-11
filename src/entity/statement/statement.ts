@@ -13,10 +13,7 @@ export abstract class Statement {
   }
 
   static parse(lexer: Lexer): Statement[] {
-    if (lexer.matchDelimiter('//')) {
-      lexer.skipToNextLine()
-      return []
-    } else if (lexer.matchKeyword('if')) {
+    if (lexer.matchKeyword('if')) {
       return ConditionalStatement.parse(lexer)
     } else if (lexer.matchKeyword('while')) {
       return While.parse(lexer)

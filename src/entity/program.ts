@@ -1,4 +1,5 @@
 import { Lexer } from '../parser/lexer'
+import { Declaration } from './statement/declaration'
 import { Statement } from './statement/statement'
 
 export class Program {
@@ -11,7 +12,7 @@ export class Program {
   static parse(lexer: Lexer): Program {
     const statements: Statement[] = []
     while (lexer.hasNext()) {
-      Statement.parse(lexer).forEach(statement => statements.push(statement))
+      Declaration.parse(lexer).forEach(statement => statements.push(statement))
     }
     return new Program(statements)
   }

@@ -65,8 +65,8 @@ export class Expression {
     result: (string | number | FunctionCall | Jump)[]
   ): void {
     this.recurParseNumericTerm(lexer, result)
-    while (!lexer.matchAssignmentOperator() && lexer.matchPrioritizedOperator()) {
-      const opr = lexer.eatOperator()
+    while (lexer.matchPrioritizedArithmeticOperator()) {
+      const opr = lexer.eatArithmeticOperator()
       this.recurParseNumericTerm(lexer, result)
       result.push(opr)
     }
@@ -77,8 +77,8 @@ export class Expression {
     result: (string | number | FunctionCall | Jump)[]
   ): void {
     this.recurParsePrioritizedNumericTerm(lexer, result)
-    while (!lexer.matchAssignmentOperator() && lexer.matchOperator()) {
-      const opr = lexer.eatOperator()
+    while (lexer.matchArithmeticOperator()) {
+      const opr = lexer.eatArithmeticOperator()
       this.recurParsePrioritizedNumericTerm(lexer, result)
       result.push(opr)
     }
