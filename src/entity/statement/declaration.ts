@@ -1,7 +1,8 @@
+import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
-import { Expression } from '../expression/expression'
 import { ExpressionParser } from '../expression/expressionParser'
+import { Function } from '../function'
 import { Assignment } from './assignment'
 import { Statement } from './statement'
 
@@ -71,6 +72,10 @@ class VariableDeclaration extends Declaration {
     this.variableType = variableType
     this.variableName = variableName
   }
+
+  execute(env: Frame, rts: Frame[]): void {
+    env.declare(this.variableName)
+  }
 }
 
 export class FunctionDeclaration extends Declaration {
@@ -90,5 +95,13 @@ export class FunctionDeclaration extends Declaration {
     this.functionName = functionName
     this.parameterList = parameterList
     this.body = body
+  }
+
+  execute(env: Frame, rts: Frame[]): void {
+    env.declare(this.functionName)
+    env.assignValue(
+      this.functionName,
+      new Function(this.returnType, this.functionName, this.parameterList, this.body)
+    )
   }
 }

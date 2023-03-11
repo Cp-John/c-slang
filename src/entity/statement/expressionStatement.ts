@@ -1,3 +1,4 @@
+import { Frame } from '../../interpreter/frame'
 import { Expression } from '../expression/expression'
 import { Statement } from './statement'
 
@@ -7,5 +8,9 @@ export class ExpressionStatement extends Statement {
   constructor(expression: Expression) {
     super()
     this.expression = expression
+  }
+
+  execute(env: Frame, rts: Frame[]): void {
+    this.expression.evaluate(env, rts)
   }
 }

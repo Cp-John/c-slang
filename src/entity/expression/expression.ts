@@ -1,3 +1,4 @@
+import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { FunctionCall } from './functionCall'
 
@@ -71,7 +72,7 @@ export class Expression {
     return val ? 1 : 0
   }
 
-  evaluate(): number | undefined {
+  evaluate(env: Frame, rts: Frame[]): number | undefined {
     const result: number[] = []
     let i = 0
     while (i < this.elements.length) {
@@ -91,7 +92,7 @@ export class Expression {
           continue
         }
       } else if (ele instanceof FunctionCall) {
-        throw new Error('function call has not been supported yet')
+        ele.execute(env, rts)
       } else if (typeof ele == 'number') {
         result.push(ele)
       } else if (ele in Expression.BINARY_OPERATORS) {
@@ -99,7 +100,7 @@ export class Expression {
       } else if (ele in Expression.UNARY_OPERATORS) {
         result.push(Expression.UNARY_OPERATORS[ele](result.pop()))
       } else {
-        throw new Error('variable has not been supported yet')
+        result.push(env.lookup(ele))
       }
       i++
     }

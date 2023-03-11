@@ -1,3 +1,4 @@
+import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Expression } from '../expression/expression'
 import { ExpressionParser } from '../expression/expressionParser'
@@ -21,5 +22,9 @@ export class Assignment extends Statement {
     const expression = ExpressionParser.parse(lexer)
     lexer.eatDelimiter(';')
     return [new Assignment(variable, opr, expression)]
+  }
+
+  execute(env: Frame, rts: Frame[]): void {
+    env.assignValue(this.variable, this.expression.evaluate(env, rts))
   }
 }

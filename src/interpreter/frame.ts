@@ -2,10 +2,8 @@ export class Frame {
   private boundings
   private prev: Frame | null
 
-  private static rootFrame: Frame = new Frame(null)
-
-  static getRootFrame(): Frame {
-    return Frame.rootFrame
+  static createNewFrame(): Frame {
+    return new Frame(null)
   }
 
   private constructor(prev: Frame | null) {
@@ -22,7 +20,7 @@ export class Frame {
       currentFrame = currentFrame.prev
     }
     if (currentFrame == null) {
-      throw new Error('undeclared identifier: ' + name)
+      throw new Error('undeclared symbol: ' + name)
     }
     return currentFrame
   }

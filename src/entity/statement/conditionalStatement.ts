@@ -1,3 +1,4 @@
+import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
 import { Expression } from '../expression/expression'
@@ -28,5 +29,13 @@ export class ConditionalStatement extends Statement {
     lexer.eatKeyword('else')
     const elseBlock = Block.parse(lexer)
     return [new ConditionalStatement(expr, ifBlock, elseBlock)]
+  }
+
+  execute(env: Frame, rts: Frame[]): void {
+    if (this.expression.evaluate(env, rts) != 0) {
+      this.ifBlock.execute(env, rts)
+    } else {
+      this.elseBlock?.execute(env, rts)
+    }
   }
 }

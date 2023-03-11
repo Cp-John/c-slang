@@ -1,3 +1,4 @@
+import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
 import { Expression } from '../expression/expression'
@@ -21,5 +22,11 @@ export class While extends Statement {
     lexer.eatDelimiter(')')
     const body = Block.parse(lexer)
     return [new While(expression, body)]
+  }
+
+  execute(env: Frame, rts: Frame[]): void {
+    while (this.expression.evaluate(env, rts) != 0) {
+      this.body.execute(env, rts)
+    }
   }
 }

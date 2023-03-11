@@ -1,5 +1,4 @@
-import { Declaration } from 'estree'
-
+import { Frame } from '../interpreter/frame'
 import { Lexer } from '../parser/lexer'
 import { Statement } from './statement/statement'
 
@@ -22,5 +21,10 @@ export class Block {
     }
     lexer.eatDelimiter('}')
     return new Block(content)
+  }
+
+  execute(env: Frame, rts: Frame[]): void {
+    const newEnv = Frame.extend(env)
+    this.content.forEach(executable => executable.execute(newEnv, rts))
   }
 }

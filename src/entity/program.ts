@@ -1,19 +1,27 @@
+import { Frame } from '../interpreter/frame'
 import { Lexer } from '../parser/lexer'
+import { Function } from './function'
 import { Declaration } from './statement/declaration'
 import { Statement } from './statement/statement'
 
 export class Program {
-  private statements: Statement[]
+  private declarations: Statement[]
 
-  constructor(statements: Statement[]) {
-    this.statements = statements
+  constructor(declarations: Statement[]) {
+    this.declarations = declarations
   }
 
   static parse(lexer: Lexer): Program {
-    const statements: Statement[] = []
+    const declarations: Statement[] = []
     while (lexer.hasNext()) {
-      Declaration.parse(lexer).forEach(statement => statements.push(statement))
+      Declaration.parse(lexer).forEach(statement => declarations.push(statement))
     }
-    return new Program(statements)
+    return new Program(declarations)
+  }
+
+  execute(): void {
+    const frame = Frame.createNewFrame()
+    this.declarations.forEach(statement => statement.execute(frame, []))
+    ;(frame.lookup('main') as Function).call(frame, [], [])
   }
 }

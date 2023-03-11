@@ -29,10 +29,12 @@ export abstract class Statement {
       return [this.parseExpressionOrAssignment(lexer)]
     }
   }
+
+  abstract execute(env: Frame, rts: Frame[]): void
 }
 
+import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
-import { Expression } from '../expression/expression'
 import { ExpressionParser } from '../expression/expressionParser'
 import { Assignment } from './assignment'
 import { ConditionalStatement } from './conditionalStatement'
