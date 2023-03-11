@@ -6,10 +6,8 @@ import { TerminalNode } from 'antlr4ts/tree/TerminalNode'
 import * as es from 'estree'
 
 import { Program } from '../entity/program'
-import { Statement } from '../entity/statement/statement'
 import {
   AdditionContext,
-  CalcParser,
   DivisionContext,
   ExpressionContext,
   MultiplicationContext,
@@ -239,7 +237,7 @@ function convertSource(expression: ExpressionContext): es.Program {
 export function parse(source: string, context: Context) {
   let program: es.Program | undefined
   console.log('source:', source)
-  Parser.parse(source)
+  console.log('program:', Program.parse(new Lexer(source)))
   // if (context.variant === 'calc') {
   //   const inputStream = CharStreams.fromString(source)
   //   const lexer = new CalcLexer(inputStream)
@@ -266,10 +264,4 @@ export function parse(source: string, context: Context) {
   //   return undefined
   // }
   return undefined
-}
-
-export class Parser {
-  static parse(source: string) {
-    console.log(Program.parse(new Lexer(source)))
-  }
 }
