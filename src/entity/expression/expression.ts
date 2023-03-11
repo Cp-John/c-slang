@@ -1,7 +1,7 @@
 import { Lexer } from '../../parser/lexer'
 import { FunctionCall } from './functionCall'
 
-class Jump {
+export class Jump {
   condition: boolean | undefined
   toPosition: number
 
@@ -19,181 +19,32 @@ export enum IncrementDecrement {
 }
 
 export class Expression {
+  private static readonly BINARY_OPERATORS = {
+    '+': (right: number, left: number) => left + right,
+    '-': (right: number, left: number) => left - right,
+    '*': (right: number, left: number) => left * right,
+    '/': (right: number, left: number) => left / right,
+    '%': (right: number, left: number) => left % right,
+    '<': (right: number, left: number) => this.booleanToNumber(left < right),
+    '<=': (right: number, left: number) => this.booleanToNumber(left <= right),
+    '>': (right: number, left: number) => this.booleanToNumber(left > right),
+    '>=': (right: number, left: number) => this.booleanToNumber(left >= right),
+    '==': (right: number, left: number) => this.booleanToNumber(left == right),
+    '!=': (right: number, left: number) => this.booleanToNumber(left != right),
+    '&&': (right: number, left: number) =>
+      this.booleanToNumber(this.numberToBoolean(left) && this.numberToBoolean(right)),
+    '||': (right: number, left: number) =>
+      this.booleanToNumber(this.numberToBoolean(left) || this.numberToBoolean(right))
+  }
+
+  private static readonly UNARY_OPERATORS = {
+    '!': (val: number) => this.booleanToNumber(!this.numberToBoolean(val))
+  }
+
   private elements: (string | number | IncrementDecrement | FunctionCall | Jump)[]
 
   constructor(elements: (string | number | IncrementDecrement | FunctionCall | Jump)[]) {
     this.elements = elements
-  }
-
-  private static parseActualParameterList(lexer: Lexer): Expression[] {
-    const result = []
-    lexer.eatDelimiter('(')
-    if (!lexer.matchDelimiter(')')) {
-      result.push(Expression.parse(lexer))
-    }
-    while (!lexer.matchDelimiter(')')) {
-      lexer.eatDelimiter(',')
-      result.push(Expression.parse(lexer))
-    }
-    lexer.eatDelimiter(')')
-    return result
-  }
-
-  private static recurParseNumericTerm(
-    lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
-  ): void {
-    if (lexer.matchDelimiter('!')) {
-      lexer.eatDelimiter('!')
-      this.recurParseNumericTerm(lexer, result)
-      result.push('!')
-    } else if (lexer.matchDelimiter('(')) {
-      lexer.eatDelimiter('(')
-      this.recurParseExpression(lexer, result)
-      lexer.eatDelimiter(')')
-    } else if (lexer.matchNumber()) {
-      result.push(lexer.eatNumber())
-    } else if (lexer.matchDelimiter('"')) {
-      result.push(lexer.eatStringLiteral())
-    } else if (lexer.matchIncrementDecrementOperator()) {
-      const opr =
-        lexer.eatIncrementDecrementOperator() == '++'
-          ? IncrementDecrement.PRE_INCREMENT
-          : IncrementDecrement.PRE_DECREMENT
-      this.recurParseNumericTerm(lexer, result)
-      result.push(opr)
-    } else {
-      result.push(lexer.eatIdentifier())
-      if (lexer.matchDelimiter('(')) {
-        result.push(new FunctionCall(String(result.pop()), this.parseActualParameterList(lexer)))
-      }
-    }
-
-    if (lexer.matchIncrementDecrementOperator()) {
-      result.push(
-        lexer.eatIncrementDecrementOperator() == '++'
-          ? IncrementDecrement.POST_INCREMENT
-          : IncrementDecrement.POST_DECREMENT
-      )
-    }
-  }
-
-  private static recurParsePrioritizedNumericTerm(
-    lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
-  ): void {
-    this.recurParseNumericTerm(lexer, result)
-    while (lexer.matchPrioritizedArithmeticOperator()) {
-      const opr = lexer.eatArithmeticOperator()
-      this.recurParseNumericTerm(lexer, result)
-      result.push(opr)
-    }
-  }
-
-  private static recurParseNumericalExpression(
-    lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
-  ): void {
-    this.recurParsePrioritizedNumericTerm(lexer, result)
-    while (lexer.matchArithmeticOperator()) {
-      const opr = lexer.eatArithmeticOperator()
-      this.recurParsePrioritizedNumericTerm(lexer, result)
-      result.push(opr)
-    }
-  }
-
-  private static recurParsePrioritizedRelationalTerm(
-    lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
-  ) {
-    this.recurParseNumericalExpression(lexer, result)
-    while (lexer.matchPrioritizedRelationalOperator()) {
-      const opr = lexer.eatRelationalOperator()
-      this.recurParseNumericalExpression(lexer, result)
-      result.push(opr)
-    }
-  }
-
-  private static recurParseRelationalExpression(
-    lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
-  ): void {
-    this.recurParsePrioritizedRelationalTerm(lexer, result)
-    while (lexer.matchRelationalOperator()) {
-      const opr = lexer.eatRelationalOperator()
-      this.recurParsePrioritizedRelationalTerm(lexer, result)
-      result.push(opr)
-    }
-  }
-
-  private static recurParsePrioritizedLogicalTerm(
-    lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
-  ): void {
-    this.recurParseRelationalExpression(lexer, result)
-    const jumps: Jump[] = []
-    while (lexer.matchDelimiter('&&')) {
-      jumps.push(new Jump(false))
-      result.push(jumps[jumps.length - 1])
-      lexer.eatDelimiter('&&')
-      this.recurParseRelationalExpression(lexer, result)
-      result.push('&&')
-    }
-    jumps.forEach(jump => (jump.toPosition = result.length))
-  }
-
-  private static recurParseLogicalExpression(
-    lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
-  ): void {
-    this.recurParsePrioritizedLogicalTerm(lexer, result)
-    const jumps: Jump[] = []
-    while (lexer.matchDelimiter('||')) {
-      jumps.push(new Jump(true))
-      result.push(jumps[jumps.length - 1])
-      lexer.eatDelimiter('||')
-      this.recurParsePrioritizedLogicalTerm(lexer, result)
-      result.push('||')
-    }
-    jumps.forEach(jump => (jump.toPosition = result.length))
-  }
-
-  private static recurParseTernaryExpression(
-    lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
-  ): void {
-    this.recurParseLogicalExpression(lexer, result)
-    if (!lexer.matchDelimiter('?')) {
-      return
-    }
-    lexer.eatDelimiter('?')
-    const jumpToElse = new Jump(false)
-    result.push(jumpToElse)
-    this.recurParseLogicalExpression(lexer, result)
-    const jumpToEnd = new Jump()
-    result.push(jumpToEnd)
-    lexer.eatDelimiter(':')
-    jumpToElse.toPosition = result.length
-    this.recurParseLogicalExpression(lexer, result)
-    jumpToEnd.toPosition = result.length
-  }
-
-  private static recurParseExpression(
-    lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
-  ): void {
-    this.recurParseTernaryExpression(lexer, result)
-    if (lexer.matchAssignmentOperator()) {
-      const opr = lexer.eatAssignmentOperator()
-      this.recurParseTernaryExpression(lexer, result)
-      result.push(opr)
-    }
-  }
-
-  static parse(lexer: Lexer): Expression {
-    const result: (string | number | IncrementDecrement | FunctionCall | Jump)[] = []
-    this.recurParseExpression(lexer, result)
-    return new Expression(result)
   }
 
   isIdentifier(): boolean {
@@ -205,16 +56,56 @@ export class Expression {
   }
 
   toIdentifier(): string {
-    if (
-      this.elements.length != 1 ||
-      typeof this.elements[0] != 'string' ||
-      !new Lexer(this.elements[0]).matchIdentifier()
-    ) {
+    if (!this.isIdentifier()) {
       throw new Error(String(this.elements) + ' is not an identifier')
     }
 
-    return this.elements[0]
+    return this.elements[0] as string
   }
 
-  execute(): void {}
+  private static numberToBoolean(ele: number): boolean {
+    return !(ele == 0)
+  }
+
+  private static booleanToNumber(val: boolean): number {
+    return val ? 1 : 0
+  }
+
+  evaluate(): number | undefined {
+    const result: number[] = []
+    let i = 0
+    while (i < this.elements.length) {
+      const ele = this.elements[i]
+      if (ele instanceof Jump) {
+        const jump = ele as Jump
+        if (
+          jump.condition == undefined ||
+          jump.condition == Expression.numberToBoolean(result[result.length - 1])
+        ) {
+          if (jump.condition != undefined) {
+            result[result.length - 1] = Expression.booleanToNumber(
+              Expression.numberToBoolean(result[result.length - 1])
+            )
+          }
+          i = jump.toPosition
+          continue
+        }
+      } else if (ele instanceof FunctionCall) {
+        throw new Error('function call has not been supported yet')
+      } else if (typeof ele == 'number') {
+        result.push(ele)
+      } else if (ele in Expression.BINARY_OPERATORS) {
+        result.push(Expression.BINARY_OPERATORS[ele](result.pop(), result.pop()))
+      } else if (ele in Expression.UNARY_OPERATORS) {
+        result.push(Expression.UNARY_OPERATORS[ele](result.pop()))
+      } else {
+        throw new Error('variable has not been supported yet')
+      }
+      i++
+    }
+    if (result.length > 0) {
+      return result[0] as number
+    }
+    return undefined
+  }
 }

@@ -1,6 +1,7 @@
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
 import { Expression } from '../expression/expression'
+import { ExpressionParser } from '../expression/expressionParser'
 import { Statement } from './statement'
 
 export class ConditionalStatement extends Statement {
@@ -18,7 +19,7 @@ export class ConditionalStatement extends Statement {
   static parse(lexer: Lexer): ConditionalStatement[] {
     lexer.eatKeyword('if')
     lexer.eatDelimiter('(')
-    const expr = Expression.parse(lexer)
+    const expr = ExpressionParser.parse(lexer)
     lexer.eatDelimiter(')')
     const ifBlock = Block.parse(lexer)
     if (!lexer.matchKeyword('else')) {

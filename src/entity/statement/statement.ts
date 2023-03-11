@@ -1,9 +1,9 @@
 export abstract class Statement {
   static parseExpressionOrAssignment(lexer: Lexer): ExpressionStatement | Assignment {
-    const expr = Expression.parse(lexer)
+    const expr = ExpressionParser.parse(lexer)
     if (expr.isIdentifier() && lexer.matchAssignmentOperator()) {
       const opr = lexer.eatAssignmentOperator()
-      const right = Expression.parse(lexer)
+      const right = ExpressionParser.parse(lexer)
       lexer.eatDelimiter(';')
       return new Assignment(expr.toIdentifier(), opr, right)
     } else {
@@ -33,6 +33,7 @@ export abstract class Statement {
 
 import { Lexer } from '../../parser/lexer'
 import { Expression } from '../expression/expression'
+import { ExpressionParser } from '../expression/expressionParser'
 import { Assignment } from './assignment'
 import { ConditionalStatement } from './conditionalStatement'
 import { Declaration } from './declaration'

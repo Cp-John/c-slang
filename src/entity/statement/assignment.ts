@@ -1,5 +1,6 @@
 import { Lexer } from '../../parser/lexer'
 import { Expression } from '../expression/expression'
+import { ExpressionParser } from '../expression/expressionParser'
 import { Statement } from './statement'
 
 export class Assignment extends Statement {
@@ -17,7 +18,7 @@ export class Assignment extends Statement {
   static parse(lexer: Lexer): Assignment[] {
     const variable = lexer.eatIdentifier()
     const opr = lexer.eatAssignmentOperator()
-    const expression = Expression.parse(lexer)
+    const expression = ExpressionParser.parse(lexer)
     lexer.eatDelimiter(';')
     return [new Assignment(variable, opr, expression)]
   }

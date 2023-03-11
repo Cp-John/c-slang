@@ -1,5 +1,6 @@
 import { Lexer } from '../../parser/lexer'
 import { Expression } from '../expression/expression'
+import { ExpressionParser } from '../expression/expressionParser'
 import { Statement } from './statement'
 
 export class Return extends Statement {
@@ -12,7 +13,7 @@ export class Return extends Statement {
 
   static parse(lexer: Lexer): [Return] {
     lexer.eatKeyword('return')
-    const expression = Expression.parse(lexer)
+    const expression = ExpressionParser.parse(lexer)
     lexer.eatDelimiter(';')
     return [new Return(expression)]
   }

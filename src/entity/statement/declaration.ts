@@ -1,6 +1,7 @@
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
 import { Expression } from '../expression/expression'
+import { ExpressionParser } from '../expression/expressionParser'
 import { Assignment } from './assignment'
 import { Statement } from './statement'
 
@@ -30,7 +31,7 @@ export abstract class Declaration extends Statement {
     while (true) {
       if (lexer.matchDelimiter('=')) {
         lexer.eatDelimiter('=')
-        statements.push(new Assignment(declaredVariable, '=', Expression.parse(lexer)))
+        statements.push(new Assignment(declaredVariable, '=', ExpressionParser.parse(lexer)))
       }
       if (!lexer.matchDelimiter(',')) {
         break
