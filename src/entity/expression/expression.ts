@@ -42,7 +42,7 @@ export class Expression {
       result.push('!')
     } else if (lexer.matchDelimiter('(')) {
       lexer.eatDelimiter('(')
-      this.recurParseTernaryExpression(lexer, result)
+      this.recurParseExpression(lexer, result)
       lexer.eatDelimiter(')')
     } else if (lexer.matchNumber()) {
       result.push(lexer.eatNumber())
@@ -160,9 +160,21 @@ export class Expression {
     jumpToEnd.toPosition = result.length
   }
 
+  private static recurParseExpression(
+    lexer: Lexer,
+    result: (string | number | FunctionCall | Jump)[]
+  ): void {
+    this.recurParseTernaryExpression(lexer, result)
+    if (lexer.matchAssignmentOperator()) {
+      const opr = lexer.eatAssignmentOperator()
+      this.recurParseTernaryExpression(lexer, result)
+      result.push(opr)
+    }
+  }
+
   static parse(lexer: Lexer): Expression {
     const result: (string | number | FunctionCall | Jump)[] = []
-    this.recurParseTernaryExpression(lexer, result)
+    this.recurParseExpression(lexer, result)
     return new Expression(result)
   }
 
