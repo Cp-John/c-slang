@@ -11,10 +11,17 @@ class Jump {
   }
 }
 
-export class Expression {
-  private elements: (string | number | FunctionCall | Jump)[]
+export enum IncrementDecrement {
+  PRE_INCREMENT = 'PRE_INCREMENT',
+  POST_INCREMENT = 'POST_INCREMENT',
+  PRE_DECREMENT = 'PRE_DECREMENT',
+  POST_DECREMENT = 'POST_DECREMENT'
+}
 
-  constructor(elements: (string | number | FunctionCall | Jump)[]) {
+export class Expression {
+  private elements: (string | number | IncrementDecrement | FunctionCall | Jump)[]
+
+  constructor(elements: (string | number | IncrementDecrement | FunctionCall | Jump)[]) {
     this.elements = elements
   }
 
@@ -34,7 +41,7 @@ export class Expression {
 
   private static recurParseNumericTerm(
     lexer: Lexer,
-    result: (string | number | FunctionCall | Jump)[]
+    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
   ): void {
     if (lexer.matchDelimiter('!')) {
       lexer.eatDelimiter('!')
@@ -49,20 +56,31 @@ export class Expression {
     } else if (lexer.matchDelimiter('"')) {
       result.push(lexer.eatStringLiteral())
     } else if (lexer.matchIncrementDecrementOperator()) {
-      result.push(lexer.eatIncrementDecrementOperator() + ' ' + lexer.eatIdentifier())
+      const opr =
+        lexer.eatIncrementDecrementOperator() == '++'
+          ? IncrementDecrement.PRE_INCREMENT
+          : IncrementDecrement.PRE_DECREMENT
+      this.recurParseNumericTerm(lexer, result)
+      result.push(opr)
     } else {
       result.push(lexer.eatIdentifier())
       if (lexer.matchDelimiter('(')) {
         result.push(new FunctionCall(String(result.pop()), this.parseActualParameterList(lexer)))
-      } else if (lexer.matchIncrementDecrementOperator()) {
-        result[result.length - 1] += ' ' + lexer.eatIncrementDecrementOperator()
       }
+    }
+
+    if (lexer.matchIncrementDecrementOperator()) {
+      result.push(
+        lexer.eatIncrementDecrementOperator() == '++'
+          ? IncrementDecrement.POST_INCREMENT
+          : IncrementDecrement.POST_DECREMENT
+      )
     }
   }
 
   private static recurParsePrioritizedNumericTerm(
     lexer: Lexer,
-    result: (string | number | FunctionCall | Jump)[]
+    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
   ): void {
     this.recurParseNumericTerm(lexer, result)
     while (lexer.matchPrioritizedArithmeticOperator()) {
@@ -74,7 +92,7 @@ export class Expression {
 
   private static recurParseNumericalExpression(
     lexer: Lexer,
-    result: (string | number | FunctionCall | Jump)[]
+    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
   ): void {
     this.recurParsePrioritizedNumericTerm(lexer, result)
     while (lexer.matchArithmeticOperator()) {
@@ -86,7 +104,7 @@ export class Expression {
 
   private static recurParsePrioritizedRelationalTerm(
     lexer: Lexer,
-    result: (string | number | FunctionCall | Jump)[]
+    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
   ) {
     this.recurParseNumericalExpression(lexer, result)
     while (lexer.matchPrioritizedRelationalOperator()) {
@@ -98,7 +116,7 @@ export class Expression {
 
   private static recurParseRelationalExpression(
     lexer: Lexer,
-    result: (string | number | FunctionCall | Jump)[]
+    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
   ): void {
     this.recurParsePrioritizedRelationalTerm(lexer, result)
     while (lexer.matchRelationalOperator()) {
@@ -110,7 +128,7 @@ export class Expression {
 
   private static recurParsePrioritizedLogicalTerm(
     lexer: Lexer,
-    result: (string | number | FunctionCall | Jump)[]
+    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
   ): void {
     this.recurParseRelationalExpression(lexer, result)
     const jumps: Jump[] = []
@@ -126,7 +144,7 @@ export class Expression {
 
   private static recurParseLogicalExpression(
     lexer: Lexer,
-    result: (string | number | FunctionCall | Jump)[]
+    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
   ): void {
     this.recurParsePrioritizedLogicalTerm(lexer, result)
     const jumps: Jump[] = []
@@ -142,7 +160,7 @@ export class Expression {
 
   private static recurParseTernaryExpression(
     lexer: Lexer,
-    result: (string | number | FunctionCall | Jump)[]
+    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
   ): void {
     this.recurParseLogicalExpression(lexer, result)
     if (!lexer.matchDelimiter('?')) {
@@ -162,7 +180,7 @@ export class Expression {
 
   private static recurParseExpression(
     lexer: Lexer,
-    result: (string | number | FunctionCall | Jump)[]
+    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
   ): void {
     this.recurParseTernaryExpression(lexer, result)
     if (lexer.matchAssignmentOperator()) {
@@ -173,7 +191,7 @@ export class Expression {
   }
 
   static parse(lexer: Lexer): Expression {
-    const result: (string | number | FunctionCall | Jump)[] = []
+    const result: (string | number | IncrementDecrement | FunctionCall | Jump)[] = []
     this.recurParseExpression(lexer, result)
     return new Expression(result)
   }
@@ -197,4 +215,6 @@ export class Expression {
 
     return this.elements[0]
   }
+
+  execute(): void {}
 }
