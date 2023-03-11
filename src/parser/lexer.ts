@@ -122,11 +122,11 @@ export class Lexer {
   }
 
   matchKeyword(keyword: string): boolean {
-    return this.hasNext() && this.currentLine.startsWith(keyword)
+    return this.hasNext() && new RegExp('^' + keyword + '\\b').test(this.currentLine)
   }
 
   eatKeyword(keyword: string) {
-    if (!this.hasNext() || !this.currentLine.startsWith(keyword)) {
+    if (!this.matchKeyword(keyword)) {
       throw new Error(this.formatError('expected a keyword "' + keyword + '"'))
     }
     this.currentLine = this.currentLine.substring(keyword.length)
