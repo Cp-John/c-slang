@@ -2,12 +2,12 @@ import { Lexer } from '../../parser/lexer'
 import { FunctionCall } from './functionCall'
 
 class Jump {
-  jumpOnTrue: boolean
-  jumpToPosition: number
+  condition: boolean | undefined
+  toPosition: number
 
-  constructor(jumpOnTrue: boolean, jumpToPosition: number = 0) {
-    this.jumpOnTrue = jumpOnTrue
-    this.jumpToPosition = jumpToPosition
+  constructor(condition: boolean | undefined = undefined, toPosition: number = 0) {
+    this.condition = condition
+    this.toPosition = toPosition
   }
 }
 
@@ -42,7 +42,7 @@ export class Expression {
       result.push('!')
     } else if (lexer.matchDelimiter('(')) {
       lexer.eatDelimiter('(')
-      this.recurParseLogicalExpression(lexer, result)
+      this.recurParseTernaryExpression(lexer, result)
       lexer.eatDelimiter(')')
     } else if (lexer.matchNumber()) {
       result.push(lexer.eatNumber())
@@ -121,7 +121,7 @@ export class Expression {
       this.recurParseRelationalExpression(lexer, result)
       result.push('&&')
     }
-    jumps.forEach(jump => (jump.jumpToPosition = result.length))
+    jumps.forEach(jump => (jump.toPosition = result.length))
   }
 
   private static recurParseLogicalExpression(
@@ -137,12 +137,32 @@ export class Expression {
       this.recurParsePrioritizedLogicalTerm(lexer, result)
       result.push('||')
     }
-    jumps.forEach(jump => (jump.jumpToPosition = result.length))
+    jumps.forEach(jump => (jump.toPosition = result.length))
+  }
+
+  private static recurParseTernaryExpression(
+    lexer: Lexer,
+    result: (string | number | FunctionCall | Jump)[]
+  ): void {
+    this.recurParseLogicalExpression(lexer, result)
+    if (!lexer.matchDelimiter('?')) {
+      return
+    }
+    lexer.eatDelimiter('?')
+    const jumpToElse = new Jump(false)
+    result.push(jumpToElse)
+    this.recurParseLogicalExpression(lexer, result)
+    const jumpToEnd = new Jump()
+    result.push(jumpToEnd)
+    lexer.eatDelimiter(':')
+    jumpToElse.toPosition = result.length
+    this.recurParseLogicalExpression(lexer, result)
+    jumpToEnd.toPosition = result.length
   }
 
   static parse(lexer: Lexer): Expression {
     const result: (string | number | FunctionCall | Jump)[] = []
-    this.recurParseLogicalExpression(lexer, result)
+    this.recurParseTernaryExpression(lexer, result)
     return new Expression(result)
   }
 
