@@ -1,10 +1,8 @@
-import { Frame } from '../interpreter/frame'
-import { Block } from './block'
-import { Expression } from './expression/expression'
+import { Frame } from '../../interpreter/frame'
+import { Block } from '../block'
+import { Expression } from '../expression/expression'
 
-export class Function {
-  private returnType: string
-  private functionName: string
+export class SelfDefinedFunction extends Function {
   private parameterList: [string, string][]
   private body: Block
 
@@ -14,8 +12,7 @@ export class Function {
     parameterList: [string, string][],
     body: Block
   ) {
-    this.returnType = returnType
-    this.functionName = functionName
+    super(returnType, functionName)
     this.parameterList = parameterList
     this.body = body
   }

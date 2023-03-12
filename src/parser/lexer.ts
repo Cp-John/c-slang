@@ -240,6 +240,10 @@ export class Lexer {
     return match[0]
   }
 
+  matchStringLiteral(): boolean {
+    return this.hasNext() && STRING_LITERAL_REGEX.test(this.currentLine)
+  }
+
   eatStringLiteral(): string {
     if (!this.hasNext()) {
       throw new Error(this.formatError('expected a string literal'))

@@ -107,7 +107,7 @@ export class Expression {
     return val
   }
 
-  evaluate(env: Frame, rts: Frame[]): number | undefined {
+  evaluate(env: Frame, rts: Frame[]): number | string | undefined {
     const result: (number | string)[] = []
     let i = 0
     while (i < this.elements.length) {
@@ -155,9 +155,11 @@ export class Expression {
       }
       i++
     }
-    if (result.length > 0) {
-      return Expression.toNumber(result.pop(), env)
+    const val = result.pop()
+    if (val == undefined || typeof val == 'number' || new Lexer(val).matchStringLiteral()) {
+      return val
+    } else {
+      return env.lookup(val)
     }
-    return undefined
   }
 }

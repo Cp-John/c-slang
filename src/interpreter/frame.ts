@@ -1,9 +1,38 @@
+import { BuiltinFunction } from '../entity/function/builtinFunction'
+
+function printf(args: (string | number)[]) {
+  let outputString = args[0] as string
+  const regex = /%d|%f|%lf/
+  for (let i = 1; i < args.length; i++) {
+    if (!regex.test(outputString)) {
+      throw new Error('data unused in format string')
+    }
+    outputString = outputString.replace(regex, String(args[i]))
+  }
+  if (regex.test(outputString)) {
+    throw new Error('expected more data arguments')
+  }
+  console.log(outputString)
+}
+
+const BUILTINS = {
+  printf: new BuiltinFunction('void', 'printf', printf)
+}
+
 export class Frame {
   private boundings
   private prev: Frame | null
 
+  private static addBuiltins(frame: Frame): Frame {
+    for (const name in BUILTINS) {
+      frame.declare(name)
+      frame.assignValue(name, BUILTINS[name])
+    }
+    return frame
+  }
+
   static createNewFrame(): Frame {
-    return new Frame(null)
+    return Frame.addBuiltins(new Frame(null))
   }
 
   private constructor(prev: Frame | null) {

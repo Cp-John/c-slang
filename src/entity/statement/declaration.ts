@@ -2,7 +2,7 @@ import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
 import { ExpressionParser } from '../expression/expressionParser'
-import { Function } from '../function'
+import { SelfDefinedFunction } from '../function/selfDefinedFunction'
 import { Assignment } from './assignment'
 import { Statement } from './statement'
 
@@ -101,7 +101,7 @@ export class FunctionDeclaration extends Declaration {
     env.declare(this.functionName)
     env.assignValue(
       this.functionName,
-      new Function(this.returnType, this.functionName, this.parameterList, this.body)
+      new SelfDefinedFunction(this.returnType, this.functionName, this.parameterList, this.body)
     )
   }
 }

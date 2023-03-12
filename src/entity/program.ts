@@ -1,6 +1,6 @@
 import { Frame } from '../interpreter/frame'
 import { Lexer } from '../parser/lexer'
-import { Function } from './function'
+import { Function } from './function/function'
 import { Declaration } from './statement/declaration'
 import { Statement } from './statement/statement'
 

@@ -1,5 +1,5 @@
 import { Frame } from '../../interpreter/frame'
-import { Function } from '../function'
+import { Function } from '../function/function'
 import { Expression } from './expression'
 
 export class FunctionCall {
