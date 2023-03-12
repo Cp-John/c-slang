@@ -13,13 +13,38 @@ export class Jump {
 }
 
 export enum IncrementDecrement {
-  PRE_INCREMENT = 'PRE_INCREMENT',
-  POST_INCREMENT = 'POST_INCREMENT',
-  PRE_DECREMENT = 'PRE_DECREMENT',
-  POST_DECREMENT = 'POST_DECREMENT'
+  PRE_INCREMENT = '$PRE_INCREMENT',
+  POST_INCREMENT = '$POST_INCREMENT',
+  PRE_DECREMENT = '$PRE_DECREMENT',
+  POST_DECREMENT = '$POST_DECREMENT'
 }
 
 export class Expression {
+  private static readonly INCREMENT_DECREMENT_OPERATORS = {
+    $PRE_INCREMENT: (identifier: string, env: Frame) =>
+      env.assignValue(identifier, env.lookup(identifier) + 1),
+    $POST_INCREMENT: (identifier: string, env: Frame) =>
+      env.assignValue(identifier, env.lookup(identifier) + 1) - 1,
+    $PRE_DECREMENT: (identifier: string, env: Frame) =>
+      env.assignValue(identifier, env.lookup(identifier) - 1),
+    $POST_DECREMENT: (identifier: string, env: Frame) =>
+      env.assignValue(identifier, env.lookup(identifier) - 1) + 1
+  }
+
+  public static readonly ASSIGNMENT_OPERATORS = {
+    '=': (right: number, left: string, env: Frame) => env.assignValue(left, right),
+    '+=': (right: number, left: string, env: Frame) =>
+      env.assignValue(left, env.lookup(left) + right),
+    '-=': (right: number, left: string, env: Frame) =>
+      env.assignValue(left, env.lookup(left) - right),
+    '*=': (right: number, left: string, env: Frame) =>
+      env.assignValue(left, env.lookup(left) * right),
+    '/=': (right: number, left: string, env: Frame) =>
+      env.assignValue(left, env.lookup(left) / right),
+    '%=': (right: number, left: string, env: Frame) =>
+      env.assignValue(left, env.lookup(left) % right)
+  }
+
   private static readonly BINARY_OPERATORS = {
     '+': (right: number, left: number) => left + right,
     '-': (right: number, left: number) => left - right,
@@ -72,8 +97,18 @@ export class Expression {
     return val ? 1 : 0
   }
 
+  private static toNumber(val: number | string | undefined, env: Frame): number {
+    if (val == undefined) {
+      throw new Error('undefined operand')
+    }
+    if (typeof val == 'string') {
+      return env.lookup(val)
+    }
+    return val
+  }
+
   evaluate(env: Frame, rts: Frame[]): number | undefined {
-    const result: number[] = []
+    const result: (number | string)[] = []
     let i = 0
     while (i < this.elements.length) {
       const ele = this.elements[i]
@@ -81,11 +116,12 @@ export class Expression {
         const jump = ele as Jump
         if (
           jump.condition == undefined ||
-          jump.condition == Expression.numberToBoolean(result[result.length - 1])
+          jump.condition ==
+            Expression.numberToBoolean(Expression.toNumber(result[result.length - 1], env))
         ) {
           if (jump.condition != undefined) {
             result[result.length - 1] = Expression.booleanToNumber(
-              Expression.numberToBoolean(result[result.length - 1])
+              Expression.numberToBoolean(Expression.toNumber(result[result.length - 1], env))
             )
           }
           i = jump.toPosition
@@ -95,17 +131,32 @@ export class Expression {
         ele.execute(env, rts)
       } else if (typeof ele == 'number') {
         result.push(ele)
+      } else if (ele in Expression.INCREMENT_DECREMENT_OPERATORS) {
+        result.push(Expression.INCREMENT_DECREMENT_OPERATORS[ele](result.pop(), env))
       } else if (ele in Expression.BINARY_OPERATORS) {
-        result.push(Expression.BINARY_OPERATORS[ele](result.pop(), result.pop()))
+        result.push(
+          Expression.BINARY_OPERATORS[ele](
+            Expression.toNumber(result.pop(), env),
+            Expression.toNumber(result.pop(), env)
+          )
+        )
       } else if (ele in Expression.UNARY_OPERATORS) {
-        result.push(Expression.UNARY_OPERATORS[ele](result.pop()))
+        result.push(Expression.UNARY_OPERATORS[ele](Expression.toNumber(result.pop(), env)))
+      } else if (ele in Expression.ASSIGNMENT_OPERATORS) {
+        result.push(
+          Expression.ASSIGNMENT_OPERATORS[ele](
+            Expression.toNumber(result.pop(), env),
+            result.pop(),
+            env
+          )
+        )
       } else {
-        result.push(env.lookup(ele))
+        result.push(ele)
       }
       i++
     }
     if (result.length > 0) {
-      return result[0] as number
+      return Expression.toNumber(result.pop(), env)
     }
     return undefined
   }

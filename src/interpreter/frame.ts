@@ -40,8 +40,9 @@ export class Frame {
     this.boundings[name] = undefined
   }
 
-  assignValue(name: string, val: any) {
+  assignValue(name: string, val: any): any {
     this.findFrameWith(name).boundings[name] = val
+    return val
   }
 
   static extend(prev: Frame) {
