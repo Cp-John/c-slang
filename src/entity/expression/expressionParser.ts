@@ -25,6 +25,10 @@ export class ExpressionParser {
       lexer.eatDelimiter('!')
       this.recurParseNumericTerm(lexer, result)
       result.push('!')
+    } else if (lexer.matchDelimiter('&')) {
+      lexer.eatDelimiter('&')
+      this.recurParseNumericTerm(lexer, result)
+      result.push('&')
     } else if (lexer.matchDelimiter('(')) {
       lexer.eatDelimiter('(')
       this.recurParseExpression(lexer, result)

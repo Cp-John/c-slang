@@ -140,6 +140,8 @@ export class Expression {
             Expression.toNumber(result.pop(), env)
           )
         )
+      } else if (ele == '&') {
+        result.push('"' + result.pop() + '"')
       } else if (ele in Expression.UNARY_OPERATORS) {
         result.push(Expression.UNARY_OPERATORS[ele](Expression.toNumber(result.pop(), env)))
       } else if (ele in Expression.ASSIGNMENT_OPERATORS) {

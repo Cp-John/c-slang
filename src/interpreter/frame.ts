@@ -1,6 +1,6 @@
 import { BuiltinFunction } from '../entity/function/builtinFunction'
 
-function printf(args: (string | number)[]) {
+function printf(env: Frame, rts: Frame[], args: (string | number)[]) {
   let outputString = args[0] as string
   const regex = /%d|%f|%lf/
   for (let i = 1; i < args.length; i++) {
@@ -12,11 +12,23 @@ function printf(args: (string | number)[]) {
   if (regex.test(outputString)) {
     throw new Error('expected more data arguments')
   }
-  console.log(outputString)
+  alert(outputString)
+}
+
+function scanf(env: Frame, rts: Frame[], args: string[]) {
+  let i = 1
+  while (i < args.length) {
+    const input = prompt()?.split(/\s+/)
+    for (let j = 0; input && j < input.length; j++) {
+      env.assignValue(args[i].replaceAll('"', ''), parseFloat(input[j]))
+      i++
+    }
+  }
 }
 
 const BUILTINS = {
-  printf: new BuiltinFunction('void', 'printf', printf)
+  printf: new BuiltinFunction('void', 'printf', printf),
+  scanf: new BuiltinFunction('int', 'scanf', scanf)
 }
 
 export class Frame {
