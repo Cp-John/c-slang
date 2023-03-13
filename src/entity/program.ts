@@ -14,7 +14,7 @@ export class Program {
   static parse(lexer: Lexer): Program {
     const declarations: Statement[] = []
     while (lexer.hasNext()) {
-      Declaration.parse(lexer).forEach(statement => declarations.push(statement))
+      Declaration.parse(lexer, true).forEach(statement => declarations.push(statement))
     }
     return new Program(declarations)
   }

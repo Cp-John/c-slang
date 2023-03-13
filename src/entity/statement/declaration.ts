@@ -45,10 +45,13 @@ export abstract class Declaration extends Statement {
     return statements
   }
 
-  static parse(lexer: Lexer): Statement[] {
+  static parse(lexer: Lexer, allowFunctionDeclaration: boolean = false): Statement[] {
     const dataType = lexer.eatDataType()
     const identifier = lexer.eatIdentifier()
     if (lexer.matchDelimiter('(')) {
+      if (!allowFunctionDeclaration) {
+        throw new Error(lexer.formatError('function definition is not allowed here'))
+      }
       return [
         new FunctionDeclaration(
           dataType,
