@@ -1,7 +1,9 @@
 import { BuiltinFunction } from '../entity/function/builtinFunction'
 
-function printf(env: Frame, rts: Frame[], args: (string | number)[]) {
+function printf(env: Frame, rts: Frame[], context: any, args: (string | number)[]) {
   let outputString = args[0] as string
+  outputString = outputString.replaceAll('"', '')
+  outputString = outputString.replaceAll('\\n', '\n')
   const regex = /%d|%f|%lf/
   for (let i = 1; i < args.length; i++) {
     if (!regex.test(outputString)) {
@@ -12,17 +14,21 @@ function printf(env: Frame, rts: Frame[], args: (string | number)[]) {
   if (regex.test(outputString)) {
     throw new Error('expected more data arguments')
   }
-  alert(outputString)
+  context['stdout'] += outputString
+  alert(context['stdout'])
 }
 
-function scanf(env: Frame, rts: Frame[], args: string[]) {
+function scanf(env: Frame, rts: Frame[], context: any, args: string[]) {
   let i = 1
   while (i < args.length) {
-    const input = prompt()?.split(/\s+/)
-    for (let j = 0; input && j < input.length; j++) {
-      env.assignValue(args[i].replaceAll('"', ''), parseFloat(input[j]))
+    const input = prompt()
+    const tokens = input?.split(/\s+/)
+    for (let j = 0; tokens && j < tokens.length; j++) {
+      const variableName = args[i].replaceAll('"', '')
+      env.assignValue(variableName, parseFloat(tokens[j]))
       i++
     }
+    context['stdout'] += input + '\n'
   }
 }
 

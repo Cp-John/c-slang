@@ -10,9 +10,9 @@ export class BuiltinFunction extends Function {
     this.realFunction = realFunction
   }
 
-  call(env: Frame, rts: Frame[], actualParameterList: Expression[]): void {
+  call(env: Frame, rts: Frame[], context: any, actualParameterList: Expression[]): void {
     const realParameterList: (string | number | undefined)[] = []
-    actualParameterList.forEach(expr => realParameterList.push(expr.evaluate(env, rts)))
-    this.realFunction(env, rts, realParameterList)
+    actualParameterList.forEach(expr => realParameterList.push(expr.evaluate(env, rts, context)))
+    this.realFunction(env, rts, context, realParameterList)
   }
 }

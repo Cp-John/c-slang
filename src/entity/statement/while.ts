@@ -24,9 +24,9 @@ export class While extends Statement {
     return [new While(expression, body)]
   }
 
-  execute(env: Frame, rts: Frame[]): void {
-    while (this.expression.evaluate(env, rts) != 0) {
-      this.body.execute(env, rts)
+  execute(env: Frame, rts: Frame[], context: any): void {
+    while (this.expression.evaluate(env, rts, context) != 0) {
+      this.body.execute(env, rts, context)
     }
   }
 }

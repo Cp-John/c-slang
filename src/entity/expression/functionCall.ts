@@ -11,7 +11,7 @@ export class FunctionCall {
     this.actualParameterList = actualParameterList
   }
 
-  execute(env: Frame, rts: Frame[]): void {
-    ;(env.lookup(this.functionName) as Function).call(env, rts, this.actualParameterList)
+  execute(env: Frame, rts: Frame[], context: any): void {
+    ;(env.lookup(this.functionName) as Function).call(env, rts, context, this.actualParameterList)
   }
 }

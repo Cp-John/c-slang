@@ -10,5 +10,5 @@ export abstract class Function {
     this.functionName = functionName
   }
 
-  abstract call(env: Frame, rts: Frame[], actualParameterList: Expression[]): void
+  abstract call(env: Frame, rts: Frame[], context: any, actualParameterList: Expression[]): void
 }

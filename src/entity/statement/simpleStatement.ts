@@ -12,7 +12,7 @@ export class Break extends Statement {
     return [new Break()]
   }
 
-  execute(env: Frame, rts: Frame[]): void {
+  execute(env: Frame, rts: Frame[], context: any): void {
     throw new Error('Method not implemented.')
   }
 }
@@ -27,7 +27,7 @@ export class Continue extends Statement {
     return [new Continue()]
   }
 
-  execute(env: Frame, rts: Frame[]): void {
+  execute(env: Frame, rts: Frame[], context: any): void {
     throw new Error('Method not implemented.')
   }
 }

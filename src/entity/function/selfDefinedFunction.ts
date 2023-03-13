@@ -18,7 +18,7 @@ export class SelfDefinedFunction extends Function {
     this.body = body
   }
 
-  call(env: Frame, rts: Frame[], actualParameterList: Expression[]) {
+  call(env: Frame, rts: Frame[], context: any, actualParameterList: Expression[]) {
     if (actualParameterList.length != this.parameterList.length) {
       throw new Error(
         'expected ' +
@@ -30,8 +30,8 @@ export class SelfDefinedFunction extends Function {
     const newEnv = Frame.extend(env)
     this.parameterList.forEach(pair => newEnv.declare(pair[1]))
     actualParameterList.forEach((expr, index) =>
-      newEnv.assignValue(this.parameterList[index][1], expr.evaluate(env, rts))
+      newEnv.assignValue(this.parameterList[index][1], expr.evaluate(env, rts, context))
     )
-    this.body.execute(newEnv, rts)
+    this.body.execute(newEnv, rts, context)
   }
 }

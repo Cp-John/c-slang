@@ -24,9 +24,9 @@ export class Assignment extends Statement {
     return [new Assignment(variable, opr, expression)]
   }
 
-  execute(env: Frame, rts: Frame[]): void {
+  execute(env: Frame, rts: Frame[], context: any): void {
     Expression.ASSIGNMENT_OPERATORS[this.assignmentOpr](
-      this.expression.evaluate(env, rts),
+      this.expression.evaluate(env, rts, context),
       this.variable,
       env
     )

@@ -91,7 +91,7 @@ class VariableDeclaration extends Declaration {
     this.variableName = variableName
   }
 
-  execute(env: Frame, rts: Frame[]): void {
+  execute(env: Frame, rts: Frame[], context: any): void {
     env.declare(this.variableName)
   }
 }
@@ -115,7 +115,7 @@ export class FunctionDeclaration extends Declaration {
     this.body = body
   }
 
-  execute(env: Frame, rts: Frame[]): void {
+  execute(env: Frame, rts: Frame[], context: any): void {
     env.declare(this.functionName)
     env.assignValue(
       this.functionName,

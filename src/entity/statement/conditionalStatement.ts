@@ -31,11 +31,11 @@ export class ConditionalStatement extends Statement {
     return [new ConditionalStatement(expr, ifBlock, elseBlock)]
   }
 
-  execute(env: Frame, rts: Frame[]): void {
-    if (this.expression.evaluate(env, rts) != 0) {
-      this.ifBlock.execute(env, rts)
+  execute(env: Frame, rts: Frame[], context: any): void {
+    if (this.expression.evaluate(env, rts, context) != 0) {
+      this.ifBlock.execute(env, rts, context)
     } else {
-      this.elseBlock?.execute(env, rts)
+      this.elseBlock?.execute(env, rts, context)
     }
   }
 }

@@ -23,8 +23,8 @@ export class Block {
     return new Block(content)
   }
 
-  execute(env: Frame, rts: Frame[]): void {
+  execute(env: Frame, rts: Frame[], context: any): void {
     const newEnv = Frame.extend(env)
-    this.content.forEach(executable => executable.execute(newEnv, rts))
+    this.content.forEach(executable => executable.execute(newEnv, rts, context))
   }
 }

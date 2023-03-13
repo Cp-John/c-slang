@@ -30,7 +30,7 @@ export abstract class Statement {
     }
   }
 
-  abstract execute(env: Frame, rts: Frame[]): void
+  abstract execute(env: Frame, rts: Frame[], context: any): void
 }
 
 import { Frame } from '../../interpreter/frame'

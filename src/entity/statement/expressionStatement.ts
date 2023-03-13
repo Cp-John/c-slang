@@ -10,7 +10,7 @@ export class ExpressionStatement extends Statement {
     this.expression = expression
   }
 
-  execute(env: Frame, rts: Frame[]): void {
-    this.expression.evaluate(env, rts)
+  execute(env: Frame, rts: Frame[], context: any): void {
+    this.expression.evaluate(env, rts, context)
   }
 }
