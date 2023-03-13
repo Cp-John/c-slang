@@ -1,5 +1,11 @@
 import { BuiltinFunction } from '../entity/function/builtinFunction'
 
+const MAX_INT = 2147483647
+
+function rand(env: Frame, rts: Frame[], context: any, args: (string | number)[]): number {
+  return Math.floor(Math.random() * MAX_INT)
+}
+
 function printf(env: Frame, rts: Frame[], context: any, args: (string | number)[]) {
   let outputString = args[0] as string
   outputString = outputString.substring(1, outputString.length - 1)
@@ -36,7 +42,8 @@ function scanf(env: Frame, rts: Frame[], context: any, args: string[]) {
 
 const BUILTINS = {
   printf: new BuiltinFunction('void', 'printf', printf),
-  scanf: new BuiltinFunction('int', 'scanf', scanf)
+  scanf: new BuiltinFunction('int', 'scanf', scanf),
+  rand: new BuiltinFunction('int', 'rand', rand)
 }
 
 export class Frame {
