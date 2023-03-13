@@ -2,6 +2,8 @@ export abstract class Statement {
   static parse(lexer: Lexer, isInLoop: boolean = false): Statement[] {
     if (lexer.matchKeyword('if')) {
       return ConditionalStatement.parse(lexer, isInLoop)
+    } else if (lexer.matchKeyword('do')) {
+      return DoWhile.parse(lexer)
     } else if (lexer.matchKeyword('while')) {
       return While.parse(lexer)
     } else if (lexer.matchKeyword('for')) {
@@ -26,6 +28,7 @@ import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { ConditionalStatement } from './conditionalStatement'
 import { Declaration } from './declaration'
+import { DoWhile } from './doWhile'
 import { ExpressionStatement } from './expressionStatement'
 import { For } from './for'
 import { Return } from './return'
