@@ -19,10 +19,9 @@ export class Program {
     return new Program(declarations)
   }
 
-  execute(): void {
+  execute(context: any): void {
     const frame = Frame.createNewFrame()
     this.declarations.forEach(declaration => declaration.execute(frame, [], {}))
-    const context = { stdout: '' }
     ;(frame.lookup('main') as Function).call(frame, [], context, [])
   }
 }

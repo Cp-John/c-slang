@@ -6,6 +6,7 @@ import { TerminalNode } from 'antlr4ts/tree/TerminalNode'
 import * as es from 'estree'
 
 import { Program } from '../entity/program'
+import { CProgramError } from '../errors/errors'
 import {
   AdditionContext,
   DivisionContext,
@@ -237,14 +238,9 @@ function convertSource(expression: ExpressionContext): es.Program {
 export function parse(source: string, context: Context) {
   // let program: es.Program | undefined
   try {
-    console.log('source:', source)
-    const program = Program.parse(new Lexer(source))
-    console.log('program:', program)
-    console.log('program executing...')
-    program.execute()
-    console.log('program executing finished')
+    return Program.parse(new Lexer(source))
   } catch (err) {
-    console.error(err)
+    context.errors.push(new CProgramError(err))
   }
   // if (context.variant === 'calc') {
   //   const inputStream = CharStreams.fromString(source)

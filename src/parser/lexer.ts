@@ -73,7 +73,6 @@ export class Lexer {
 
   formatError(msg: string): string {
     return (
-      'parsing error: ' +
       msg +
       ' at (' +
       this.row +

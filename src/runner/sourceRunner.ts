@@ -1,6 +1,8 @@
 import * as es from 'estree'
 
 import { IOptions, Result } from '..'
+import { Program } from '../entity/program'
+import { CRuntimeError } from '../errors/errors'
 import { CannotFindModuleError } from '../errors/localImportErrors'
 import { evaluate } from '../interpreter/interpreter'
 import { hoistAndMergeImports } from '../localImports/transformers/hoistAndMergeImports'
@@ -34,40 +36,54 @@ export async function sourceRunner(
   code: string,
   context: Context,
   options: Partial<IOptions> = {}
-): Promise<Result> {
+): Promise<any> {
   const theOptions: IOptions = { ...DEFAULT_SOURCE_OPTIONS, ...options }
   context.variant = determineVariant(context, options)
   context.errors = []
 
   // Parse and validate
-  const program: es.Program | undefined = parse(code, context)
+  const program: Program | undefined = parse(code, context)
   if (!program) {
+    return resolvedErrorPromise
+  }
+
+  const cProgramContext = { stdout: '' }
+
+  try {
+    program.execute(cProgramContext)
+    return Promise.resolve({
+      status: 'finished',
+      value: cProgramContext['stdout'],
+      context
+    })
+  } catch (err) {
+    context.errors.push(new CRuntimeError(err))
     return resolvedErrorPromise
   }
 
   // TODO: Remove this after runners have been refactored.
   //       These should be done as part of the local imports
   //       preprocessing step.
-  removeExports(program)
-  removeNonSourceModuleImports(program)
-  hoistAndMergeImports(program)
+  // removeExports(program)
+  // removeNonSourceModuleImports(program)
+  // hoistAndMergeImports(program)
 
-  validateAndAnnotate(program, context)
-  context.unTypecheckedCode.push(code)
+  // validateAndAnnotate(program, context)
+  // context.unTypecheckedCode.push(code)
 
-  if (context.errors.length > 0) {
-    return resolvedErrorPromise
-  }
+  // if (context.errors.length > 0) {
+  //   return resolvedErrorPromise
+  // }
 
-  // Handle preludes
-  if (context.prelude !== null) {
-    const prelude = context.prelude
-    context.prelude = null
-    await sourceRunner(prelude, context, { ...options, isPrelude: true })
-    return sourceRunner(code, context, options)
-  }
+  // // Handle preludes
+  // if (context.prelude !== null) {
+  //   const prelude = context.prelude
+  //   context.prelude = null
+  //   await sourceRunner(prelude, context, { ...options, isPrelude: true })
+  //   return sourceRunner(code, context, options)
+  // }
 
-  return runInterpreter(program, context, theOptions)
+  // return runInterpreter(program, context, theOptions)
 }
 
 export async function sourceFilesRunner(
