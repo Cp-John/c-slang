@@ -1,17 +1,4 @@
 export abstract class Statement {
-  static parseExpressionOrAssignment(lexer: Lexer): ExpressionStatement | Assignment {
-    const expr = ExpressionParser.parse(lexer)
-    if (expr.isIdentifier() && lexer.matchAssignmentOperator()) {
-      const opr = lexer.eatAssignmentOperator()
-      const right = ExpressionParser.parse(lexer)
-      lexer.eatDelimiter(';')
-      return new Assignment(expr.toIdentifier(), opr, right)
-    } else {
-      lexer.eatDelimiter(';')
-      return new ExpressionStatement(expr)
-    }
-  }
-
   static parse(lexer: Lexer, isInLoop: boolean = false): Statement[] {
     if (lexer.matchKeyword('if')) {
       return ConditionalStatement.parse(lexer, isInLoop)
@@ -26,7 +13,7 @@ export abstract class Statement {
     } else if (lexer.matchDataType()) {
       return Declaration.parse(lexer)
     } else {
-      return [this.parseExpressionOrAssignment(lexer)]
+      return ExpressionStatement.parse(lexer)
     }
   }
 
@@ -35,8 +22,6 @@ export abstract class Statement {
 
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
-import { ExpressionParser } from '../expression/expressionParser'
-import { Assignment } from './assignment'
 import { ConditionalStatement } from './conditionalStatement'
 import { Declaration } from './declaration'
 import { ExpressionStatement } from './expressionStatement'

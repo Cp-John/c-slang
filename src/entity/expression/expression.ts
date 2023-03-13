@@ -73,20 +73,11 @@ export class Expression {
     this.elements = elements
   }
 
-  isIdentifier(): boolean {
-    return (
-      this.elements.length == 1 &&
-      typeof this.elements[0] == 'string' &&
-      new Lexer(this.elements[0]).matchIdentifier()
-    )
-  }
-
-  toIdentifier(): string {
-    if (!this.isIdentifier()) {
-      throw new Error(String(this.elements) + ' is not an identifier')
-    }
-
-    return this.elements[0] as string
+  assignTo(variableName: string): Expression {
+    let newElements: (string | number | FunctionCall | Jump)[] = [variableName]
+    newElements = newElements.concat(this.elements)
+    newElements.push('=')
+    return new Expression(newElements)
   }
 
   private static numberToBoolean(ele: number): boolean {

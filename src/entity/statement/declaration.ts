@@ -3,7 +3,7 @@ import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
 import { ExpressionParser } from '../expression/expressionParser'
 import { SelfDefinedFunction } from '../function/selfDefinedFunction'
-import { Assignment } from './assignment'
+import { ExpressionStatement } from './expressionStatement'
 import { Statement } from './statement'
 
 export abstract class Declaration extends Statement {
@@ -37,7 +37,9 @@ export abstract class Declaration extends Statement {
     while (true) {
       if (lexer.matchDelimiter('=')) {
         lexer.eatDelimiter('=')
-        statements.push(new Assignment(declaredVariable, '=', ExpressionParser.parse(lexer)))
+        statements.push(
+          new ExpressionStatement(ExpressionParser.parse(lexer).assignTo(declaredVariable))
+        )
       }
       if (!lexer.matchDelimiter(',')) {
         break
