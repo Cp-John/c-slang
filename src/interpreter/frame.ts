@@ -24,7 +24,7 @@ function scanf(env: Frame, rts: Frame[], context: any, args: string[]) {
     const tokens = input?.split(/\s+/)
     for (let j = 0; tokens && j < tokens.length; j++) {
       const variableName = args[i].replaceAll('"', '')
-      if (!isNaN(parseFloat(tokens[j]))) {
+      if (isNaN(parseFloat(tokens[j]))) {
         env.assignValue(variableName, 0)
       } else {
         env.assignValue(variableName, parseFloat(tokens[j]))
