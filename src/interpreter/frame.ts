@@ -6,6 +6,10 @@ function rand(env: Frame, rts: Frame[], context: any, args: (string | number)[])
   return Math.floor(Math.random() * MAX_INT)
 }
 
+function time(env: Frame, rts: Frame[], context: any, args: (string | number)[]): number {
+  return Math.floor(Date.now() / 1000)
+}
+
 function printf(env: Frame, rts: Frame[], context: any, args: (string | number)[]) {
   let outputString = args[0] as string
   outputString = outputString.substring(1, outputString.length - 1)
@@ -43,7 +47,8 @@ function scanf(env: Frame, rts: Frame[], context: any, args: string[]) {
 const BUILTINS = {
   printf: new BuiltinFunction('void', 'printf', printf),
   scanf: new BuiltinFunction('int', 'scanf', scanf),
-  rand: new BuiltinFunction('int', 'rand', rand)
+  rand: new BuiltinFunction('int', 'rand', rand),
+  time: new BuiltinFunction('int', 'time', time)
 }
 
 export class Frame {
