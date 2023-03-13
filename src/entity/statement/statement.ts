@@ -4,6 +4,8 @@ export abstract class Statement {
       return ConditionalStatement.parse(lexer, isInLoop)
     } else if (lexer.matchKeyword('while')) {
       return While.parse(lexer)
+    } else if (lexer.matchKeyword('for')) {
+      return For.parse(lexer)
     } else if (lexer.matchKeyword('return')) {
       return Return.parse(lexer)
     } else if (lexer.matchKeyword('continue')) {
@@ -25,6 +27,7 @@ import { Lexer } from '../../parser/lexer'
 import { ConditionalStatement } from './conditionalStatement'
 import { Declaration } from './declaration'
 import { ExpressionStatement } from './expressionStatement'
+import { For } from './for'
 import { Return } from './return'
 import { Break, Continue } from './simpleStatement'
 import { While } from './while'
