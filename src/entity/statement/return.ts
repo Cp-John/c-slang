@@ -5,21 +5,24 @@ import { ExpressionParser } from '../expression/expressionParser'
 import { Statement } from './statement'
 
 export class Return extends Statement {
-  private expression: Expression
+  private expression: Expression | null
 
-  constructor(expression: Expression) {
+  constructor(expression: Expression | null) {
     super()
     this.expression = expression
   }
 
   static parse(lexer: Lexer): [Return] {
     lexer.eatKeyword('return')
-    const expression = ExpressionParser.parse(lexer)
+    let expression = null
+    if (!lexer.matchDelimiter(';')) {
+      expression = ExpressionParser.parse(lexer)
+    }
     lexer.eatDelimiter(';')
     return [new Return(expression)]
   }
 
   execute(env: Frame, rts: Frame[]): void {
-    this.expression.evaluate(env, rts)
+    this.expression?.evaluate(env, rts)
   }
 }

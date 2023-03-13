@@ -1,3 +1,5 @@
+import { LexerActionExecutor } from 'antlr4ts/atn/LexerActionExecutor'
+
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
@@ -46,7 +48,12 @@ export abstract class Declaration extends Statement {
   }
 
   static parse(lexer: Lexer, allowFunctionDeclaration: boolean = false): Statement[] {
-    const dataType = lexer.eatDataType()
+    let type
+    if (lexer.matchKeyword('void')) {
+      type = lexer.eatKeyword('void')
+    } else {
+      type = lexer.eatDataType()
+    }
     const identifier = lexer.eatIdentifier()
     if (lexer.matchDelimiter('(')) {
       if (!allowFunctionDeclaration) {
@@ -54,14 +61,17 @@ export abstract class Declaration extends Statement {
       }
       return [
         new FunctionDeclaration(
-          dataType,
+          type,
           identifier,
           Declaration.parseFormalParameterList(lexer),
           Block.parse(lexer, false)
         )
       ]
     } else {
-      return this.parseDeclaredVariables(dataType, identifier, lexer)
+      if (type == 'void') {
+        throw new Error(lexer.formatError("variable has incomplete type 'void'"))
+      }
+      return this.parseDeclaredVariables(type, identifier, lexer)
     }
   }
 }

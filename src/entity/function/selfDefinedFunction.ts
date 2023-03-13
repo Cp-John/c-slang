@@ -1,6 +1,7 @@
 import { Frame } from '../../interpreter/frame'
 import { Block } from '../block'
 import { Expression } from '../expression/expression'
+import { Function } from './function'
 
 export class SelfDefinedFunction extends Function {
   private parameterList: [string, string][]

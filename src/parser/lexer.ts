@@ -127,12 +127,13 @@ export class Lexer {
     return this.hasNext() && new RegExp('^' + keyword + '\\b').test(this.currentLine)
   }
 
-  eatKeyword(keyword: string) {
+  eatKeyword(keyword: string): string {
     if (!this.matchKeyword(keyword)) {
       throw new Error(this.formatError('expected a keyword "' + keyword + '"'))
     }
     this.currentLine = this.currentLine.substring(keyword.length)
     this.col += keyword.length
+    return keyword
   }
 
   matchDelimiter(delim: string) {
