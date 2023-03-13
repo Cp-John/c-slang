@@ -169,7 +169,7 @@ export class ExpressionParser {
     this.recurParseTernaryExpression(lexer, result)
     if (lexer.matchAssignmentOperator()) {
       const opr = lexer.eatAssignmentOperator()
-      this.recurParseTernaryExpression(lexer, result)
+      this.recurParseExpression(lexer, result)
       result.push(opr)
     }
   }
