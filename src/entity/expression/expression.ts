@@ -20,6 +20,13 @@ export enum IncrementDecrement {
 }
 
 export class Expression {
+  private static assertAssignable = (val: any): string => {
+    if (typeof val != 'string') {
+      throw new Error(String(val) + ' is not assignable')
+    }
+    return val
+  }
+
   private static readonly INCREMENT_DECREMENT_OPERATORS = {
     $PRE_INCREMENT: (identifier: string, env: Frame) =>
       env.assignValue(identifier, env.lookup(identifier) + 1),
@@ -123,7 +130,12 @@ export class Expression {
       } else if (typeof ele == 'number') {
         result.push(ele)
       } else if (ele in Expression.INCREMENT_DECREMENT_OPERATORS) {
-        result.push(Expression.INCREMENT_DECREMENT_OPERATORS[ele](result.pop(), env))
+        result.push(
+          Expression.INCREMENT_DECREMENT_OPERATORS[ele](
+            Expression.assertAssignable(result.pop()),
+            env
+          )
+        )
       } else if (ele in Expression.BINARY_OPERATORS) {
         result.push(
           Expression.BINARY_OPERATORS[ele](
@@ -139,7 +151,7 @@ export class Expression {
         result.push(
           Expression.ASSIGNMENT_OPERATORS[ele](
             Expression.toNumber(result.pop(), env),
-            result.pop(),
+            Expression.assertAssignable(result.pop()),
             env
           )
         )
