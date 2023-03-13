@@ -191,11 +191,11 @@ export class Lexer {
 
   eatArithmeticOperator(): string {
     if (!this.hasNext()) {
-      throw new Error(this.formatError('expected an operator'))
+      throw new Error(this.formatError('expected an arithmetic operator'))
     }
     const match = ARITHMETIC_OPERATOR_REGEX.exec(this.currentLine)
     if (!match) {
-      throw new Error(this.formatError('expected a operator'))
+      throw new Error(this.formatError('expected an arithmetic operator'))
     }
     this.currentLine = this.currentLine.substring(match[0].length)
     this.col += match[0].length
