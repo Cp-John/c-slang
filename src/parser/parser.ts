@@ -236,12 +236,16 @@ function convertSource(expression: ExpressionContext): es.Program {
 
 export function parse(source: string, context: Context) {
   // let program: es.Program | undefined
-  console.log('source:', source)
-  const program = Program.parse(new Lexer(source))
-  console.log('program:', program)
-  console.log('program executing...')
-  program.execute()
-  console.log('program executing finished')
+  try {
+    console.log('source:', source)
+    const program = Program.parse(new Lexer(source))
+    console.log('program:', program)
+    console.log('program executing...')
+    program.execute()
+    console.log('program executing finished')
+  } catch (err) {
+    console.error(err)
+  }
   // if (context.variant === 'calc') {
   //   const inputStream = CharStreams.fromString(source)
   //   const lexer = new CalcLexer(inputStream)

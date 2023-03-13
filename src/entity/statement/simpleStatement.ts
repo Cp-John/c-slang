@@ -3,7 +3,10 @@ import { Lexer } from '../../parser/lexer'
 import { Statement } from './statement'
 
 export class Break extends Statement {
-  static parse(lexer: Lexer): Continue[] {
+  static parse(lexer: Lexer, isInLoop: boolean): Continue[] {
+    if (!isInLoop) {
+      throw new Error(lexer.formatError('break statement not in loop statement'))
+    }
     lexer.eatKeyword('break')
     lexer.eatDelimiter(';')
     return [new Break()]
@@ -15,7 +18,10 @@ export class Break extends Statement {
 }
 
 export class Continue extends Statement {
-  static parse(lexer: Lexer): [Continue] {
+  static parse(lexer: Lexer, isInLoop: boolean): [Continue] {
+    if (!isInLoop) {
+      throw new Error(lexer.formatError('continue statement not in loop statement'))
+    }
     lexer.eatKeyword('continue')
     lexer.eatDelimiter(';')
     return [new Continue()]

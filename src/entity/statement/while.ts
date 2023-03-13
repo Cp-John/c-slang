@@ -20,7 +20,7 @@ export class While extends Statement {
     lexer.eatDelimiter('(')
     const expression = ExpressionParser.parse(lexer)
     lexer.eatDelimiter(')')
-    const body = Block.parse(lexer)
+    const body = Block.parse(lexer, true)
     return [new While(expression, body)]
   }
 

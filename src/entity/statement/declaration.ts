@@ -54,7 +54,7 @@ export abstract class Declaration extends Statement {
           dataType,
           identifier,
           Declaration.parseFormalParameterList(lexer),
-          Block.parse(lexer)
+          Block.parse(lexer, false)
         )
       ]
     } else {

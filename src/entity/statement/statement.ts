@@ -12,17 +12,17 @@ export abstract class Statement {
     }
   }
 
-  static parse(lexer: Lexer): Statement[] {
+  static parse(lexer: Lexer, isInLoop: boolean = false): Statement[] {
     if (lexer.matchKeyword('if')) {
-      return ConditionalStatement.parse(lexer)
+      return ConditionalStatement.parse(lexer, isInLoop)
     } else if (lexer.matchKeyword('while')) {
       return While.parse(lexer)
     } else if (lexer.matchKeyword('return')) {
       return Return.parse(lexer)
     } else if (lexer.matchKeyword('continue')) {
-      return Continue.parse(lexer)
+      return Continue.parse(lexer, isInLoop)
     } else if (lexer.matchKeyword('break')) {
-      return Break.parse(lexer)
+      return Break.parse(lexer, isInLoop)
     } else if (lexer.matchDataType()) {
       return Declaration.parse(lexer)
     } else {

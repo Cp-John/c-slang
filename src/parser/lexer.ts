@@ -71,7 +71,7 @@ export class Lexer {
     }
   }
 
-  private formatError(msg: string): string {
+  formatError(msg: string): string {
     return (
       'parsing error: ' +
       msg +
