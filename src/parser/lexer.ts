@@ -1,3 +1,4 @@
+const PREPROCESSOR_DIRECTIVEG = /^\s*#\s*include\b|^\s*#\s*define\b/
 const NUMBER_REGEX = /^[+-]?([0-9]*[.])?[0-9]+/
 const IDENTIFIER_REGEX = /^[_a-zA-Z][_a-zA-Z0-9]*/
 const STRING_LITERAL_REGEX = /^".*?(?<!\\)"/
@@ -47,11 +48,9 @@ export class Lexer {
 
   constructor(source: string) {
     this.lines = source.split(/\r?\n/)
-    if (this.lines.length > 0) {
-      this.currentLine = this.lines[0]
-    }
-    this.row = 1
-    this.col = 1
+    this.row = 0
+    this.col = 0
+    this.skipToNextLine()
   }
 
   private trimHead() {
@@ -80,6 +79,9 @@ export class Lexer {
       this.currentLine = this.lines[this.row]
       this.row += 1
       this.col = 1
+      if (PREPROCESSOR_DIRECTIVEG.test(this.currentLine)) {
+        this.skipToNextLine()
+      }
     } else {
       this.col += this.currentLine.length
       this.currentLine = ''
