@@ -12,6 +12,11 @@ export abstract class Declaration extends Statement {
   private static parseFormalParameterList(lexer: Lexer): [string, string][] {
     const result: [string, string][] = []
     lexer.eatDelimiter('(')
+    if (lexer.matchKeyword('void')) {
+      lexer.eatKeyword('void')
+      lexer.eatDelimiter(')')
+      return result
+    }
     if (!lexer.matchDelimiter(')')) {
       result.push([lexer.eatDataType(), lexer.eatIdentifier()])
     }
