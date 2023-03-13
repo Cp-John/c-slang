@@ -1,5 +1,3 @@
-import { runInThisContext } from 'vm'
-
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
