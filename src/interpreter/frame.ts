@@ -2,8 +2,7 @@ import { BuiltinFunction } from '../entity/function/builtinFunction'
 
 function printf(env: Frame, rts: Frame[], context: any, args: (string | number)[]) {
   let outputString = args[0] as string
-  outputString = outputString.replaceAll('"', '')
-  outputString = outputString.replaceAll('\\n', '\n')
+  outputString = outputString.substring(1, outputString.length - 1)
   const regex = /%d|%f|%lf/
   for (let i = 1; i < args.length; i++) {
     if (!regex.test(outputString)) {

@@ -1,5 +1,3 @@
-import { LexerActionExecutor } from 'antlr4ts/atn/LexerActionExecutor'
-
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'

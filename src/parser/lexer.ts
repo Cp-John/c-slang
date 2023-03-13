@@ -1,6 +1,7 @@
 const NUMBER_REGEX = /^[+-]?([0-9]*[.])?[0-9]+/
 const IDENTIFIER_REGEX = /^[_a-zA-Z][_a-zA-Z0-9]*/
 const STRING_LITERAL_REGEX = /^".*?"/
+const CHARACTER_LITERAL_REGEX = /^'.'|^'\\[abfnrtv'"?]'|^'\\\\'/
 const DATA_TYPE_REGEX = /^int\b|^char\b|^float\b/
 const SPACE_REGEX = /^\s+/
 const PRIORITIZED_ARITHMETIC_OPERATOR_REGEX = /^[*\/%](?!=)/
@@ -23,6 +24,20 @@ const RESERVED_KEYWORDS = new Set([
   'do',
   'for'
 ])
+
+const ESCAPE_CHARACTERS = {
+  '\\a': 'a',
+  '\\b': '\b',
+  '\\f': '\f',
+  '\\n': '\n',
+  '\\r': '\r',
+  '\\t': '\t',
+  '\\v': '\v',
+  "\\'": "'",
+  '\\"': '"',
+  '\\?': '?',
+  '\\\\': '\\'
+}
 
 export class Lexer {
   private lines: string[]
@@ -240,8 +255,25 @@ export class Lexer {
     return match[0]
   }
 
-  matchStringLiteral(): boolean {
-    return this.hasNext() && STRING_LITERAL_REGEX.test(this.currentLine)
+  eatCharacterLiteral(): number {
+    if (!this.hasNext()) {
+      throw new Error(this.formatError('expected a character literal'))
+    }
+    const match = CHARACTER_LITERAL_REGEX.exec(this.currentLine)
+    if (!match) {
+      throw new Error(this.formatError('expected a character literal'))
+    }
+    this.currentLine = this.currentLine.substring(match[0].length)
+    this.col += match[0].length
+    return Lexer.restoreEscapeChars(match[0]).charCodeAt(1)
+  }
+
+  private static restoreEscapeChars(original: string): string {
+    let result = original
+    for (const toReplace in ESCAPE_CHARACTERS) {
+      result = result.replaceAll(toReplace, ESCAPE_CHARACTERS[toReplace])
+    }
+    return result
   }
 
   eatStringLiteral(): string {
@@ -254,7 +286,7 @@ export class Lexer {
     }
     this.currentLine = this.currentLine.substring(match[0].length)
     this.col += match[0].length
-    return match[0]
+    return Lexer.restoreEscapeChars(match[0])
   }
 
   assertEndOfLine() {

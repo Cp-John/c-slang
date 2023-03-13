@@ -158,7 +158,7 @@ export class Expression {
       i++
     }
     const val = result.pop()
-    if (val == undefined || typeof val == 'number' || new Lexer(val).matchStringLiteral()) {
+    if (val == undefined || typeof val == 'number' || new Lexer(val).matchDelimiter('"')) {
       return val
     } else {
       return env.lookup(val)

@@ -35,6 +35,8 @@ export class ExpressionParser {
       lexer.eatDelimiter(')')
     } else if (lexer.matchNumber()) {
       result.push(lexer.eatNumber())
+    } else if (lexer.matchDelimiter("'")) {
+      result.push(lexer.eatCharacterLiteral())
     } else if (lexer.matchDelimiter('"')) {
       result.push(lexer.eatStringLiteral())
     } else if (lexer.matchIncrementDecrementOperator()) {
