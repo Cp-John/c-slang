@@ -57,6 +57,7 @@ export async function sourceRunner(
       context
     })
   } catch (err) {
+    console.log('output:', cProgramContext.stdout)
     context.errors.push(new CRuntimeError(err))
     return resolvedErrorPromise
   }

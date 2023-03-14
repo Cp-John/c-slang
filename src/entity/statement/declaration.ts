@@ -1,6 +1,7 @@
 import { Frame, VariableType } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
+import { Expression } from '../expression/expression'
 import { ExpressionParser } from '../expression/expressionParser'
 import { SelfDefinedFunction } from '../function/selfDefinedFunction'
 import { ExpressionStatement } from './expressionStatement'
@@ -32,16 +33,20 @@ export abstract class Declaration extends Statement {
     firstVariable: string,
     lexer: Lexer
   ): Statement[] {
-    const statements: Statement[] = [new VariableDeclaration(dataType, firstVariable)]
+    const statements: VariableDeclaration[] = [
+      new VariableDeclaration(dataType, firstVariable, null)
+    ]
 
     let declaredVariable = firstVariable
     while (true) {
       if (lexer.matchDelimiter('=')) {
         lexer.eatDelimiter('=')
-        statements.push(
-          new ExpressionStatement(
-            ExpressionParser.parse(env, lexer, false, false, false).assignTo(declaredVariable)
-          )
+        statements[statements.length - 1].expression = ExpressionParser.parse(
+          env,
+          lexer,
+          false,
+          false,
+          false
         )
       }
       if (!lexer.matchDelimiter(',')) {
@@ -49,7 +54,7 @@ export abstract class Declaration extends Statement {
       }
       lexer.eatDelimiter(',')
       declaredVariable = env.declare(lexer, VariableType.NUMBER)
-      statements.push(new VariableDeclaration(dataType, declaredVariable))
+      statements.push(new VariableDeclaration(dataType, declaredVariable, null))
     }
     lexer.eatDelimiter(';')
     return statements
@@ -98,15 +103,20 @@ export abstract class Declaration extends Statement {
 class VariableDeclaration extends Declaration {
   private variableType: string
   private variableName: string
+  expression: Expression | null
 
-  constructor(variableType: string, variableName: string) {
+  constructor(variableType: string, variableName: string, expression: Expression | null) {
     super()
     this.variableType = variableType
     this.variableName = variableName
+    this.expression = expression
   }
 
   execute(env: Frame, rts: any[], context: any): void {
     env.declare(this.variableName, VariableType.NUMBER)
+    if (this.expression != null) {
+      env.assignValue(this.variableName, this.expression.evaluate(env, rts, context))
+    }
   }
 }
 
