@@ -54,6 +54,10 @@ export class Lexer {
     this.skipToNextLine()
   }
 
+  tell(): [number, number] {
+    return [this.row, this.col]
+  }
+
   private trimHead() {
     const spaces = SPACE_REGEX.exec(this.currentLine)
     if (spaces) {
@@ -89,17 +93,17 @@ export class Lexer {
     }
   }
 
-  formatError(msg: string): string {
+  formatError(msg: string, row: number = this.row, col: number = this.col): string {
     return (
       msg +
       ' at (' +
-      this.row +
+      row +
       ', ' +
-      this.col +
+      col +
       ')\n\t' +
-      this.lines[this.row - 1] +
+      this.lines[row - 1] +
       '\n\t' +
-      ' '.repeat(this.col - 1) +
+      ' '.repeat(col - 1) +
       '^'
     )
   }

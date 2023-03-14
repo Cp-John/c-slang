@@ -2,6 +2,41 @@ import { Lexer } from '../../parser/lexer'
 import { Expression, IncrementDecrement, Jump } from './expression'
 import { FunctionCall } from './functionCall'
 
+function assertAddressable(
+  ele: string | number | IncrementDecrement | FunctionCall | Jump,
+  row: number,
+  col: number,
+  lexer: Lexer
+) {
+  if (typeof ele != 'string' || !new Lexer(ele).matchIdentifier()) {
+    throw new Error(lexer.formatError('expression is not addressable', row, col))
+  }
+}
+
+function assertAssignable(
+  ele: string | number | IncrementDecrement | FunctionCall | Jump,
+  row: number,
+  col: number,
+  lexer: Lexer
+) {
+  if (typeof ele != 'string' || !new Lexer(ele).matchIdentifier()) {
+    throw new Error(lexer.formatError('expression is not assignable', row, col))
+  }
+}
+
+function assertNotVoid(
+  ele: string | number | IncrementDecrement | FunctionCall | Jump,
+  row: number,
+  col: number,
+  lexer: Lexer
+) {
+  if (ele instanceof FunctionCall) {
+    throw new Error(
+      lexer.formatError("invalid operands to binary expression ('void' and 'number')", row, col)
+    )
+  }
+}
+
 export class ExpressionParser {
   private static parseActualParameterList(lexer: Lexer): Expression[] {
     const result = []
@@ -26,8 +61,10 @@ export class ExpressionParser {
       this.recurParseNumericTerm(lexer, result)
       result.push('!')
     } else if (lexer.matchDelimiter('&')) {
+      const [row, col] = lexer.tell()
       lexer.eatDelimiter('&')
       this.recurParseNumericTerm(lexer, result)
+      assertAddressable(result[result.length - 1], row, col, lexer)
       result.push('&')
     } else if (lexer.matchDelimiter('(')) {
       lexer.eatDelimiter('(')
@@ -40,11 +77,13 @@ export class ExpressionParser {
     } else if (lexer.matchDelimiter('"')) {
       result.push(lexer.eatStringLiteral())
     } else if (lexer.matchIncrementDecrementOperator()) {
+      const [row, col] = lexer.tell()
       const opr =
         lexer.eatIncrementDecrementOperator() == '++'
           ? IncrementDecrement.PRE_INCREMENT
           : IncrementDecrement.PRE_DECREMENT
       this.recurParseNumericTerm(lexer, result)
+      assertAssignable(result[result.length - 1], row, col, lexer)
       result.push(opr)
     } else {
       result.push(lexer.eatIdentifier())
@@ -68,8 +107,11 @@ export class ExpressionParser {
   ): void {
     this.recurParseNumericTerm(lexer, result)
     while (lexer.matchPrioritizedArithmeticOperator()) {
+      const [row, col] = lexer.tell()
+      assertNotVoid(result[result.length - 1], row, col, lexer)
       const opr = lexer.eatArithmeticOperator()
       this.recurParseNumericTerm(lexer, result)
+      assertNotVoid(result[result.length - 1], row, col, lexer)
       result.push(opr)
     }
   }
@@ -80,8 +122,11 @@ export class ExpressionParser {
   ): void {
     this.recurParsePrioritizedNumericTerm(lexer, result)
     while (lexer.matchArithmeticOperator()) {
+      const [row, col] = lexer.tell()
+      assertNotVoid(result[result.length - 1], row, col, lexer)
       const opr = lexer.eatArithmeticOperator()
       this.recurParsePrioritizedNumericTerm(lexer, result)
+      assertNotVoid(result[result.length - 1], row, col, lexer)
       result.push(opr)
     }
   }
@@ -168,6 +213,8 @@ export class ExpressionParser {
   ): void {
     this.recurParseTernaryExpression(lexer, result)
     if (lexer.matchAssignmentOperator()) {
+      const [row, col] = lexer.tell()
+      assertAssignable(result[result.length - 1], row, col, lexer)
       const opr = lexer.eatAssignmentOperator()
       this.recurParseExpression(lexer, result)
       result.push(opr)
