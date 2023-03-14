@@ -3,7 +3,7 @@ import { Lexer } from '../../parser/lexer'
 import { Statement } from './statement'
 
 export class Break extends Statement {
-  static parse(env: Frame, lexer: Lexer, isInLoop: boolean): Continue[] {
+  static parse(env: Frame, lexer: Lexer, isInLoop: boolean, returnType: string): Continue[] {
     if (!isInLoop) {
       throw new Error(lexer.formatError('break statement not in loop statement'))
     }
@@ -18,7 +18,7 @@ export class Break extends Statement {
 }
 
 export class Continue extends Statement {
-  static parse(env: Frame, lexer: Lexer, isInLoop: boolean): [Continue] {
+  static parse(env: Frame, lexer: Lexer, isInLoop: boolean, returnType: string): [Continue] {
     if (!isInLoop) {
       throw new Error(lexer.formatError('continue statement not in loop statement'))
     }

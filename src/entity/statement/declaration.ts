@@ -55,7 +55,13 @@ export abstract class Declaration extends Statement {
     return statements
   }
 
-  static parse(env: Frame, lexer: Lexer, allowFunctionDeclaration: boolean = false): Statement[] {
+  static parse(
+    env: Frame,
+    lexer: Lexer,
+    isInLoop: boolean,
+    returnType: string,
+    allowFunctionDeclaration: boolean = false
+  ): Statement[] {
     let type
     if (lexer.matchKeyword('void')) {
       type = lexer.eatKeyword('void')
@@ -70,7 +76,7 @@ export abstract class Declaration extends Statement {
       env.markType(identifier, VariableType.FUNCTION)
       const newEnv = Frame.extend(env)
       const formalParameterList = Declaration.parseFormalParameterList(newEnv, lexer)
-      const functionBody = Block.parse(newEnv, lexer, false)
+      const functionBody = Block.parse(newEnv, lexer, false, type)
       env.assignValue(
         identifier,
         new SelfDefinedFunction(type, identifier, formalParameterList, functionBody)

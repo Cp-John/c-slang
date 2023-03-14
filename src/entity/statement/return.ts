@@ -12,9 +12,14 @@ export class Return extends Statement {
     this.expression = expression
   }
 
-  static parse(env: Frame, lexer: Lexer): [Return] {
+  static parse(env: Frame, lexer: Lexer, isInLoop: boolean, returnType: string): [Return] {
     lexer.eatKeyword('return')
     let expression = null
+    if (lexer.matchDelimiter(';') && returnType != 'void') {
+      throw new Error(lexer.formatError('non-void function should return a value'))
+    } else if (!lexer.matchDelimiter(';') && returnType == 'void') {
+      throw new Error(lexer.formatError('void function should not return a value'))
+    }
     if (!lexer.matchDelimiter(';')) {
       expression = ExpressionParser.parse(env, lexer, false, false, false)
     }

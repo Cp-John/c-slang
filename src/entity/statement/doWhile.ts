@@ -15,9 +15,9 @@ export class DoWhile extends Statement {
     this.condition = condition
   }
 
-  static parse(env: Frame, lexer: Lexer): DoWhile[] {
+  static parse(env: Frame, lexer: Lexer, isInLoop: boolean, returnType: string): DoWhile[] {
     lexer.eatKeyword('do')
-    const body = Block.parse(env, lexer, true)
+    const body = Block.parse(env, lexer, true, returnType)
     lexer.eatKeyword('while')
     lexer.eatDelimiter('(')
     const condition = ExpressionParser.parse(env, lexer, false, false, false)
