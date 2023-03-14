@@ -13,6 +13,7 @@ const PRIORITIZED_RELATIONAL_OPERATOR_REGEX = /^>=|^<=|^>|^</
 const ASSIGNMENT_OPERATOR_REGEX = /^\+=|^-=|^\*=|^\/=|^%=|^=/
 
 const RESERVED_KEYWORDS = new Set([
+  'void',
   'int',
   'char',
   'float',
