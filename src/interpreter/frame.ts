@@ -36,6 +36,9 @@ function scanf(env: Frame, rts: Frame[], context: any, args: string[]) {
   let i = 1
   while (i < args.length) {
     const input = prompt(context['stdout'])
+    if (input == null) {
+      throw Error('execution interrupted')
+    }
     const tokens = input?.split(/\s+/)
     for (let j = 0; tokens && j < tokens.length; j++) {
       const variableName = args[i].replaceAll('"', '')
