@@ -155,6 +155,8 @@ export class ExpressionParser {
     }
 
     if (lexer.matchIncrementDecrementOperator()) {
+      const [row, col] = lexer.tell()
+      assertAssignable(result[result.length - 1], env, row, col, lexer)
       result.push(
         lexer.eatIncrementDecrementOperator() == '++'
           ? IncrementDecrement.POST_INCREMENT
