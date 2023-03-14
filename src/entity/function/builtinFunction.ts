@@ -13,6 +13,9 @@ export class BuiltinFunction extends Function {
   call(env: Frame, rts: any[], context: any, actualParameterList: Expression[]): void {
     const realParameterList: (string | number | undefined)[] = []
     actualParameterList.forEach(expr => realParameterList.push(expr.evaluate(env, rts, context)))
-    this.realFunction(env, rts, context, realParameterList)
+    const result = this.realFunction(env, rts, context, realParameterList)
+    if (result != undefined) {
+      rts.push(result)
+    }
   }
 }

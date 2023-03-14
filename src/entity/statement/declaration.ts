@@ -84,6 +84,7 @@ export abstract class Declaration extends Statement {
       } else {
         lexer.eatDelimiter(';')
       }
+      console.log(functionObj.body)
       return [new FunctionDeclaration(type, identifier, formalParameterList, functionObj.body)]
     } else {
       if (type == 'void') {
@@ -134,5 +135,6 @@ export class FunctionDeclaration extends Declaration {
       this.functionName,
       new SelfDefinedFunction(this.returnType, this.functionName, this.parameterList, this.body)
     )
+    console.log(env)
   }
 }

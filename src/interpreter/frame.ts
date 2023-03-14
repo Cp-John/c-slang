@@ -55,11 +55,18 @@ function scanf(env: Frame, rts: any[], context: any, args: string[]) {
   }
 }
 
+function sqrt(env: Frame, rts: any[], context: any, args: string[]): number {
+  return Math.sqrt(parseFloat(args[0]))
+}
+
 const BUILTINS = {
-  printf: new BuiltinFunction('void', 'printf', printf),
-  scanf: new BuiltinFunction('int', 'scanf', scanf),
-  rand: new BuiltinFunction('int', 'rand', rand, 0),
-  time: new BuiltinFunction('int', 'time', time, 0)
+  printf: [new BuiltinFunction('void', 'printf', printf), VariableType.FUNCTION],
+  scanf: [new BuiltinFunction('int', 'scanf', scanf), VariableType.FUNCTION],
+  rand: [new BuiltinFunction('int', 'rand', rand, 0), VariableType.FUNCTION],
+  time: [new BuiltinFunction('int', 'time', time, 0), VariableType.FUNCTION],
+  sqrt: [new BuiltinFunction('float', 'sqrt', sqrt, 1), VariableType.FUNCTION],
+  RAND_MAX: [RAND_MAX, VariableType.NUMBER],
+  MAX_INT: [MAX_INT, VariableType.NUMBER]
 }
 
 export class Frame {
@@ -68,8 +75,8 @@ export class Frame {
 
   private static addBuiltins(frame: Frame): Frame {
     for (const name in BUILTINS) {
-      frame.declare(name, VariableType.FUNCTION)
-      frame.assignValue(name, BUILTINS[name])
+      frame.declare(name, BUILTINS[name][1])
+      frame.assignValue(name, BUILTINS[name][0])
     }
     return frame
   }
@@ -123,7 +130,11 @@ export class Frame {
   }
 
   private isRedefinition(name: string): boolean {
-    return name in this.boundings && (this.boundings[name]['type'] == VariableType.NUMBER || (this.boundings[name]['val'] as SelfDefinedFunction).body != null)
+    return (
+      name in this.boundings &&
+      (this.boundings[name]['type'] == VariableType.NUMBER ||
+        (this.boundings[name]['val'] as SelfDefinedFunction).body != null)
+    )
   }
 
   declare(nameOrLexer: string | Lexer, type: VariableType): string {

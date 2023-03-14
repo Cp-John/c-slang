@@ -3,7 +3,7 @@ import { Expression } from '../expression/expression'
 
 export abstract class Function {
   returnType: string
-  protected functionName: string
+  functionName: string
   arity: number
 
   constructor(returnType: string, functionName: string, arity: number) {
