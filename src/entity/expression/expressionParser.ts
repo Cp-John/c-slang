@@ -155,7 +155,13 @@ export class ExpressionParser {
           this.parseActualParameterList(env, lexer)
         )
         if (!allowVoid && functionCall.getReturnType(env) == 'void') {
-          throw new Error(lexer.formatError("statement requires expression of scalar type ('void' invalid)", row, col))
+          throw new Error(
+            lexer.formatError(
+              "statement requires expression of scalar type ('void' invalid)",
+              row,
+              col
+            )
+          )
         }
         result.push(functionCall)
       }
@@ -330,7 +336,13 @@ export class ExpressionParser {
     }
   }
 
-  static parse(env: Frame, lexer: Lexer, allowStringLiteral: boolean, allowVoid: boolean, isConstantExpression: boolean): Expression {
+  static parse(
+    env: Frame,
+    lexer: Lexer,
+    allowStringLiteral: boolean,
+    allowVoid: boolean,
+    isConstantExpression: boolean
+  ): Expression {
     const result: (string | number | IncrementDecrement | FunctionCall | Jump)[] = []
     if (lexer.matchDelimiter('"') && allowStringLiteral) {
       result.push(lexer.eatStringLiteral())
