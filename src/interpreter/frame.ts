@@ -1,6 +1,8 @@
 import { BuiltinFunction } from '../entity/function/builtinFunction'
+import { SelfDefinedFunction } from '../entity/function/selfDefinedFunction'
 import { Lexer } from '../parser/lexer'
 
+const RAND_MAX = 2147483647
 const MAX_INT = 2147483647
 
 export enum VariableType {
@@ -120,18 +122,22 @@ export class Frame {
     return this.findFrameWith(name).boundings[name]['type']
   }
 
+  private isRedefinition(name: string): boolean {
+    return name in this.boundings && (this.boundings[name]['type'] == VariableType.NUMBER || (this.boundings[name]['val'] as SelfDefinedFunction).body != null)
+  }
+
   declare(nameOrLexer: string | Lexer, type: VariableType): string {
     let name: string
     if (nameOrLexer instanceof Lexer) {
       nameOrLexer.hasNext()
       const [row, col] = nameOrLexer.tell()
       name = nameOrLexer.eatIdentifier()
-      if (name in this.boundings) {
+      if (this.isRedefinition(name)) {
         throw new Error(nameOrLexer.formatError("redefinition of '" + name + "'", row, col))
       }
     } else {
       name = nameOrLexer
-      if (name in this.boundings) {
+      if (this.isRedefinition(name)) {
         throw new Error("redefinition of '" + name + "'")
       }
     }

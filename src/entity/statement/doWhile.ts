@@ -34,7 +34,17 @@ export class DoWhile extends Statement {
 
   execute(env: Frame, rts: any[], context: any): void {
     do {
-      this.body.execute(env, rts, context)
+      try {
+        this.body.execute(env, rts, context)
+      } catch (err: any) {
+        if (err == 'BREAK') {
+          break
+        } else if (err == 'CONTINUE') {
+          continue
+        } else {
+          throw err
+        }
+      }
     } while (this.condition.evaluate(env, rts, context) != 0)
   }
 }

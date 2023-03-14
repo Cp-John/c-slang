@@ -32,7 +32,17 @@ export class While extends Statement {
 
   execute(env: Frame, rts: any[], context: any): void {
     while (this.expression.evaluate(env, rts, context) != 0) {
-      this.body.execute(env, rts, context)
+      try {
+        this.body.execute(env, rts, context)
+      } catch (err: any) {
+        if (err == 'BREAK') {
+          break
+        } else if (err == 'CONTINUE') {
+          continue
+        } else {
+          throw err
+        }
+      }
     }
   }
 }

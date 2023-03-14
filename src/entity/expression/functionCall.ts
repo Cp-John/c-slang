@@ -50,6 +50,12 @@ export class FunctionCall {
   }
 
   execute(env: Frame, rts: any[], context: any): void {
-    this.functionObj.call(env, rts, context, this.actualParameterList)
+    try {
+      this.functionObj.call(env, rts, context, this.actualParameterList)
+    } catch (err: any) {
+      if (err != 'RETURN') {
+        throw err
+      }
+    }
   }
 }

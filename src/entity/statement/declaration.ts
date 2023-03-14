@@ -77,12 +77,14 @@ export abstract class Declaration extends Statement {
       env.markType(identifier, VariableType.FUNCTION)
       const newEnv = Frame.extend(env)
       const formalParameterList = Declaration.parseFormalParameterList(newEnv, lexer)
-      const functionBody = Block.parse(newEnv, lexer, false, false, type)
-      env.assignValue(
-        identifier,
-        new SelfDefinedFunction(type, identifier, formalParameterList, functionBody)
-      )
-      return [new FunctionDeclaration(type, identifier, formalParameterList, functionBody)]
+      const functionObj = new SelfDefinedFunction(type, identifier, formalParameterList, null)
+      env.assignValue(identifier, functionObj)
+      if (lexer.matchDelimiter('{')) {
+        functionObj.body = Block.parse(newEnv, lexer, false, false, type)
+      } else {
+        lexer.eatDelimiter(';')
+      }
+      return [new FunctionDeclaration(type, identifier, formalParameterList, functionObj.body)]
     } else {
       if (type == 'void') {
         throw new Error(lexer.formatError("variable has incomplete type 'void'"))
@@ -111,13 +113,13 @@ export class FunctionDeclaration extends Declaration {
   private returnType: string
   private functionName: string
   private parameterList: [string, string][]
-  private body: Block
+  private body: Block | null
 
   constructor(
     returnType: string,
     functionName: string,
     parameterList: [string, string][],
-    body: Block
+    body: Block | null
   ) {
     super()
     this.returnType = returnType

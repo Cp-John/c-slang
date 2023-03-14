@@ -63,7 +63,17 @@ export class For extends Statement {
     const newEnv = Frame.extend(env)
     this.init.forEach(statement => statement.execute(newEnv, rts, context))
     while (this.condition?.evaluate(newEnv, rts, context) != 0) {
-      this.body.execute(newEnv, rts, context)
+      try {
+        this.body.execute(newEnv, rts, context)
+      } catch (err: any) {
+        if (err == 'BREAK') {
+          break
+        } else if (err == 'CONTINUE') {
+          // do nothing
+        } else {
+          throw err
+        }
+      }
       this.updation?.execute(newEnv, rts, context)
     }
   }

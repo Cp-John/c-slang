@@ -127,6 +127,9 @@ export class Expression {
         }
       } else if (ele instanceof FunctionCall) {
         ele.execute(env, rts, context)
+        if (ele.getReturnType(env) != 'void') {
+          result.push(rts.pop())
+        }
       } else if (typeof ele == 'number') {
         result.push(ele)
       } else if (ele in Expression.INCREMENT_DECREMENT_OPERATORS) {

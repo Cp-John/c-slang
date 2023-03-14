@@ -25,6 +25,12 @@ export class Program {
   execute(context: any): void {
     const frame = Frame.extend(Frame.getBuiltinFrame())
     this.declarations.forEach(declaration => declaration.execute(frame, [], {}))
-    ;(frame.lookup('main') as Function).call(frame, [], context, [])
+    try {
+      ;(frame.lookup('main') as Function).call(frame, [], context, [])
+    } catch (err: any) {
+      if (err != 'RETURN') {
+        throw err
+      }
+    }
   }
 }

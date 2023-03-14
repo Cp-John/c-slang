@@ -69,11 +69,19 @@ export class Switch extends Statement {
     const result = this.expression.evaluate(env, rts, context)
     let matched = false
     for (let i = 0; i < this.body.length; i++) {
-      if (!matched && this.body[i] instanceof Case) {
-        const toMatch = (this.body[i] as Case).evaluate(env, rts, context)
-        matched = result == toMatch
-      } else if (matched && !(this.body[i] instanceof Case)) {
-        ;(this.body[i] as Statement | Block).execute(env, rts, context)
+      try {
+        if (!matched && this.body[i] instanceof Case) {
+          const toMatch = (this.body[i] as Case).evaluate(env, rts, context)
+          matched = result == toMatch
+        } else if (matched && !(this.body[i] instanceof Case)) {
+          ;(this.body[i] as Statement | Block).execute(env, rts, context)
+        }
+      } catch (err: any) {
+        if (err == 'BREAK') {
+          break
+        } else {
+          throw err
+        }
       }
     }
   }

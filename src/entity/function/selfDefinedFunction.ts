@@ -5,13 +5,13 @@ import { Function } from './function'
 
 export class SelfDefinedFunction extends Function {
   private parameterList: [string, string][]
-  private body: Block
+  body: Block | null
 
   constructor(
     returnType: string,
     functionName: string,
     parameterList: [string, string][],
-    body: Block
+    body: Block | null
   ) {
     super(returnType, functionName, parameterList.length)
     this.parameterList = parameterList
@@ -19,6 +19,9 @@ export class SelfDefinedFunction extends Function {
   }
 
   call(env: Frame, rts: any[], context: any, actualParameterList: Expression[]) {
+    if (this.body == null) {
+      throw new Error("function '" + this.functionName + "' has no definition yet")
+    }
     if (actualParameterList.length != this.parameterList.length) {
       throw new Error(
         'expected ' +
