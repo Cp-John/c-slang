@@ -6,14 +6,12 @@ import { ExpressionParser } from '../expression/expressionParser'
 import { Statement } from './statement'
 
 export class ConditionalStatement extends Statement {
-  private expression: Expression
-  private ifBlock: Block
+  private ifBlocks: [Expression, Block][]
   private elseBlock: Block | undefined
 
-  constructor(expression: Expression, ifBlock: Block, elseBlock: Block | undefined) {
+  constructor(ifBlocks: [Expression, Block][], elseBlock: Block | undefined) {
     super()
-    this.expression = expression
-    this.ifBlock = ifBlock
+    this.ifBlocks = ifBlocks
     this.elseBlock = elseBlock
   }
 
@@ -23,23 +21,41 @@ export class ConditionalStatement extends Statement {
     isInLoop: boolean,
     returnType: string
   ): ConditionalStatement[] {
-    lexer.eatKeyword('if')
-    lexer.eatDelimiter('(')
-    const expr = ExpressionParser.parse(env, lexer, false, false, false)
-    lexer.eatDelimiter(')')
-    const ifBlock = Block.parse(env, lexer, isInLoop, returnType)
-    if (!lexer.matchKeyword('else')) {
-      return [new ConditionalStatement(expr, ifBlock, undefined)]
+    const ifBlocks: [Expression, Block][] = []
+    let hasElseBlock = true
+    while (true) {
+      lexer.eatKeyword('if')
+      lexer.eatDelimiter('(')
+      const expr = ExpressionParser.parse(env, lexer, false, false, false)
+      lexer.eatDelimiter(')')
+      const ifBlock = Block.parse(env, lexer, isInLoop, returnType)
+      ifBlocks.push([expr, ifBlock])
+      if (!lexer.matchKeyword('else')) {
+        hasElseBlock = false
+        break
+      }
+      lexer.eatKeyword('else')
+      if (!lexer.matchKeyword('if')) {
+        break
+      }
     }
-    lexer.eatKeyword('else')
-    const elseBlock = Block.parse(env, lexer, isInLoop, returnType)
-    return [new ConditionalStatement(expr, ifBlock, elseBlock)]
+    let elseBlock = undefined
+    if (hasElseBlock) {
+      elseBlock = Block.parse(env, lexer, isInLoop, returnType)
+    }
+    return [new ConditionalStatement(ifBlocks, elseBlock)]
   }
 
   execute(env: Frame, rts: Frame[], context: any): void {
-    if (this.expression.evaluate(env, rts, context) != 0) {
-      this.ifBlock.execute(env, rts, context)
-    } else {
+    let executed = false
+    for (const [expr, body] of this.ifBlocks) {
+      if (expr.evaluate(env, rts, context) != 0) {
+        body.execute(env, rts, context)
+        executed = true
+        break
+      }
+    }
+    if (!executed) {
       this.elseBlock?.execute(env, rts, context)
     }
   }
