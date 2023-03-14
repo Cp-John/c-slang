@@ -18,7 +18,8 @@ export class ConditionalStatement extends Statement {
   static parse(
     env: Frame,
     lexer: Lexer,
-    isInLoop: boolean,
+    allowBreak: boolean,
+    allowContinue: boolean,
     returnType: string
   ): ConditionalStatement[] {
     const ifBlocks: [Expression, Block][] = []
@@ -28,7 +29,7 @@ export class ConditionalStatement extends Statement {
       lexer.eatDelimiter('(')
       const expr = ExpressionParser.parse(env, lexer, false, false, false)
       lexer.eatDelimiter(')')
-      const ifBlock = Block.parse(env, lexer, isInLoop, returnType)
+      const ifBlock = Block.parse(env, lexer, allowBreak, allowContinue, returnType)
       ifBlocks.push([expr, ifBlock])
       if (!lexer.matchKeyword('else')) {
         hasElseBlock = false
@@ -41,12 +42,12 @@ export class ConditionalStatement extends Statement {
     }
     let elseBlock = undefined
     if (hasElseBlock) {
-      elseBlock = Block.parse(env, lexer, isInLoop, returnType)
+      elseBlock = Block.parse(env, lexer, allowBreak, allowContinue, returnType)
     }
     return [new ConditionalStatement(ifBlocks, elseBlock)]
   }
 
-  execute(env: Frame, rts: Frame[], context: any): void {
+  execute(env: Frame, rts: any[], context: any): void {
     let executed = false
     for (const [expr, body] of this.ifBlocks) {
       if (expr.evaluate(env, rts, context) != 0) {

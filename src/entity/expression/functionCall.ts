@@ -49,7 +49,7 @@ export class FunctionCall {
     return this.functionObj.returnType
   }
 
-  execute(env: Frame, rts: Frame[], context: any): void {
+  execute(env: Frame, rts: any[], context: any): void {
     this.functionObj.call(env, rts, context, this.actualParameterList)
   }
 }

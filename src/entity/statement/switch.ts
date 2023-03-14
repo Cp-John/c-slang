@@ -34,7 +34,13 @@ export class Switch extends Statement {
     this.body = body
   }
 
-  static parse(env: Frame, lexer: Lexer, isInLoop: boolean, returnType: string): Switch[] {
+  static parse(
+    env: Frame,
+    lexer: Lexer,
+    allowBreak: boolean,
+    allowContinue: boolean,
+    returnType: string
+  ): Switch[] {
     lexer.eatKeyword('switch')
     lexer.eatDelimiter('(')
     const expression = ExpressionParser.parse(env, lexer, false, false, false)
@@ -46,11 +52,13 @@ export class Switch extends Statement {
         body.push(Case.parse(env, lexer))
       }
       if (lexer.matchDelimiter('{')) {
-        body.push(Block.parse(env, lexer, true, returnType))
+        body.push(Block.parse(env, lexer, true, false, returnType))
       } else if (lexer.matchDataType()) {
         throw new Error(lexer.formatError('expected an expression'))
       } else {
-        Statement.parse(env, lexer, true, returnType).forEach(statement => body.push(statement))
+        Statement.parse(env, lexer, true, false, returnType).forEach(statement =>
+          body.push(statement)
+        )
       }
     }
     lexer.eatDelimiter('}')

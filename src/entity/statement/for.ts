@@ -26,14 +26,20 @@ export class For extends Statement {
     this.body = body
   }
 
-  static parse(env: Frame, lexer: Lexer, isInLoop: boolean, returnType: string): For[] {
+  static parse(
+    env: Frame,
+    lexer: Lexer,
+    allowBreak: boolean,
+    allowContinue: boolean,
+    returnType: string
+  ): For[] {
     const forStatement = new For([], null, null, new Block([]))
     lexer.eatKeyword('for')
     lexer.eatDelimiter('(')
     if (lexer.matchDelimiter(';')) {
       lexer.eatDelimiter(';')
     } else if (lexer.matchDataType()) {
-      Declaration.parse(env, lexer, false, returnType, false).forEach(statement =>
+      Declaration.parse(env, lexer, false, false, returnType, false).forEach(statement =>
         forStatement.init.push(statement)
       )
     } else {
@@ -49,11 +55,11 @@ export class For extends Statement {
       )
     }
     lexer.eatDelimiter(')')
-    forStatement.body = Block.parse(env, lexer, true, returnType)
+    forStatement.body = Block.parse(env, lexer, true, true, returnType)
     return [forStatement]
   }
 
-  execute(env: Frame, rts: Frame[], context: any): void {
+  execute(env: Frame, rts: any[], context: any): void {
     const newEnv = Frame.extend(env)
     this.init.forEach(statement => statement.execute(newEnv, rts, context))
     while (this.condition?.evaluate(newEnv, rts, context) != 0) {

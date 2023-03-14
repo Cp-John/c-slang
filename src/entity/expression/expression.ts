@@ -105,7 +105,7 @@ export class Expression {
     return val
   }
 
-  evaluate(env: Frame, rts: Frame[], context: any): number | string | undefined {
+  evaluate(env: Frame, rts: any[], context: any): number | string | undefined {
     const result: (number | string)[] = []
     let i = 0
     while (i < this.elements.length) {

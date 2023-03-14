@@ -1,29 +1,35 @@
 export abstract class Statement {
-  static parse(env: Frame, lexer: Lexer, isInLoop: boolean, returnType: string): Statement[] {
+  static parse(
+    env: Frame,
+    lexer: Lexer,
+    allowBreak: boolean,
+    allowContinue: boolean,
+    returnType: string
+  ): Statement[] {
     if (lexer.matchKeyword('if')) {
-      return ConditionalStatement.parse(env, lexer, isInLoop, returnType)
+      return ConditionalStatement.parse(env, lexer, allowBreak, allowContinue, returnType)
     } else if (lexer.matchKeyword('do')) {
-      return DoWhile.parse(env, lexer, isInLoop, returnType)
+      return DoWhile.parse(env, lexer, allowBreak, allowContinue, returnType)
     } else if (lexer.matchKeyword('while')) {
-      return While.parse(env, lexer, isInLoop, returnType)
+      return While.parse(env, lexer, allowBreak, allowContinue, returnType)
     } else if (lexer.matchKeyword('for')) {
-      return For.parse(env, lexer, isInLoop, returnType)
+      return For.parse(env, lexer, allowBreak, allowContinue, returnType)
     } else if (lexer.matchKeyword('switch')) {
-      return Switch.parse(env, lexer, isInLoop, returnType)
+      return Switch.parse(env, lexer, allowBreak, allowContinue, returnType)
     } else if (lexer.matchKeyword('return')) {
-      return Return.parse(env, lexer, isInLoop, returnType)
+      return Return.parse(env, lexer, allowBreak, allowContinue, returnType)
     } else if (lexer.matchKeyword('continue')) {
-      return Continue.parse(env, lexer, isInLoop, returnType)
+      return Continue.parse(env, lexer, allowBreak, allowContinue, returnType)
     } else if (lexer.matchKeyword('break')) {
-      return Break.parse(env, lexer, isInLoop, returnType)
+      return Break.parse(env, lexer, allowBreak, allowContinue, returnType)
     } else if (lexer.matchDataType()) {
-      return Declaration.parse(env, lexer, isInLoop, returnType, false)
+      return Declaration.parse(env, lexer, allowBreak, allowContinue, returnType, false)
     } else {
       return ExpressionStatement.parse(env, lexer)
     }
   }
 
-  abstract execute(env: Frame, rts: Frame[], context: any): void
+  abstract execute(env: Frame, rts: any[], context: any): void
 }
 
 import { Frame } from '../../interpreter/frame'

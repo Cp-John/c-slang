@@ -9,15 +9,21 @@ export class Block {
     this.content = content
   }
 
-  static parse(env: Frame, lexer: Lexer, isInLoop: boolean, returnType: string): Block {
+  static parse(
+    env: Frame,
+    lexer: Lexer,
+    allowBreak: boolean,
+    allowContinue: boolean,
+    returnType: string
+  ): Block {
     lexer.eatDelimiter('{')
     const content: (Block | Statement)[] = []
     const newEnv = Frame.extend(env)
     while (!lexer.matchDelimiter('}')) {
       if (lexer.matchDelimiter('{')) {
-        content.push(Block.parse(newEnv, lexer, isInLoop, returnType))
+        content.push(Block.parse(newEnv, lexer, allowBreak, allowContinue, returnType))
       } else {
-        Statement.parse(newEnv, lexer, isInLoop, returnType).forEach(statement =>
+        Statement.parse(newEnv, lexer, allowBreak, allowContinue, returnType).forEach(statement =>
           content.push(statement)
         )
       }
@@ -26,7 +32,7 @@ export class Block {
     return new Block(content)
   }
 
-  execute(env: Frame, rts: Frame[], context: any): void {
+  execute(env: Frame, rts: any[], context: any): void {
     const newEnv = Frame.extend(env)
     this.content.forEach(executable => executable.execute(newEnv, rts, context))
   }

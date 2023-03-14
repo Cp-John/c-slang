@@ -3,8 +3,14 @@ import { Lexer } from '../../parser/lexer'
 import { Statement } from './statement'
 
 export class Break extends Statement {
-  static parse(env: Frame, lexer: Lexer, isInLoop: boolean, returnType: string): Continue[] {
-    if (!isInLoop) {
+  static parse(
+    env: Frame,
+    lexer: Lexer,
+    allowBreak: boolean,
+    allowContinue: boolean,
+    returnType: string
+  ): Continue[] {
+    if (!allowBreak) {
       throw new Error(lexer.formatError('break statement not in loop statement'))
     }
     lexer.eatKeyword('break')
@@ -12,14 +18,20 @@ export class Break extends Statement {
     return [new Break()]
   }
 
-  execute(env: Frame, rts: Frame[], context: any): void {
-    throw new Error('Method not implemented.')
+  execute(env: Frame, rts: any[], context: any): void {
+    throw 'BREAK'
   }
 }
 
 export class Continue extends Statement {
-  static parse(env: Frame, lexer: Lexer, isInLoop: boolean, returnType: string): [Continue] {
-    if (!isInLoop) {
+  static parse(
+    env: Frame,
+    lexer: Lexer,
+    allowBreak: boolean,
+    allowContinue: boolean,
+    returnType: string
+  ): [Continue] {
+    if (!allowContinue) {
       throw new Error(lexer.formatError('continue statement not in loop statement'))
     }
     lexer.eatKeyword('continue')
@@ -27,7 +39,7 @@ export class Continue extends Statement {
     return [new Continue()]
   }
 
-  execute(env: Frame, rts: Frame[], context: any): void {
-    throw new Error('Method not implemented.')
+  execute(env: Frame, rts: any[], context: any): void {
+    throw 'CONTINUE'
   }
 }

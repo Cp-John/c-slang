@@ -8,15 +8,15 @@ export enum VariableType {
   FUNCTION
 }
 
-function rand(env: Frame, rts: Frame[], context: any, args: (string | number)[]): number {
+function rand(env: Frame, rts: any[], context: any, args: (string | number)[]): number {
   return Math.floor(Math.random() * MAX_INT)
 }
 
-function time(env: Frame, rts: Frame[], context: any, args: (string | number)[]): number {
+function time(env: Frame, rts: any[], context: any, args: (string | number)[]): number {
   return Math.floor(Date.now() / 1000)
 }
 
-function printf(env: Frame, rts: Frame[], context: any, args: (string | number)[]) {
+function printf(env: Frame, rts: any[], context: any, args: (string | number)[]) {
   let outputString = args[0] as string
   outputString = outputString.substring(1, outputString.length - 1)
   const regex = /%d|%f|%lf/
@@ -32,7 +32,7 @@ function printf(env: Frame, rts: Frame[], context: any, args: (string | number)[
   context['stdout'] += outputString
 }
 
-function scanf(env: Frame, rts: Frame[], context: any, args: string[]) {
+function scanf(env: Frame, rts: any[], context: any, args: string[]) {
   let i = 1
   while (i < args.length) {
     const input = prompt(context['stdout'])

@@ -18,7 +18,7 @@ export class SelfDefinedFunction extends Function {
     this.body = body
   }
 
-  call(env: Frame, rts: Frame[], context: any, actualParameterList: Expression[]) {
+  call(env: Frame, rts: any[], context: any, actualParameterList: Expression[]) {
     if (actualParameterList.length != this.parameterList.length) {
       throw new Error(
         'expected ' +

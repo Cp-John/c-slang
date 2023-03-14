@@ -12,7 +12,13 @@ export class Return extends Statement {
     this.expression = expression
   }
 
-  static parse(env: Frame, lexer: Lexer, isInLoop: boolean, returnType: string): [Return] {
+  static parse(
+    env: Frame,
+    lexer: Lexer,
+    allowBreak: boolean,
+    allowContinue: boolean,
+    returnType: string
+  ): [Return] {
     lexer.eatKeyword('return')
     let expression = null
     if (lexer.matchDelimiter(';') && returnType != 'void') {
@@ -27,7 +33,10 @@ export class Return extends Statement {
     return [new Return(expression)]
   }
 
-  execute(env: Frame, rts: Frame[], context: any): void {
-    this.expression?.evaluate(env, rts, context)
+  execute(env: Frame, rts: any[], context: any): void {
+    if (this.expression != null) {
+      rts.push(this.expression.evaluate(env, rts, context))
+    }
+    throw 'RETURN'
   }
 }

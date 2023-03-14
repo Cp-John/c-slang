@@ -15,7 +15,7 @@ export class Program {
     const declarations: Statement[] = []
     const frame = Frame.extend(Frame.getBuiltinFrame())
     while (lexer.hasNext()) {
-      Declaration.parse(frame, lexer, false, '', true).forEach(declaration =>
+      Declaration.parse(frame, lexer, false, false, '', true).forEach(declaration =>
         declarations.push(declaration)
       )
     }

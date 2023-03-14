@@ -15,16 +15,22 @@ export class While extends Statement {
     this.body = body
   }
 
-  static parse(env: Frame, lexer: Lexer, isInLoop: boolean, returnType: string): While[] {
+  static parse(
+    env: Frame,
+    lexer: Lexer,
+    allowBreak: boolean,
+    allowContinue: boolean,
+    returnType: string
+  ): While[] {
     lexer.eatKeyword('while')
     lexer.eatDelimiter('(')
     const expression = ExpressionParser.parse(env, lexer, false, false, false)
     lexer.eatDelimiter(')')
-    const body = Block.parse(env, lexer, true, returnType)
+    const body = Block.parse(env, lexer, true, true, returnType)
     return [new While(expression, body)]
   }
 
-  execute(env: Frame, rts: Frame[], context: any): void {
+  execute(env: Frame, rts: any[], context: any): void {
     while (this.expression.evaluate(env, rts, context) != 0) {
       this.body.execute(env, rts, context)
     }

@@ -58,7 +58,8 @@ export abstract class Declaration extends Statement {
   static parse(
     env: Frame,
     lexer: Lexer,
-    isInLoop: boolean,
+    allowBreak: boolean,
+    allowContinue: boolean,
     returnType: string,
     allowFunctionDeclaration: boolean = false
   ): Statement[] {
@@ -76,7 +77,7 @@ export abstract class Declaration extends Statement {
       env.markType(identifier, VariableType.FUNCTION)
       const newEnv = Frame.extend(env)
       const formalParameterList = Declaration.parseFormalParameterList(newEnv, lexer)
-      const functionBody = Block.parse(newEnv, lexer, false, type)
+      const functionBody = Block.parse(newEnv, lexer, false, false, type)
       env.assignValue(
         identifier,
         new SelfDefinedFunction(type, identifier, formalParameterList, functionBody)
@@ -101,7 +102,7 @@ class VariableDeclaration extends Declaration {
     this.variableName = variableName
   }
 
-  execute(env: Frame, rts: Frame[], context: any): void {
+  execute(env: Frame, rts: any[], context: any): void {
     env.declare(this.variableName, VariableType.NUMBER)
   }
 }
@@ -125,7 +126,7 @@ export class FunctionDeclaration extends Declaration {
     this.body = body
   }
 
-  execute(env: Frame, rts: Frame[], context: any): void {
+  execute(env: Frame, rts: any[], context: any): void {
     env.declare(this.functionName, VariableType.FUNCTION)
     env.assignValue(
       this.functionName,

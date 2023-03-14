@@ -12,5 +12,5 @@ export abstract class Function {
     this.arity = arity
   }
 
-  abstract call(env: Frame, rts: Frame[], context: any, actualParameterList: Expression[]): void
+  abstract call(env: Frame, rts: any[], context: any, actualParameterList: Expression[]): void
 }

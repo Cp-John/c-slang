@@ -15,9 +15,15 @@ export class DoWhile extends Statement {
     this.condition = condition
   }
 
-  static parse(env: Frame, lexer: Lexer, isInLoop: boolean, returnType: string): DoWhile[] {
+  static parse(
+    env: Frame,
+    lexer: Lexer,
+    allowBreak: boolean,
+    allowContinue: boolean,
+    returnType: string
+  ): DoWhile[] {
     lexer.eatKeyword('do')
-    const body = Block.parse(env, lexer, true, returnType)
+    const body = Block.parse(env, lexer, true, true, returnType)
     lexer.eatKeyword('while')
     lexer.eatDelimiter('(')
     const condition = ExpressionParser.parse(env, lexer, false, false, false)
@@ -26,7 +32,7 @@ export class DoWhile extends Statement {
     return [new DoWhile(body, condition)]
   }
 
-  execute(env: Frame, rts: Frame[], context: any): void {
+  execute(env: Frame, rts: any[], context: any): void {
     do {
       this.body.execute(env, rts, context)
     } while (this.condition.evaluate(env, rts, context) != 0)
