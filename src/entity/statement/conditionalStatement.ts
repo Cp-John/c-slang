@@ -17,17 +17,17 @@ export class ConditionalStatement extends Statement {
     this.elseBlock = elseBlock
   }
 
-  static parse(lexer: Lexer, isInLoop: boolean): ConditionalStatement[] {
+  static parse(env: Frame, lexer: Lexer, isInLoop: boolean): ConditionalStatement[] {
     lexer.eatKeyword('if')
     lexer.eatDelimiter('(')
-    const expr = ExpressionParser.parse(lexer)
+    const expr = ExpressionParser.parse(env, lexer)
     lexer.eatDelimiter(')')
-    const ifBlock = Block.parse(lexer, isInLoop)
+    const ifBlock = Block.parse(env, lexer, isInLoop)
     if (!lexer.matchKeyword('else')) {
       return [new ConditionalStatement(expr, ifBlock, undefined)]
     }
     lexer.eatKeyword('else')
-    const elseBlock = Block.parse(lexer, isInLoop)
+    const elseBlock = Block.parse(env, lexer, isInLoop)
     return [new ConditionalStatement(expr, ifBlock, elseBlock)]
   }
 

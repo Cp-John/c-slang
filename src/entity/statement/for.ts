@@ -26,26 +26,26 @@ export class For extends Statement {
     this.body = body
   }
 
-  static parse(lexer: Lexer): For[] {
+  static parse(env: Frame, lexer: Lexer): For[] {
     const forStatement = new For([], null, null, new Block([]))
     lexer.eatKeyword('for')
     lexer.eatDelimiter('(')
     if (lexer.matchDelimiter(';')) {
       lexer.eatDelimiter(';')
     } else if (lexer.matchDataType()) {
-      Declaration.parse(lexer).forEach(statement => forStatement.init.push(statement))
+      Declaration.parse(env, lexer).forEach(statement => forStatement.init.push(statement))
     } else {
-      ExpressionStatement.parse(lexer).forEach(statement => forStatement.init.push(statement))
+      ExpressionStatement.parse(env, lexer).forEach(statement => forStatement.init.push(statement))
     }
     if (!lexer.matchDelimiter(';')) {
-      forStatement.condition = ExpressionParser.parse(lexer)
+      forStatement.condition = ExpressionParser.parse(env, lexer)
     }
     lexer.eatDelimiter(';')
     if (!lexer.matchDelimiter(')')) {
-      forStatement.updation = new ExpressionStatement(ExpressionParser.parse(lexer))
+      forStatement.updation = new ExpressionStatement(ExpressionParser.parse(env, lexer))
     }
     lexer.eatDelimiter(')')
-    forStatement.body = Block.parse(lexer, true)
+    forStatement.body = Block.parse(env, lexer, true)
     return [forStatement]
   }
 

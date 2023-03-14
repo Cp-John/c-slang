@@ -5,8 +5,8 @@ import { Function } from './function'
 export class BuiltinFunction extends Function {
   realFunction
 
-  constructor(returnType: string, functionName: string, realFunction: any) {
-    super(returnType, functionName)
+  constructor(returnType: string, functionName: string, realFunction: any, arity: number = -1) {
+    super(returnType, functionName, arity)
     this.realFunction = realFunction
   }
 

@@ -12,11 +12,11 @@ export class Return extends Statement {
     this.expression = expression
   }
 
-  static parse(lexer: Lexer): [Return] {
+  static parse(env: Frame, lexer: Lexer): [Return] {
     lexer.eatKeyword('return')
     let expression = null
     if (!lexer.matchDelimiter(';')) {
-      expression = ExpressionParser.parse(lexer)
+      expression = ExpressionParser.parse(env, lexer)
     }
     lexer.eatDelimiter(';')
     return [new Return(expression)]

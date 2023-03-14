@@ -1,6 +1,12 @@
 import { BuiltinFunction } from '../entity/function/builtinFunction'
+import { Lexer } from '../parser/lexer'
 
 const MAX_INT = 2147483647
+
+export enum VariableType {
+  NUMBER,
+  FUNCTION
+}
 
 function rand(env: Frame, rts: Frame[], context: any, args: (string | number)[]): number {
   return Math.floor(Math.random() * MAX_INT)
@@ -47,8 +53,8 @@ function scanf(env: Frame, rts: Frame[], context: any, args: string[]) {
 const BUILTINS = {
   printf: new BuiltinFunction('void', 'printf', printf),
   scanf: new BuiltinFunction('int', 'scanf', scanf),
-  rand: new BuiltinFunction('int', 'rand', rand),
-  time: new BuiltinFunction('int', 'time', time)
+  rand: new BuiltinFunction('int', 'rand', rand, 0),
+  time: new BuiltinFunction('int', 'time', time, 0)
 }
 
 export class Frame {
@@ -57,13 +63,13 @@ export class Frame {
 
   private static addBuiltins(frame: Frame): Frame {
     for (const name in BUILTINS) {
-      frame.declare(name)
+      frame.declare(name, VariableType.FUNCTION)
       frame.assignValue(name, BUILTINS[name])
     }
     return frame
   }
 
-  static createNewFrame(): Frame {
+  static getBuiltinFrame(): Frame {
     return Frame.addBuiltins(new Frame(null))
   }
 
@@ -72,7 +78,7 @@ export class Frame {
     this.prev = prev
   }
 
-  private findFrameWith(name: string): Frame {
+  private getFrameWithName(name: string): Frame | null {
     if (name in this.boundings) {
       return this
     }
@@ -80,29 +86,58 @@ export class Frame {
     while (currentFrame != null && !(name in currentFrame.boundings)) {
       currentFrame = currentFrame.prev
     }
-    if (currentFrame == null) {
+    return currentFrame
+  }
+
+  private findFrameWith(name: string): Frame {
+    const frame = this.getFrameWithName(name)
+    if (frame == null) {
       throw new Error('undeclared symbol: ' + name)
     }
-    return currentFrame
+    return frame
+  }
+
+  isDeclared(name: string): boolean {
+    return this.getFrameWithName(name) != null
   }
 
   lookup(name: string) {
     const frame = this.findFrameWith(name)
-    if (frame.boundings[name] == undefined) {
+    if (frame.boundings[name]['val'] == undefined) {
       throw new Error('unbounded identifier: ' + name)
     }
-    return frame.boundings[name]
+    return frame.boundings[name]['val']
   }
 
-  declare(name: string) {
-    if (name in this.boundings) {
-      throw new Error('redefinition of ' + name)
+  markType(name: string, type: VariableType) {
+    this.findFrameWith(name).boundings[name]['type'] = type
+  }
+
+  lookupType(name: string): VariableType {
+    return this.findFrameWith(name).boundings[name]['type']
+  }
+
+  declare(nameOrLexer: string | Lexer, type: VariableType): string {
+    let name: string
+    if (nameOrLexer instanceof Lexer) {
+      nameOrLexer.hasNext()
+      const [row, col] = nameOrLexer.tell()
+      name = nameOrLexer.eatIdentifier()
+      if (name in this.boundings) {
+        throw new Error(nameOrLexer.formatError("redefinition of '" + name + "'", row, col))
+      }
+    } else {
+      name = nameOrLexer
+      if (name in this.boundings) {
+        throw new Error("redefinition of '" + name + "'")
+      }
     }
-    this.boundings[name] = undefined
+    this.boundings[name] = { type: type, val: undefined }
+    return name
   }
 
   assignValue(name: string, val: any): any {
-    this.findFrameWith(name).boundings[name] = val
+    this.findFrameWith(name).boundings[name]['val'] = val
     return val
   }
 

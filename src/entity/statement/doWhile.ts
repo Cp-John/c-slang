@@ -15,12 +15,12 @@ export class DoWhile extends Statement {
     this.condition = condition
   }
 
-  static parse(lexer: Lexer): DoWhile[] {
+  static parse(env: Frame, lexer: Lexer): DoWhile[] {
     lexer.eatKeyword('do')
-    const body = Block.parse(lexer, true)
+    const body = Block.parse(env, lexer, true)
     lexer.eatKeyword('while')
     lexer.eatDelimiter('(')
-    const condition = ExpressionParser.parse(lexer)
+    const condition = ExpressionParser.parse(env, lexer)
     lexer.eatDelimiter(')')
     lexer.eatDelimiter(';')
     return [new DoWhile(body, condition)]

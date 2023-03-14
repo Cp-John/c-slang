@@ -9,14 +9,15 @@ export class Block {
     this.content = content
   }
 
-  static parse(lexer: Lexer, isInLoop: boolean): Block {
+  static parse(env: Frame, lexer: Lexer, isInLoop: boolean): Block {
     lexer.eatDelimiter('{')
     const content: (Block | Statement)[] = []
+    const newEnv = Frame.extend(env)
     while (!lexer.matchDelimiter('}')) {
       if (lexer.matchDelimiter('{')) {
-        content.push(Block.parse(lexer, isInLoop))
+        content.push(Block.parse(newEnv, lexer, isInLoop))
       } else {
-        Statement.parse(lexer, isInLoop).forEach(statement => content.push(statement))
+        Statement.parse(newEnv, lexer, isInLoop).forEach(statement => content.push(statement))
       }
     }
     lexer.eatDelimiter('}')

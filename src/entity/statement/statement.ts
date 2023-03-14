@@ -1,23 +1,23 @@
 export abstract class Statement {
-  static parse(lexer: Lexer, isInLoop: boolean = false): Statement[] {
+  static parse(env: Frame, lexer: Lexer, isInLoop: boolean = false): Statement[] {
     if (lexer.matchKeyword('if')) {
-      return ConditionalStatement.parse(lexer, isInLoop)
+      return ConditionalStatement.parse(env, lexer, isInLoop)
     } else if (lexer.matchKeyword('do')) {
-      return DoWhile.parse(lexer)
+      return DoWhile.parse(env, lexer)
     } else if (lexer.matchKeyword('while')) {
-      return While.parse(lexer)
+      return While.parse(env, lexer)
     } else if (lexer.matchKeyword('for')) {
-      return For.parse(lexer)
+      return For.parse(env, lexer)
     } else if (lexer.matchKeyword('return')) {
-      return Return.parse(lexer)
+      return Return.parse(env, lexer)
     } else if (lexer.matchKeyword('continue')) {
-      return Continue.parse(lexer, isInLoop)
+      return Continue.parse(env, lexer, isInLoop)
     } else if (lexer.matchKeyword('break')) {
-      return Break.parse(lexer, isInLoop)
+      return Break.parse(env, lexer, isInLoop)
     } else if (lexer.matchDataType()) {
-      return Declaration.parse(lexer)
+      return Declaration.parse(env, lexer)
     } else {
-      return ExpressionStatement.parse(lexer)
+      return ExpressionStatement.parse(env, lexer)
     }
   }
 

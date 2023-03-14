@@ -1,4 +1,4 @@
-import { Frame } from '../../interpreter/frame'
+import { Frame, VariableType } from '../../interpreter/frame'
 import { Block } from '../block'
 import { Expression } from '../expression/expression'
 import { Function } from './function'
@@ -13,7 +13,7 @@ export class SelfDefinedFunction extends Function {
     parameterList: [string, string][],
     body: Block
   ) {
-    super(returnType, functionName)
+    super(returnType, functionName, parameterList.length)
     this.parameterList = parameterList
     this.body = body
   }
@@ -28,7 +28,7 @@ export class SelfDefinedFunction extends Function {
       )
     }
     const newEnv = Frame.extend(env)
-    this.parameterList.forEach(pair => newEnv.declare(pair[1]))
+    this.parameterList.forEach(pair => newEnv.declare(pair[1], VariableType.NUMBER))
     actualParameterList.forEach((expr, index) =>
       newEnv.assignValue(this.parameterList[index][1], expr.evaluate(env, rts, context))
     )

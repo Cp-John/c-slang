@@ -16,8 +16,8 @@ export class ExpressionStatement extends Statement {
     this.expression.evaluate(env, rts, context)
   }
 
-  static parse(lexer: Lexer) {
-    const expressionStatement = new ExpressionStatement(ExpressionParser.parse(lexer))
+  static parse(env: Frame, lexer: Lexer) {
+    const expressionStatement = new ExpressionStatement(ExpressionParser.parse(env, lexer))
     lexer.eatDelimiter(';')
     return [expressionStatement]
   }

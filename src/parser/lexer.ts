@@ -1,3 +1,5 @@
+import { Frame } from '../interpreter/frame'
+
 const PREPROCESSOR_DIRECTIVEG = /^\s*#\s*include\b|^\s*#\s*define\b/
 const NUMBER_REGEX = /^[+-]?([0-9]*[.])?[0-9]+/
 const IDENTIFIER_REGEX = /^[_a-zA-Z][_a-zA-Z0-9]*/

@@ -13,14 +13,15 @@ export class Program {
 
   static parse(lexer: Lexer): Program {
     const declarations: Statement[] = []
+    const frame = Frame.extend(Frame.getBuiltinFrame())
     while (lexer.hasNext()) {
-      Declaration.parse(lexer, true).forEach(declaration => declarations.push(declaration))
+      Declaration.parse(frame, lexer, true).forEach(declaration => declarations.push(declaration))
     }
     return new Program(declarations)
   }
 
   execute(context: any): void {
-    const frame = Frame.createNewFrame()
+    const frame = Frame.extend(Frame.getBuiltinFrame())
     this.declarations.forEach(declaration => declaration.execute(frame, [], {}))
     ;(frame.lookup('main') as Function).call(frame, [], context, [])
   }
