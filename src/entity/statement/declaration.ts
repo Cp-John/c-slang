@@ -39,7 +39,9 @@ export abstract class Declaration extends Statement {
       if (lexer.matchDelimiter('=')) {
         lexer.eatDelimiter('=')
         statements.push(
-          new ExpressionStatement(ExpressionParser.parse(env, lexer).assignTo(declaredVariable))
+          new ExpressionStatement(
+            ExpressionParser.parse(env, lexer, false, false, false).assignTo(declaredVariable)
+          )
         )
       }
       if (!lexer.matchDelimiter(',')) {

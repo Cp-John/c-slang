@@ -8,6 +8,8 @@ export abstract class Statement {
       return While.parse(env, lexer)
     } else if (lexer.matchKeyword('for')) {
       return For.parse(env, lexer)
+    } else if (lexer.matchKeyword('switch')) {
+      return Switch.parse(env, lexer)
     } else if (lexer.matchKeyword('return')) {
       return Return.parse(env, lexer)
     } else if (lexer.matchKeyword('continue')) {
@@ -33,4 +35,5 @@ import { ExpressionStatement } from './expressionStatement'
 import { For } from './for'
 import { Return } from './return'
 import { Break, Continue } from './simpleStatement'
+import { Switch } from './switch'
 import { While } from './while'

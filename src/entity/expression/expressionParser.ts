@@ -1,6 +1,5 @@
 import { Frame, VariableType } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
-import { Function } from '../function/function'
 import { Expression, IncrementDecrement, Jump } from './expression'
 import { FunctionCall } from './functionCall'
 
@@ -90,11 +89,11 @@ export class ExpressionParser {
     const result = []
     lexer.eatDelimiter('(')
     if (!lexer.matchDelimiter(')')) {
-      result.push(ExpressionParser.parse(env, lexer))
+      result.push(ExpressionParser.parse(env, lexer, true, false, false))
     }
     while (!lexer.matchDelimiter(')')) {
       lexer.eatDelimiter(',')
-      result.push(ExpressionParser.parse(env, lexer))
+      result.push(ExpressionParser.parse(env, lexer, true, false, false))
     }
     lexer.eatDelimiter(')')
     return result
@@ -103,54 +102,62 @@ export class ExpressionParser {
   private static recurParseNumericTerm(
     env: Frame,
     lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
+    result: (string | number | IncrementDecrement | FunctionCall | Jump)[],
+    allowVoid: boolean,
+    isConstantExpression: boolean
   ): void {
     if (lexer.matchDelimiter('!')) {
       lexer.eatDelimiter('!')
-      this.recurParseNumericTerm(env, lexer, result)
+      this.recurParseNumericTerm(env, lexer, result, allowVoid, isConstantExpression)
       result.push('!')
     } else if (lexer.matchDelimiter('&')) {
       const [row, col] = lexer.tell()
       lexer.eatDelimiter('&')
-      this.recurParseNumericTerm(env, lexer, result)
+      this.recurParseNumericTerm(env, lexer, result, allowVoid, isConstantExpression)
       assertAddressable(result[result.length - 1], env, row, col, lexer)
       result.push('&')
     } else if (lexer.matchDelimiter('(')) {
       lexer.eatDelimiter('(')
-      this.recurParseExpression(env, lexer, result)
+      this.recurParseExpression(env, lexer, result, allowVoid, isConstantExpression)
       lexer.eatDelimiter(')')
     } else if (lexer.matchNumber()) {
       result.push(lexer.eatNumber())
     } else if (lexer.matchDelimiter("'")) {
       result.push(lexer.eatCharacterLiteral())
-    } else if (lexer.matchDelimiter('"')) {
-      result.push(lexer.eatStringLiteral())
     } else if (lexer.matchIncrementDecrementOperator()) {
+      if (isConstantExpression) {
+        throw new Error(lexer.formatError('expected a constant expression'))
+      }
       const [row, col] = lexer.tell()
       const opr =
         lexer.eatIncrementDecrementOperator() == '++'
           ? IncrementDecrement.PRE_INCREMENT
           : IncrementDecrement.PRE_DECREMENT
-      this.recurParseNumericTerm(env, lexer, result)
+      this.recurParseNumericTerm(env, lexer, result, allowVoid, isConstantExpression)
       assertAssignable(result[result.length - 1], env, row, col, lexer)
       result.push(opr)
     } else {
+      if (isConstantExpression) {
+        throw new Error(lexer.formatError('expected a constant expression'))
+      }
       const [row, col] = lexer.tell()
       const identifier = lexer.eatIdentifier()
       result.push(identifier)
       assertIsDeclared(identifier, env, row, col, lexer)
       if (lexer.matchDelimiter('(')) {
         assertIsFunction(identifier, env, row, col, lexer)
-        result.push(
-          new FunctionCall(
-            env,
-            row,
-            col,
-            lexer,
-            String(result.pop()),
-            this.parseActualParameterList(env, lexer)
-          )
+        const functionCall = new FunctionCall(
+          env,
+          row,
+          col,
+          lexer,
+          String(result.pop()),
+          this.parseActualParameterList(env, lexer)
         )
+        if (!allowVoid && functionCall.getReturnType(env) == 'void') {
+          throw new Error(lexer.formatError("statement requires expression of scalar type ('void' invalid)", row, col))
+        }
+        result.push(functionCall)
       }
     }
 
@@ -168,14 +175,16 @@ export class ExpressionParser {
   private static recurParsePrioritizedNumericTerm(
     env: Frame,
     lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
+    result: (string | number | IncrementDecrement | FunctionCall | Jump)[],
+    allowVoid: boolean,
+    isConstantExpression: boolean
   ): void {
-    this.recurParseNumericTerm(env, lexer, result)
+    this.recurParseNumericTerm(env, lexer, result, allowVoid, isConstantExpression)
     while (lexer.matchPrioritizedArithmeticOperator()) {
       const [row, col] = lexer.tell()
       checkBinaryOperand(result[result.length - 1], env, row, col, lexer)
       const opr = lexer.eatArithmeticOperator()
-      this.recurParseNumericTerm(env, lexer, result)
+      this.recurParseNumericTerm(env, lexer, result, allowVoid, isConstantExpression)
       checkBinaryOperand(result[result.length - 1], env, row, col, lexer)
       result.push(opr)
     }
@@ -184,14 +193,16 @@ export class ExpressionParser {
   private static recurParseNumericalExpression(
     env: Frame,
     lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
+    result: (string | number | IncrementDecrement | FunctionCall | Jump)[],
+    allowVoid: boolean,
+    isConstantExpression: boolean
   ): void {
-    this.recurParsePrioritizedNumericTerm(env, lexer, result)
+    this.recurParsePrioritizedNumericTerm(env, lexer, result, allowVoid, isConstantExpression)
     while (lexer.matchArithmeticOperator()) {
       const [row, col] = lexer.tell()
       checkBinaryOperand(result[result.length - 1], env, row, col, lexer)
       const opr = lexer.eatArithmeticOperator()
-      this.recurParsePrioritizedNumericTerm(env, lexer, result)
+      this.recurParsePrioritizedNumericTerm(env, lexer, result, allowVoid, isConstantExpression)
       checkBinaryOperand(result[result.length - 1], env, row, col, lexer)
       result.push(opr)
     }
@@ -200,14 +211,16 @@ export class ExpressionParser {
   private static recurParsePrioritizedRelationalTerm(
     env: Frame,
     lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
+    result: (string | number | IncrementDecrement | FunctionCall | Jump)[],
+    allowVoid: boolean,
+    isConstantExpression: boolean
   ) {
-    this.recurParseNumericalExpression(env, lexer, result)
+    this.recurParseNumericalExpression(env, lexer, result, allowVoid, isConstantExpression)
     while (lexer.matchPrioritizedRelationalOperator()) {
       const [row, col] = lexer.tell()
       checkBinaryOperand(result[result.length - 1], env, row, col, lexer)
       const opr = lexer.eatRelationalOperator()
-      this.recurParseNumericalExpression(env, lexer, result)
+      this.recurParseNumericalExpression(env, lexer, result, allowVoid, isConstantExpression)
       checkBinaryOperand(result[result.length - 1], env, row, col, lexer)
       result.push(opr)
     }
@@ -216,14 +229,16 @@ export class ExpressionParser {
   private static recurParseRelationalExpression(
     env: Frame,
     lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
+    result: (string | number | IncrementDecrement | FunctionCall | Jump)[],
+    allowVoid: boolean,
+    isConstantExpression: boolean
   ): void {
-    this.recurParsePrioritizedRelationalTerm(env, lexer, result)
+    this.recurParsePrioritizedRelationalTerm(env, lexer, result, allowVoid, isConstantExpression)
     while (lexer.matchRelationalOperator()) {
       const [row, col] = lexer.tell()
       checkBinaryOperand(result[result.length - 1], env, row, col, lexer)
       const opr = lexer.eatRelationalOperator()
-      this.recurParsePrioritizedRelationalTerm(env, lexer, result)
+      this.recurParsePrioritizedRelationalTerm(env, lexer, result, allowVoid, isConstantExpression)
       checkBinaryOperand(result[result.length - 1], env, row, col, lexer)
       result.push(opr)
     }
@@ -232,9 +247,11 @@ export class ExpressionParser {
   private static recurParsePrioritizedLogicalTerm(
     env: Frame,
     lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
+    result: (string | number | IncrementDecrement | FunctionCall | Jump)[],
+    allowVoid: boolean,
+    isConstantExpression: boolean
   ): void {
-    this.recurParseRelationalExpression(env, lexer, result)
+    this.recurParseRelationalExpression(env, lexer, result, allowVoid, isConstantExpression)
     const jumps: Jump[] = []
     while (lexer.matchDelimiter('&&')) {
       const [row, col] = lexer.tell()
@@ -242,7 +259,7 @@ export class ExpressionParser {
       jumps.push(new Jump(false))
       result.push(jumps[jumps.length - 1])
       lexer.eatDelimiter('&&')
-      this.recurParseRelationalExpression(env, lexer, result)
+      this.recurParseRelationalExpression(env, lexer, result, allowVoid, isConstantExpression)
       checkBinaryOperand(result[result.length - 1], env, row, col, lexer)
       result.push('&&')
     }
@@ -252,9 +269,11 @@ export class ExpressionParser {
   private static recurParseLogicalExpression(
     env: Frame,
     lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
+    result: (string | number | IncrementDecrement | FunctionCall | Jump)[],
+    allowVoid: boolean,
+    isConstantExpression: boolean
   ): void {
-    this.recurParsePrioritizedLogicalTerm(env, lexer, result)
+    this.recurParsePrioritizedLogicalTerm(env, lexer, result, allowVoid, isConstantExpression)
     const jumps: Jump[] = []
     while (lexer.matchDelimiter('||')) {
       const [row, col] = lexer.tell()
@@ -262,7 +281,7 @@ export class ExpressionParser {
       jumps.push(new Jump(true))
       result.push(jumps[jumps.length - 1])
       lexer.eatDelimiter('||')
-      this.recurParsePrioritizedLogicalTerm(env, lexer, result)
+      this.recurParsePrioritizedLogicalTerm(env, lexer, result, allowVoid, isConstantExpression)
       checkBinaryOperand(result[result.length - 1], env, row, col, lexer)
       result.push('||')
     }
@@ -272,9 +291,11 @@ export class ExpressionParser {
   private static recurParseTernaryExpression(
     env: Frame,
     lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
+    result: (string | number | IncrementDecrement | FunctionCall | Jump)[],
+    allowVoid: boolean,
+    isConstantExpression: boolean
   ): void {
-    this.recurParseLogicalExpression(env, lexer, result)
+    this.recurParseLogicalExpression(env, lexer, result, allowVoid, isConstantExpression)
     if (!lexer.matchDelimiter('?')) {
       return
     }
@@ -283,33 +304,39 @@ export class ExpressionParser {
     lexer.eatDelimiter('?')
     const jumpToElse = new Jump(false)
     result.push(jumpToElse)
-    this.recurParseLogicalExpression(env, lexer, result)
+    this.recurParseLogicalExpression(env, lexer, result, allowVoid, isConstantExpression)
     const jumpToEnd = new Jump()
     result.push(jumpToEnd)
     lexer.eatDelimiter(':')
     jumpToElse.toPosition = result.length
-    this.recurParseLogicalExpression(env, lexer, result)
+    this.recurParseLogicalExpression(env, lexer, result, allowVoid, isConstantExpression)
     jumpToEnd.toPosition = result.length
   }
 
   private static recurParseExpression(
     env: Frame,
     lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[]
+    result: (string | number | IncrementDecrement | FunctionCall | Jump)[],
+    allowVoid: boolean,
+    isConstantExpression: boolean
   ): void {
-    this.recurParseTernaryExpression(env, lexer, result)
+    this.recurParseTernaryExpression(env, lexer, result, allowVoid, isConstantExpression)
     if (lexer.matchAssignmentOperator()) {
       const [row, col] = lexer.tell()
       assertAssignable(result[result.length - 1], env, row, col, lexer)
       const opr = lexer.eatAssignmentOperator()
-      this.recurParseExpression(env, lexer, result)
+      this.recurParseExpression(env, lexer, result, allowVoid, isConstantExpression)
       result.push(opr)
     }
   }
 
-  static parse(env: Frame, lexer: Lexer): Expression {
+  static parse(env: Frame, lexer: Lexer, allowStringLiteral: boolean, allowVoid: boolean, isConstantExpression: boolean): Expression {
     const result: (string | number | IncrementDecrement | FunctionCall | Jump)[] = []
-    this.recurParseExpression(env, lexer, result)
+    if (lexer.matchDelimiter('"') && allowStringLiteral) {
+      result.push(lexer.eatStringLiteral())
+    } else {
+      this.recurParseExpression(env, lexer, result, allowVoid, isConstantExpression)
+    }
     return new Expression(result)
   }
 }

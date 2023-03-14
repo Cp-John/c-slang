@@ -38,11 +38,13 @@ export class For extends Statement {
       ExpressionStatement.parse(env, lexer).forEach(statement => forStatement.init.push(statement))
     }
     if (!lexer.matchDelimiter(';')) {
-      forStatement.condition = ExpressionParser.parse(env, lexer)
+      forStatement.condition = ExpressionParser.parse(env, lexer, false, false, false)
     }
     lexer.eatDelimiter(';')
     if (!lexer.matchDelimiter(')')) {
-      forStatement.updation = new ExpressionStatement(ExpressionParser.parse(env, lexer))
+      forStatement.updation = new ExpressionStatement(
+        ExpressionParser.parse(env, lexer, false, true, false)
+      )
     }
     lexer.eatDelimiter(')')
     forStatement.body = Block.parse(env, lexer, true)

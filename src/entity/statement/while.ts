@@ -18,7 +18,7 @@ export class While extends Statement {
   static parse(env: Frame, lexer: Lexer): While[] {
     lexer.eatKeyword('while')
     lexer.eatDelimiter('(')
-    const expression = ExpressionParser.parse(env, lexer)
+    const expression = ExpressionParser.parse(env, lexer, false, false, false)
     lexer.eatDelimiter(')')
     const body = Block.parse(env, lexer, true)
     return [new While(expression, body)]

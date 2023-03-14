@@ -16,7 +16,7 @@ export class Return extends Statement {
     lexer.eatKeyword('return')
     let expression = null
     if (!lexer.matchDelimiter(';')) {
-      expression = ExpressionParser.parse(env, lexer)
+      expression = ExpressionParser.parse(env, lexer, false, false, false)
     }
     lexer.eatDelimiter(';')
     return [new Return(expression)]

@@ -20,7 +20,7 @@ export class ConditionalStatement extends Statement {
   static parse(env: Frame, lexer: Lexer, isInLoop: boolean): ConditionalStatement[] {
     lexer.eatKeyword('if')
     lexer.eatDelimiter('(')
-    const expr = ExpressionParser.parse(env, lexer)
+    const expr = ExpressionParser.parse(env, lexer, false, false, false)
     lexer.eatDelimiter(')')
     const ifBlock = Block.parse(env, lexer, isInLoop)
     if (!lexer.matchKeyword('else')) {
