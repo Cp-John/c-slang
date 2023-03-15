@@ -42,7 +42,7 @@ const printf: RealBuiltinFunction = (
 ): void => {
   let outputString = args[0] as string
   outputString = outputString.substring(1, outputString.length - 1)
-  const regex = /%d|%f|%lf|%s/
+  const regex = /%d|%f|%lf|%s|%c/
   let i = 1
   while (i < args.length) {
     const toReplace = regex.exec(outputString)
@@ -51,6 +51,8 @@ const printf: RealBuiltinFunction = (
     } else if (toReplace[0] == '%s') {
       const str = args[i] as string
       outputString = outputString.replace(regex, str.substring(1, str.length - 1))
+    } else if (toReplace[0] == '%c') {
+      outputString = outputString.replace(regex, String.fromCharCode((args[i] as NumericLiteral).getValue()))
     } else {
       outputString = outputString.replace(regex, String((args[i] as NumericLiteral).getValue()))
     }
