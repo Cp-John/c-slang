@@ -36,7 +36,9 @@ export class Program {
     try {
       mainFunction = frame.lookupFunction('main')
     } catch (err) {
-      throw new Error("entry of execution: 'main' function not found, " + Program.getErrorMessage(err))
+      throw new Error(
+        "entry of execution: 'main' function not found, " + Program.getErrorMessage(err)
+      )
     }
     try {
       mainFunction.call(frame, [], context, [])
