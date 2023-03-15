@@ -52,7 +52,10 @@ const printf: RealBuiltinFunction = (
       const str = args[i] as string
       outputString = outputString.replace(regex, str.substring(1, str.length - 1))
     } else if (toReplace[0] == '%c') {
-      outputString = outputString.replace(regex, String.fromCharCode((args[i] as NumericLiteral).getValue()))
+      outputString = outputString.replace(
+        regex,
+        String.fromCharCode((args[i] as NumericLiteral).getValue())
+      )
     } else {
       outputString = outputString.replace(regex, String((args[i] as NumericLiteral).getValue()))
     }
