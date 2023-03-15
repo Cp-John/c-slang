@@ -133,7 +133,11 @@ export class Lexer {
   }
 
   matchIdentifier(): boolean {
-    return this.hasNext() && IDENTIFIER_REGEX.test(this.currentLine)
+    if (!this.hasNext()) {
+      return false
+    }
+    const match = IDENTIFIER_REGEX.exec(this.currentLine)
+    return match != null && !RESERVED_KEYWORDS.has(match[0])
   }
 
   eatIdentifier(): string {

@@ -28,6 +28,13 @@ export class NumericLiteral {
     return this.val != 0
   }
 
+  castToType(newType: DataType): NumericLiteral {
+    if (newType != DataType.FLOAT && newType != DataType.INT) {
+      throw new Error("invalid type '" + newType + "' for numeric literal")
+    }
+    return new NumericLiteral(this.val, newType)
+  }
+
   static booleanToNumericLiteral(val: boolean): NumericLiteral {
     return val ? new NumericLiteral(1, DataType.INT) : new NumericLiteral(0, DataType.INT)
   }

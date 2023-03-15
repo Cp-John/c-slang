@@ -1,4 +1,4 @@
-import { DataType, Frame } from '../../interpreter/frame'
+import { DATA_TYPES, DataType, Frame } from '../../interpreter/frame'
 import { FunctionCall } from './functionCall'
 import { NumericLiteral } from './numericLiteral'
 
@@ -97,6 +97,8 @@ export class Expression {
         }
       } else if (ele instanceof NumericLiteral) {
         result.push(ele)
+      } else if (DATA_TYPES.includes(ele as DataType)) {
+        result.push(Expression.toNumberLiteral(result.pop(), env).castToType(ele as DataType))
       } else if (ele in Expression.INCREMENT_DECREMENT_OPERATORS) {
         result.push(Expression.INCREMENT_DECREMENT_OPERATORS[ele](result.pop(), env))
       } else if (NumericLiteral.BINARY_ARITHMETIC_OPERATORS.has(ele)) {

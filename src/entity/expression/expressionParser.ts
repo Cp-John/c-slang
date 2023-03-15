@@ -74,7 +74,6 @@ function checkTernaryOperand(
 
 function assertIsDeclared(identifier: string, env: Frame, row: number, col: number, lexer: Lexer) {
   if (!env.isDeclared(identifier)) {
-    console.log(env)
     throw new Error(lexer.formatError("undeclared symbol: '" + identifier + "'", row, col))
   }
 }
@@ -109,18 +108,25 @@ export class ExpressionParser {
   ): void {
     if (lexer.matchDelimiter('!')) {
       lexer.eatDelimiter('!')
-      this.recurParseNumericTerm(env, lexer, result, allowVoid, isConstantExpression)
+      this.recurParseNumericTerm(env, lexer, result, false, isConstantExpression)
       result.push('!')
     } else if (lexer.matchDelimiter('&')) {
       const [row, col] = lexer.tell()
       lexer.eatDelimiter('&')
-      this.recurParseNumericTerm(env, lexer, result, allowVoid, isConstantExpression)
+      this.recurParseNumericTerm(env, lexer, result, false, isConstantExpression)
       assertAddressable(result[result.length - 1], env, row, col, lexer)
       result.push('&')
     } else if (lexer.matchDelimiter('(')) {
       lexer.eatDelimiter('(')
-      this.recurParseExpression(env, lexer, result, allowVoid, isConstantExpression)
-      lexer.eatDelimiter(')')
+      if (lexer.matchDataType()) {
+        const typeToCast = lexer.eatDataType()
+        lexer.eatDelimiter(')')
+        this.recurParseExpression(env, lexer, result, false, isConstantExpression)
+        result.push(typeToCast)
+      } else {
+        this.recurParseExpression(env, lexer, result, true, isConstantExpression)
+        lexer.eatDelimiter(')')
+      }
     } else if (lexer.matchNumber()) {
       result.push(lexer.eatNumber())
     } else if (lexer.matchDelimiter("'")) {
@@ -134,7 +140,7 @@ export class ExpressionParser {
         lexer.eatIncrementDecrementOperator() == '++'
           ? IncrementDecrement.PRE_INCREMENT
           : IncrementDecrement.PRE_DECREMENT
-      this.recurParseNumericTerm(env, lexer, result, allowVoid, isConstantExpression)
+      this.recurParseNumericTerm(env, lexer, result, false, isConstantExpression)
       assertAssignable(result[result.length - 1], env, row, col, lexer)
       result.push(opr)
     } else {
@@ -191,7 +197,7 @@ export class ExpressionParser {
       const [row, col] = lexer.tell()
       checkBinaryOperand(result[result.length - 1], env, row, col, lexer)
       const opr = lexer.eatArithmeticOperator()
-      this.recurParseNumericTerm(env, lexer, result, allowVoid, isConstantExpression)
+      this.recurParseNumericTerm(env, lexer, result, false, isConstantExpression)
       checkBinaryOperand(result[result.length - 1], env, row, col, lexer)
       result.push(opr)
     }
@@ -209,7 +215,7 @@ export class ExpressionParser {
       const [row, col] = lexer.tell()
       checkBinaryOperand(result[result.length - 1], env, row, col, lexer)
       const opr = lexer.eatArithmeticOperator()
-      this.recurParsePrioritizedNumericTerm(env, lexer, result, allowVoid, isConstantExpression)
+      this.recurParsePrioritizedNumericTerm(env, lexer, result, false, isConstantExpression)
       checkBinaryOperand(result[result.length - 1], env, row, col, lexer)
       result.push(opr)
     }
@@ -227,7 +233,7 @@ export class ExpressionParser {
       const [row, col] = lexer.tell()
       checkBinaryOperand(result[result.length - 1], env, row, col, lexer)
       const opr = lexer.eatRelationalOperator()
-      this.recurParseNumericalExpression(env, lexer, result, allowVoid, isConstantExpression)
+      this.recurParseNumericalExpression(env, lexer, result, false, isConstantExpression)
       checkBinaryOperand(result[result.length - 1], env, row, col, lexer)
       result.push(opr)
     }
@@ -245,7 +251,7 @@ export class ExpressionParser {
       const [row, col] = lexer.tell()
       checkBinaryOperand(result[result.length - 1], env, row, col, lexer)
       const opr = lexer.eatRelationalOperator()
-      this.recurParsePrioritizedRelationalTerm(env, lexer, result, allowVoid, isConstantExpression)
+      this.recurParsePrioritizedRelationalTerm(env, lexer, result, false, isConstantExpression)
       checkBinaryOperand(result[result.length - 1], env, row, col, lexer)
       result.push(opr)
     }
@@ -266,7 +272,7 @@ export class ExpressionParser {
       jumps.push(new Jump(false))
       result.push(jumps[jumps.length - 1])
       lexer.eatDelimiter('&&')
-      this.recurParseRelationalExpression(env, lexer, result, allowVoid, isConstantExpression)
+      this.recurParseRelationalExpression(env, lexer, result, false, isConstantExpression)
       checkBinaryOperand(result[result.length - 1], env, row, col, lexer)
       result.push('&&')
     }
@@ -288,7 +294,7 @@ export class ExpressionParser {
       jumps.push(new Jump(true))
       result.push(jumps[jumps.length - 1])
       lexer.eatDelimiter('||')
-      this.recurParsePrioritizedLogicalTerm(env, lexer, result, allowVoid, isConstantExpression)
+      this.recurParsePrioritizedLogicalTerm(env, lexer, result, false, isConstantExpression)
       checkBinaryOperand(result[result.length - 1], env, row, col, lexer)
       result.push('||')
     }
@@ -311,12 +317,12 @@ export class ExpressionParser {
     lexer.eatDelimiter('?')
     const jumpToElse = new Jump(false)
     result.push(jumpToElse)
-    this.recurParseLogicalExpression(env, lexer, result, allowVoid, isConstantExpression)
+    this.recurParseLogicalExpression(env, lexer, result, false, isConstantExpression)
     const jumpToEnd = new Jump()
     result.push(jumpToEnd)
     lexer.eatDelimiter(':')
     jumpToElse.toPosition = result.length
-    this.recurParseLogicalExpression(env, lexer, result, allowVoid, isConstantExpression)
+    this.recurParseLogicalExpression(env, lexer, result, false, isConstantExpression)
     jumpToEnd.toPosition = result.length
   }
 
@@ -332,7 +338,7 @@ export class ExpressionParser {
       const [row, col] = lexer.tell()
       assertAssignable(result[result.length - 1], env, row, col, lexer)
       const opr = lexer.eatAssignmentOperator()
-      this.recurParseExpression(env, lexer, result, allowVoid, isConstantExpression)
+      this.recurParseExpression(env, lexer, result, false, isConstantExpression)
       result.push(opr)
     }
   }

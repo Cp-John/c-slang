@@ -14,6 +14,8 @@ export enum DataType {
   VOID = 'void'
 }
 
+export const DATA_TYPES = Object.values(DataType)
+
 const rand: RealBuiltinFunction = (
   env: Frame,
   rts: any[],
