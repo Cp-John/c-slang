@@ -121,7 +121,7 @@ export class ExpressionParser {
       if (lexer.matchDataType()) {
         const typeToCast = lexer.eatDataType()
         lexer.eatDelimiter(')')
-        this.recurParseExpression(env, lexer, result, false, isConstantExpression)
+        this.recurParseNumericTerm(env, lexer, result, false, isConstantExpression)
         result.push(typeToCast)
       } else {
         this.recurParseExpression(env, lexer, result, true, isConstantExpression)
