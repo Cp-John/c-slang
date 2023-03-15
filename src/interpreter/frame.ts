@@ -42,34 +42,21 @@ const printf: RealBuiltinFunction = (
 ): void => {
   let outputString = args[0] as string
   outputString = outputString.substring(1, outputString.length - 1)
-  const numberRegex = /%d|%f|%lf/
-  const stringRegex = /%s/
+  const regex = /%d|%f|%lf|%s/
   let i = 1
   while (i < args.length) {
-    let matchedIndex = undefined
-    let matchedRegex = undefined
-    if (numberRegex.test(outputString)) {
-      matchedIndex = numberRegex.exec(outputString)?.index
-      matchedRegex = numberRegex
-    }
-    if (stringRegex.test(outputString)) {
-      const idx = stringRegex.exec(outputString)?.index
-      if (matchedIndex == undefined || (idx && idx < matchedIndex)) {
-        matchedRegex = stringRegex
-        outputString = outputString.replace(matchedRegex, args[i] as string)
-        continue
-      }
-    }
-    if (!matchedRegex) {
+    const toReplace = regex.exec(outputString)
+    if (toReplace == null) {
       throw new Error('data unused in format string')
+    } else if (toReplace[0] == '%s') {
+      const str = args[i] as string
+      outputString = outputString.replace(regex, str.substring(1, str.length - 1))
+    } else {
+      outputString = outputString.replace(regex, String((args[i] as NumericLiteral).getValue()))
     }
-    outputString = outputString.replace(
-      matchedRegex,
-      String((args[i] as NumericLiteral).getValue())
-    )
     i++
   }
-  if (numberRegex.test(outputString) || stringRegex.test(outputString)) {
+  if (regex.test(outputString)) {
     throw new Error('expected more data arguments')
   }
   context['stdout'] += outputString
