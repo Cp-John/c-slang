@@ -1,4 +1,4 @@
-import { Frame } from '../../interpreter/frame'
+import { DataType, Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Statement } from './statement'
 
@@ -8,7 +8,7 @@ export class Break extends Statement {
     lexer: Lexer,
     allowBreak: boolean,
     allowContinue: boolean,
-    returnType: string
+    returnType: DataType
   ): Continue[] {
     if (!allowBreak) {
       throw new Error(lexer.formatError('break statement not in loop statement'))
@@ -29,7 +29,7 @@ export class Continue extends Statement {
     lexer: Lexer,
     allowBreak: boolean,
     allowContinue: boolean,
-    returnType: string
+    returnType: DataType
   ): [Continue] {
     if (!allowContinue) {
       throw new Error(lexer.formatError('continue statement not in loop statement'))

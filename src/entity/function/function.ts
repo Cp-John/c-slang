@@ -1,12 +1,12 @@
-import { Frame } from '../../interpreter/frame'
+import { DataType, Frame } from '../../interpreter/frame'
 import { Expression } from '../expression/expression'
 
 export abstract class Function {
-  returnType: string
+  returnType: DataType
   functionName: string
   arity: number
 
-  constructor(returnType: string, functionName: string, arity: number) {
+  constructor(returnType: DataType, functionName: string, arity: number) {
     this.returnType = returnType
     this.functionName = functionName
     this.arity = arity

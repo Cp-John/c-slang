@@ -1,21 +1,34 @@
-import { Frame } from '../../interpreter/frame'
+import { DataType, Frame } from '../../interpreter/frame'
 import { Expression } from '../expression/expression'
+import { NumericLiteral } from '../expression/numericLiteral'
 import { Function } from './function'
 
-export class BuiltinFunction extends Function {
-  realFunction
+export interface RealBuiltinFunction {
+  (env: Frame, rts: any[], context: any, args: (string | NumericLiteral)[]): void
+}
 
-  constructor(returnType: string, functionName: string, realFunction: any, arity: number = -1) {
+export class BuiltinFunction extends Function {
+  realFunction: RealBuiltinFunction
+
+  constructor(
+    returnType: DataType,
+    functionName: string,
+    realFunction: RealBuiltinFunction,
+    arity: number = -1
+  ) {
     super(returnType, functionName, arity)
     this.realFunction = realFunction
   }
 
   call(env: Frame, rts: any[], context: any, actualParameterList: Expression[]): void {
-    const realParameterList: (string | number | undefined)[] = []
-    actualParameterList.forEach(expr => realParameterList.push(expr.evaluate(env, rts, context)))
-    const result = this.realFunction(env, rts, context, realParameterList)
-    if (result != undefined) {
-      rts.push(result)
-    }
+    const realParameterList: (string | NumericLiteral)[] = []
+    actualParameterList.forEach(expr => {
+      const val = expr.evaluate(env, rts, context)
+      if (val == undefined) {
+        throw new Error('impossible execution path')
+      }
+      realParameterList.push(val)
+    })
+    this.realFunction(env, rts, context, realParameterList)
   }
 }

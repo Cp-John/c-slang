@@ -1,15 +1,14 @@
-import { Frame, VariableType } from '../../interpreter/frame'
+import { DataType, Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
 import { Expression } from '../expression/expression'
 import { ExpressionParser } from '../expression/expressionParser'
 import { SelfDefinedFunction } from '../function/selfDefinedFunction'
-import { ExpressionStatement } from './expressionStatement'
 import { Statement } from './statement'
 
 export abstract class Declaration extends Statement {
-  private static parseFormalParameterList(env: Frame, lexer: Lexer): [string, string][] {
-    const result: [string, string][] = []
+  private static parseFormalParameterList(env: Frame, lexer: Lexer): [DataType, string][] {
+    const result: [DataType, string][] = []
     lexer.eatDelimiter('(')
     if (lexer.matchKeyword('void')) {
       lexer.eatKeyword('void')
@@ -17,11 +16,13 @@ export abstract class Declaration extends Statement {
       return result
     }
     if (!lexer.matchDelimiter(')')) {
-      result.push([lexer.eatDataType(), env.declare(lexer, VariableType.NUMBER)])
+      const type = lexer.eatDataType()
+      result.push([type, env.declare(lexer, type)])
     }
     while (!lexer.matchDelimiter(')')) {
       lexer.eatDelimiter(',')
-      result.push([lexer.eatDataType(), env.declare(lexer, VariableType.NUMBER)])
+      const type = lexer.eatDataType()
+      result.push([type, env.declare(lexer, type)])
     }
     lexer.eatDelimiter(')')
     return result
@@ -29,12 +30,12 @@ export abstract class Declaration extends Statement {
 
   private static parseDeclaredVariables(
     env: Frame,
-    dataType: string,
+    variableType: DataType,
     firstVariable: string,
     lexer: Lexer
   ): Statement[] {
     const statements: VariableDeclaration[] = [
-      new VariableDeclaration(dataType, firstVariable, null)
+      new VariableDeclaration(variableType, firstVariable, null)
     ]
 
     let declaredVariable = firstVariable
@@ -53,8 +54,8 @@ export abstract class Declaration extends Statement {
         break
       }
       lexer.eatDelimiter(',')
-      declaredVariable = env.declare(lexer, VariableType.NUMBER)
-      statements.push(new VariableDeclaration(dataType, declaredVariable, null))
+      declaredVariable = env.declare(lexer, variableType)
+      statements.push(new VariableDeclaration(variableType, declaredVariable, null))
     }
     lexer.eatDelimiter(';')
     return statements
@@ -65,21 +66,21 @@ export abstract class Declaration extends Statement {
     lexer: Lexer,
     allowBreak: boolean,
     allowContinue: boolean,
-    returnType: string,
+    returnType: DataType,
     allowFunctionDeclaration: boolean = false
   ): Statement[] {
-    let type
+    let type = DataType.VOID
     if (lexer.matchKeyword('void')) {
-      type = lexer.eatKeyword('void')
+      lexer.eatKeyword('void')
     } else {
       type = lexer.eatDataType()
     }
-    const identifier = env.declare(lexer, VariableType.NUMBER)
+    const identifier = env.declare(lexer, type)
     if (lexer.matchDelimiter('(')) {
       if (!allowFunctionDeclaration) {
         throw new Error(lexer.formatError('function definition is not allowed here'))
       }
-      env.markType(identifier, VariableType.FUNCTION)
+      env.markType(identifier, DataType.FUNCTION)
       const newEnv = Frame.extend(env)
       const formalParameterList = Declaration.parseFormalParameterList(newEnv, lexer)
       const functionObj = new SelfDefinedFunction(type, identifier, formalParameterList, null)
@@ -101,11 +102,11 @@ export abstract class Declaration extends Statement {
 }
 
 class VariableDeclaration extends Declaration {
-  private variableType: string
+  private variableType: DataType
   private variableName: string
   expression: Expression | null
 
-  constructor(variableType: string, variableName: string, expression: Expression | null) {
+  constructor(variableType: DataType, variableName: string, expression: Expression | null) {
     super()
     this.variableType = variableType
     this.variableName = variableName
@@ -113,23 +114,27 @@ class VariableDeclaration extends Declaration {
   }
 
   execute(env: Frame, rts: any[], context: any): void {
-    env.declare(this.variableName, VariableType.NUMBER)
+    env.declare(this.variableName, this.variableType)
     if (this.expression != null) {
-      env.assignValue(this.variableName, this.expression.evaluate(env, rts, context))
+      const val = this.expression.evaluate(env, rts, context)
+      if (val == undefined || typeof val == 'string') {
+        throw new Error('impossible execution path')
+      }
+      env.assignValue(this.variableName, val)
     }
   }
 }
 
 export class FunctionDeclaration extends Declaration {
-  private returnType: string
+  private returnType: DataType
   private functionName: string
-  private parameterList: [string, string][]
+  private parameterList: [DataType, string][]
   private body: Block | null
 
   constructor(
-    returnType: string,
+    returnType: DataType,
     functionName: string,
-    parameterList: [string, string][],
+    parameterList: [DataType, string][],
     body: Block | null
   ) {
     super()
@@ -140,7 +145,7 @@ export class FunctionDeclaration extends Declaration {
   }
 
   execute(env: Frame, rts: any[], context: any): void {
-    env.declare(this.functionName, VariableType.FUNCTION)
+    env.declare(this.functionName, DataType.FUNCTION)
     env.assignValue(
       this.functionName,
       new SelfDefinedFunction(this.returnType, this.functionName, this.parameterList, this.body)

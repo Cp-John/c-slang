@@ -1,4 +1,4 @@
-import { Frame } from '../../interpreter/frame'
+import { DataType, Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Function } from '../function/function'
 import { Expression } from './expression'
@@ -15,7 +15,7 @@ export class FunctionCall {
     functionName: string,
     actualParameterList: Expression[]
   ) {
-    this.functionObj = env.lookup(functionName) as Function
+    this.functionObj = env.lookupFunction(functionName)
     this.actualParameterList = actualParameterList
     if (this.functionObj.arity == -1 || this.functionObj.arity == actualParameterList.length) {
       return
@@ -45,22 +45,13 @@ export class FunctionCall {
     }
   }
 
-  getReturnType(env: Frame) {
+  getReturnType(env: Frame): DataType {
     return this.functionObj.returnType
   }
 
   execute(env: Frame, rts: any[], context: any): void {
-    try {
-      ;(env.lookup(this.functionObj.functionName) as Function).call(
-        env,
-        rts,
-        context,
-        this.actualParameterList
-      )
-    } catch (err: any) {
-      if (err != 'RETURN') {
-        throw err
-      }
-    }
+    env
+      .lookupFunction(this.functionObj.functionName)
+      .call(env, rts, context, this.actualParameterList)
   }
 }

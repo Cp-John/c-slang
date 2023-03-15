@@ -1,8 +1,9 @@
-import { Frame } from '../../interpreter/frame'
+import { DataType, Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
 import { Expression } from '../expression/expression'
 import { ExpressionParser } from '../expression/expressionParser'
+import { NumericLiteral } from '../expression/numericLiteral'
 import { Statement } from './statement'
 
 class Case {
@@ -39,7 +40,7 @@ export class Switch extends Statement {
     lexer: Lexer,
     allowBreak: boolean,
     allowContinue: boolean,
-    returnType: string
+    returnType: DataType
   ): Switch[] {
     lexer.eatKeyword('switch')
     lexer.eatDelimiter('(')
@@ -66,12 +67,14 @@ export class Switch extends Statement {
   }
 
   execute(env: Frame, rts: Frame[], context: any): void {
-    const result = this.expression.evaluate(env, rts, context)
+    const result = (this.expression.evaluate(env, rts, context) as NumericLiteral).getValue()
     let matched = false
     for (let i = 0; i < this.body.length; i++) {
       try {
         if (!matched && this.body[i] instanceof Case) {
-          const toMatch = (this.body[i] as Case).evaluate(env, rts, context)
+          const toMatch = (
+            (this.body[i] as Case).evaluate(env, rts, context) as NumericLiteral
+          ).getValue()
           matched = result == toMatch
         } else if (matched && !(this.body[i] instanceof Case)) {
           ;(this.body[i] as Statement | Block).execute(env, rts, context)

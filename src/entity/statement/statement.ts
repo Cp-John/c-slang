@@ -4,7 +4,7 @@ export abstract class Statement {
     lexer: Lexer,
     allowBreak: boolean,
     allowContinue: boolean,
-    returnType: string
+    returnType: DataType
   ): Statement[] {
     if (lexer.matchKeyword('if')) {
       return ConditionalStatement.parse(env, lexer, allowBreak, allowContinue, returnType)
@@ -32,7 +32,7 @@ export abstract class Statement {
   abstract execute(env: Frame, rts: any[], context: any): void
 }
 
-import { Frame } from '../../interpreter/frame'
+import { DataType, Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { ConditionalStatement } from './conditionalStatement'
 import { Declaration } from './declaration'

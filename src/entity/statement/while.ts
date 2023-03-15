@@ -1,8 +1,9 @@
-import { Frame } from '../../interpreter/frame'
+import { DataType, Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
 import { Expression } from '../expression/expression'
 import { ExpressionParser } from '../expression/expressionParser'
+import { NumericLiteral } from '../expression/numericLiteral'
 import { Statement } from './statement'
 
 export class While extends Statement {
@@ -20,7 +21,7 @@ export class While extends Statement {
     lexer: Lexer,
     allowBreak: boolean,
     allowContinue: boolean,
-    returnType: string
+    returnType: DataType
   ): While[] {
     lexer.eatKeyword('while')
     lexer.eatDelimiter('(')
@@ -31,7 +32,7 @@ export class While extends Statement {
   }
 
   execute(env: Frame, rts: any[], context: any): void {
-    while (this.expression.evaluate(env, rts, context) != 0) {
+    while ((this.expression.evaluate(env, rts, context) as NumericLiteral).getValue()) {
       try {
         this.body.execute(env, rts, context)
       } catch (err: any) {

@@ -1,4 +1,5 @@
-import { Frame } from '../interpreter/frame'
+import { NumericLiteral } from '../entity/expression/numericLiteral'
+import { DataType, Frame } from '../interpreter/frame'
 
 const PREPROCESSOR_DIRECTIVEG = /^\s*#\s*include\b|^\s*#\s*define\b/
 const NUMBER_REGEX = /^[+-]?([0-9]*[.])?[0-9]+/
@@ -117,7 +118,7 @@ export class Lexer {
     return this.hasNext() && NUMBER_REGEX.test(this.currentLine)
   }
 
-  eatNumber(): number {
+  eatNumber(): NumericLiteral {
     if (!this.hasNext()) {
       throw new Error(this.formatError('expected a number'))
     }
@@ -127,7 +128,7 @@ export class Lexer {
     }
     this.currentLine = this.currentLine.substring(match[0].length)
     this.col += match[0].length
-    return parseFloat(match[0])
+    return NumericLiteral.new(parseFloat(match[0]))
   }
 
   matchIdentifier(): boolean {
@@ -178,7 +179,7 @@ export class Lexer {
     return this.hasNext() && DATA_TYPE_REGEX.test(this.currentLine)
   }
 
-  eatDataType(): string {
+  eatDataType(): DataType {
     if (!this.hasNext()) {
       throw new Error(this.formatError('expected a datatype'))
     }
@@ -188,7 +189,7 @@ export class Lexer {
     }
     this.currentLine = this.currentLine.substring(match[0].length)
     this.col += match[0].length
-    return match[0]
+    return match[0] == DataType.INT || match[0] == 'char' ? DataType.INT : DataType.FLOAT
   }
 
   matchPrioritizedArithmeticOperator(): boolean {
@@ -267,7 +268,7 @@ export class Lexer {
     return match[0]
   }
 
-  eatCharacterLiteral(): number {
+  eatCharacterLiteral(): NumericLiteral {
     if (!this.hasNext()) {
       throw new Error(this.formatError('expected a character literal'))
     }
@@ -277,7 +278,7 @@ export class Lexer {
     }
     this.currentLine = this.currentLine.substring(match[0].length)
     this.col += match[0].length
-    return Lexer.restoreEscapeChars(match[0]).charCodeAt(1)
+    return new NumericLiteral(Lexer.restoreEscapeChars(match[0]).charCodeAt(1), DataType.INT)
   }
 
   private static restoreEscapeChars(original: string): string {

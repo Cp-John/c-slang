@@ -1,10 +1,11 @@
-import { Frame, VariableType } from '../../interpreter/frame'
+import { DataType, Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Expression, IncrementDecrement, Jump } from './expression'
 import { FunctionCall } from './functionCall'
+import { NumericLiteral } from './numericLiteral'
 
 function assertAddressable(
-  ele: string | number | IncrementDecrement | FunctionCall | Jump,
+  ele: string | NumericLiteral | IncrementDecrement | FunctionCall | Jump,
   env: Frame,
   row: number,
   col: number,
@@ -13,14 +14,14 @@ function assertAddressable(
   if (
     typeof ele != 'string' ||
     !new Lexer(ele).matchIdentifier() ||
-    env.lookupType(ele) == VariableType.FUNCTION
+    env.lookupType(ele) == DataType.FUNCTION
   ) {
     throw new Error(lexer.formatError('expression is not addressable', row, col))
   }
 }
 
 function assertAssignable(
-  ele: string | number | IncrementDecrement | FunctionCall | Jump,
+  ele: string | NumericLiteral | IncrementDecrement | FunctionCall | Jump,
   env: Frame,
   row: number,
   col: number,
@@ -29,14 +30,14 @@ function assertAssignable(
   if (
     typeof ele != 'string' ||
     !new Lexer(ele).matchIdentifier() ||
-    env.lookupType(ele) == VariableType.FUNCTION
+    env.lookupType(ele) == DataType.FUNCTION
   ) {
     throw new Error(lexer.formatError('expression is not assignable', row, col))
   }
 }
 
 function checkBinaryOperand(
-  ele: string | number | IncrementDecrement | FunctionCall | Jump,
+  ele: string | NumericLiteral | IncrementDecrement | FunctionCall | Jump,
   env: Frame,
   row: number,
   col: number,
@@ -49,7 +50,7 @@ function checkBinaryOperand(
   } else if (
     typeof ele == 'string' &&
     new Lexer(ele).matchIdentifier() &&
-    env.lookupType(ele) == VariableType.FUNCTION
+    env.lookupType(ele) == DataType.FUNCTION
   ) {
     throw new Error(
       lexer.formatError('invalid operand type to binary expression: function object', row, col)
@@ -58,7 +59,7 @@ function checkBinaryOperand(
 }
 
 function checkTernaryOperand(
-  ele: string | number | IncrementDecrement | FunctionCall | Jump,
+  ele: string | NumericLiteral | IncrementDecrement | FunctionCall | Jump,
   env: Frame,
   row: number,
   col: number,
@@ -79,7 +80,7 @@ function assertIsDeclared(identifier: string, env: Frame, row: number, col: numb
 }
 
 function assertIsFunction(identifier: string, env: Frame, row: number, col: number, lexer: Lexer) {
-  if (env.lookupType(identifier) != VariableType.FUNCTION) {
+  if (env.lookupType(identifier) != DataType.FUNCTION) {
     throw new Error(lexer.formatError('called object type is not a function', row, col))
   }
 }
@@ -102,7 +103,7 @@ export class ExpressionParser {
   private static recurParseNumericTerm(
     env: Frame,
     lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[],
+    result: (string | NumericLiteral | IncrementDecrement | FunctionCall | Jump)[],
     allowVoid: boolean,
     isConstantExpression: boolean
   ): void {
@@ -181,7 +182,7 @@ export class ExpressionParser {
   private static recurParsePrioritizedNumericTerm(
     env: Frame,
     lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[],
+    result: (string | NumericLiteral | IncrementDecrement | FunctionCall | Jump)[],
     allowVoid: boolean,
     isConstantExpression: boolean
   ): void {
@@ -199,7 +200,7 @@ export class ExpressionParser {
   private static recurParseNumericalExpression(
     env: Frame,
     lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[],
+    result: (string | NumericLiteral | IncrementDecrement | FunctionCall | Jump)[],
     allowVoid: boolean,
     isConstantExpression: boolean
   ): void {
@@ -217,7 +218,7 @@ export class ExpressionParser {
   private static recurParsePrioritizedRelationalTerm(
     env: Frame,
     lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[],
+    result: (string | NumericLiteral | IncrementDecrement | FunctionCall | Jump)[],
     allowVoid: boolean,
     isConstantExpression: boolean
   ) {
@@ -235,7 +236,7 @@ export class ExpressionParser {
   private static recurParseRelationalExpression(
     env: Frame,
     lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[],
+    result: (string | NumericLiteral | IncrementDecrement | FunctionCall | Jump)[],
     allowVoid: boolean,
     isConstantExpression: boolean
   ): void {
@@ -253,7 +254,7 @@ export class ExpressionParser {
   private static recurParsePrioritizedLogicalTerm(
     env: Frame,
     lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[],
+    result: (string | NumericLiteral | IncrementDecrement | FunctionCall | Jump)[],
     allowVoid: boolean,
     isConstantExpression: boolean
   ): void {
@@ -275,7 +276,7 @@ export class ExpressionParser {
   private static recurParseLogicalExpression(
     env: Frame,
     lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[],
+    result: (string | NumericLiteral | IncrementDecrement | FunctionCall | Jump)[],
     allowVoid: boolean,
     isConstantExpression: boolean
   ): void {
@@ -297,7 +298,7 @@ export class ExpressionParser {
   private static recurParseTernaryExpression(
     env: Frame,
     lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[],
+    result: (string | NumericLiteral | IncrementDecrement | FunctionCall | Jump)[],
     allowVoid: boolean,
     isConstantExpression: boolean
   ): void {
@@ -322,7 +323,7 @@ export class ExpressionParser {
   private static recurParseExpression(
     env: Frame,
     lexer: Lexer,
-    result: (string | number | IncrementDecrement | FunctionCall | Jump)[],
+    result: (string | NumericLiteral | IncrementDecrement | FunctionCall | Jump)[],
     allowVoid: boolean,
     isConstantExpression: boolean
   ): void {
@@ -343,7 +344,7 @@ export class ExpressionParser {
     allowVoid: boolean,
     isConstantExpression: boolean
   ): Expression {
-    const result: (string | number | IncrementDecrement | FunctionCall | Jump)[] = []
+    const result: (string | NumericLiteral | IncrementDecrement | FunctionCall | Jump)[] = []
     if (lexer.matchDelimiter('"') && allowStringLiteral) {
       result.push(lexer.eatStringLiteral())
     } else {

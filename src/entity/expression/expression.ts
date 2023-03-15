@@ -1,6 +1,6 @@
-import { Frame } from '../../interpreter/frame'
-import { Lexer } from '../../parser/lexer'
+import { DataType, Frame } from '../../interpreter/frame'
 import { FunctionCall } from './functionCall'
+import { NumericLiteral } from './numericLiteral'
 
 export class Jump {
   condition: boolean | undefined
@@ -20,93 +20,59 @@ export enum IncrementDecrement {
 }
 
 export class Expression {
-  private static assertAssignable = (val: any): string => {
-    if (typeof val != 'string') {
-      throw new Error(String(val) + ' is not assignable')
-    }
-    return val
-  }
-
   private static readonly INCREMENT_DECREMENT_OPERATORS = {
     $PRE_INCREMENT: (identifier: string, env: Frame) =>
-      env.assignValue(identifier, env.lookup(identifier) + 1),
+      env.assignValue(identifier, env.lookupNumber(identifier).increment()),
     $POST_INCREMENT: (identifier: string, env: Frame) =>
-      env.assignValue(identifier, env.lookup(identifier) + 1) - 1,
+      env.assignValue(identifier, env.lookupNumber(identifier).increment()).decrement(),
     $PRE_DECREMENT: (identifier: string, env: Frame) =>
-      env.assignValue(identifier, env.lookup(identifier) - 1),
+      env.assignValue(identifier, env.lookupNumber(identifier).decrement()),
     $POST_DECREMENT: (identifier: string, env: Frame) =>
-      env.assignValue(identifier, env.lookup(identifier) - 1) + 1
+      env.assignValue(identifier, env.lookupNumber(identifier).decrement()).increment()
   }
 
   public static readonly ASSIGNMENT_OPERATORS = {
-    '=': (right: number, left: string, env: Frame) => env.assignValue(left, right),
-    '+=': (right: number, left: string, env: Frame) =>
-      env.assignValue(left, env.lookup(left) + right),
-    '-=': (right: number, left: string, env: Frame) =>
-      env.assignValue(left, env.lookup(left) - right),
-    '*=': (right: number, left: string, env: Frame) =>
-      env.assignValue(left, env.lookup(left) * right),
-    '/=': (right: number, left: string, env: Frame) =>
-      env.assignValue(left, env.lookup(left) / right),
-    '%=': (right: number, left: string, env: Frame) =>
-      env.assignValue(left, env.lookup(left) % right)
+    '=': (right: NumericLiteral, left: string, env: Frame) => env.assignValue(left, right),
+    '+=': (right: NumericLiteral, left: string, env: Frame) =>
+      env.assignValue(left, env.lookupNumber(left).plus(right)),
+    '-=': (right: NumericLiteral, left: string, env: Frame) =>
+      env.assignValue(left, env.lookupNumber(left).minus(right)),
+    '*=': (right: NumericLiteral, left: string, env: Frame) =>
+      env.assignValue(left, env.lookupNumber(left).multiply(right)),
+    '/=': (right: NumericLiteral, left: string, env: Frame) =>
+      env.assignValue(left, env.lookupNumber(left).divideBy(right)),
+    '%=': (right: NumericLiteral, left: string, env: Frame) =>
+      env.assignValue(left, env.lookupNumber(left).modulo(right))
   }
 
-  private static readonly BINARY_OPERATORS = {
-    '+': (right: number, left: number) => left + right,
-    '-': (right: number, left: number) => left - right,
-    '*': (right: number, left: number) => left * right,
-    '/': (right: number, left: number) => left / right,
-    '%': (right: number, left: number) => left % right,
-    '<': (right: number, left: number) => this.booleanToNumber(left < right),
-    '<=': (right: number, left: number) => this.booleanToNumber(left <= right),
-    '>': (right: number, left: number) => this.booleanToNumber(left > right),
-    '>=': (right: number, left: number) => this.booleanToNumber(left >= right),
-    '==': (right: number, left: number) => this.booleanToNumber(left == right),
-    '!=': (right: number, left: number) => this.booleanToNumber(left != right),
-    '&&': (right: number, left: number) =>
-      this.booleanToNumber(this.numberToBoolean(left) && this.numberToBoolean(right)),
-    '||': (right: number, left: number) =>
-      this.booleanToNumber(this.numberToBoolean(left) || this.numberToBoolean(right))
-  }
+  private elements: (string | NumericLiteral | IncrementDecrement | FunctionCall | Jump)[]
 
-  private static readonly UNARY_OPERATORS = {
-    '!': (val: number) => this.booleanToNumber(!this.numberToBoolean(val))
-  }
-
-  private elements: (string | number | IncrementDecrement | FunctionCall | Jump)[]
-
-  constructor(elements: (string | number | IncrementDecrement | FunctionCall | Jump)[]) {
+  constructor(elements: (string | NumericLiteral | IncrementDecrement | FunctionCall | Jump)[]) {
     this.elements = elements
   }
 
   assignTo(variableName: string): Expression {
-    let newElements: (string | number | FunctionCall | Jump)[] = [variableName]
+    let newElements: (string | NumericLiteral | FunctionCall | Jump)[] = [variableName]
     newElements = newElements.concat(this.elements)
     newElements.push('=')
     return new Expression(newElements)
   }
 
-  private static numberToBoolean(ele: number): boolean {
-    return !(ele == 0)
-  }
-
-  private static booleanToNumber(val: boolean): number {
-    return val ? 1 : 0
-  }
-
-  private static toNumber(val: number | string | undefined, env: Frame): number {
+  private static toNumberLiteral(
+    val: NumericLiteral | string | undefined,
+    env: Frame
+  ): NumericLiteral {
     if (val == undefined) {
       throw new Error('undefined operand')
+    } else if (typeof val == 'string') {
+      return env.lookupNumber(val)
+    } else {
+      return val
     }
-    if (typeof val == 'string') {
-      return env.lookup(val)
-    }
-    return val
   }
 
-  evaluate(env: Frame, rts: any[], context: any): number | string | undefined {
-    const result: (number | string)[] = []
+  evaluate(env: Frame, rts: any[], context: any): NumericLiteral | string | undefined {
+    const result: (NumericLiteral | string | undefined)[] = []
     let i = 0
     while (i < this.elements.length) {
       const ele = this.elements[i]
@@ -114,12 +80,11 @@ export class Expression {
         const jump = ele as Jump
         if (
           jump.condition == undefined ||
-          jump.condition ==
-            Expression.numberToBoolean(Expression.toNumber(result[result.length - 1], env))
+          jump.condition == Expression.toNumberLiteral(result[result.length - 1], env).toBoolean()
         ) {
           if (jump.condition != undefined) {
-            result[result.length - 1] = Expression.booleanToNumber(
-              Expression.numberToBoolean(Expression.toNumber(result[result.length - 1], env))
+            result[result.length - 1] = NumericLiteral.booleanToNumericLiteral(
+              Expression.toNumberLiteral(result[result.length - 1], env).toBoolean()
             )
           }
           i = jump.toPosition
@@ -127,34 +92,37 @@ export class Expression {
         }
       } else if (ele instanceof FunctionCall) {
         ele.execute(env, rts, context)
-        if (ele.getReturnType(env) != 'void') {
+        if (ele.getReturnType(env) != DataType.VOID) {
           result.push(rts.pop())
         }
-      } else if (typeof ele == 'number') {
+      } else if (ele instanceof NumericLiteral) {
         result.push(ele)
       } else if (ele in Expression.INCREMENT_DECREMENT_OPERATORS) {
+        result.push(Expression.INCREMENT_DECREMENT_OPERATORS[ele](result.pop(), env))
+      } else if (NumericLiteral.BINARY_ARITHMETIC_OPERATORS.has(ele)) {
+        const operator = NumericLiteral.BINARY_ARITHMETIC_OPERATORS.get(ele)
+        if (!operator) {
+          throw new Error('impossible execution path')
+        }
         result.push(
-          Expression.INCREMENT_DECREMENT_OPERATORS[ele](
-            Expression.assertAssignable(result.pop()),
-            env
-          )
-        )
-      } else if (ele in Expression.BINARY_OPERATORS) {
-        result.push(
-          Expression.BINARY_OPERATORS[ele](
-            Expression.toNumber(result.pop(), env),
-            Expression.toNumber(result.pop(), env)
+          operator(
+            Expression.toNumberLiteral(result.pop(), env),
+            Expression.toNumberLiteral(result.pop(), env)
           )
         )
       } else if (ele == '&') {
         result.push('"' + result.pop() + '"')
-      } else if (ele in Expression.UNARY_OPERATORS) {
-        result.push(Expression.UNARY_OPERATORS[ele](Expression.toNumber(result.pop(), env)))
+      } else if (NumericLiteral.UNARY_ARITHMETIC_OPERATORS.has(ele)) {
+        result.push(
+          NumericLiteral.UNARY_ARITHMETIC_OPERATORS.get(ele)?.apply(
+            Expression.toNumberLiteral(result.pop(), env)
+          )
+        )
       } else if (ele in Expression.ASSIGNMENT_OPERATORS) {
         result.push(
           Expression.ASSIGNMENT_OPERATORS[ele](
-            Expression.toNumber(result.pop(), env),
-            Expression.assertAssignable(result.pop()),
+            Expression.toNumberLiteral(result.pop(), env),
+            result.pop(),
             env
           )
         )
@@ -164,10 +132,10 @@ export class Expression {
       i++
     }
     const val = result.pop()
-    if (val == undefined || typeof val == 'number' || new Lexer(val).matchDelimiter('"')) {
+    if (val == undefined || val instanceof NumericLiteral || val.startsWith('"')) {
       return val
     } else {
-      return env.lookup(val)
+      return env.lookupNumber(val)
     }
   }
 }

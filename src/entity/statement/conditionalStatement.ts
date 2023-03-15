@@ -1,8 +1,9 @@
-import { Frame } from '../../interpreter/frame'
+import { DataType, Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
 import { Expression } from '../expression/expression'
 import { ExpressionParser } from '../expression/expressionParser'
+import { NumericLiteral } from '../expression/numericLiteral'
 import { Statement } from './statement'
 
 export class ConditionalStatement extends Statement {
@@ -20,7 +21,7 @@ export class ConditionalStatement extends Statement {
     lexer: Lexer,
     allowBreak: boolean,
     allowContinue: boolean,
-    returnType: string
+    returnType: DataType
   ): ConditionalStatement[] {
     const ifBlocks: [Expression, Block][] = []
     let hasElseBlock = true
@@ -50,7 +51,7 @@ export class ConditionalStatement extends Statement {
   execute(env: Frame, rts: any[], context: any): void {
     let executed = false
     for (const [expr, body] of this.ifBlocks) {
-      if (expr.evaluate(env, rts, context) != 0) {
+      if ((expr.evaluate(env, rts, context) as NumericLiteral).toBoolean()) {
         body.execute(env, rts, context)
         executed = true
         break

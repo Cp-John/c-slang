@@ -1,8 +1,9 @@
-import { Frame } from '../../interpreter/frame'
+import { DataType, Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
 import { Expression } from '../expression/expression'
 import { ExpressionParser } from '../expression/expressionParser'
+import { NumericLiteral } from '../expression/numericLiteral'
 import { Declaration } from './declaration'
 import { ExpressionStatement } from './expressionStatement'
 import { Statement } from './statement'
@@ -31,7 +32,7 @@ export class For extends Statement {
     lexer: Lexer,
     allowBreak: boolean,
     allowContinue: boolean,
-    returnType: string
+    returnType: DataType
   ): For[] {
     const forStatement = new For([], null, null, new Block([]))
     lexer.eatKeyword('for')
@@ -62,7 +63,10 @@ export class For extends Statement {
   execute(env: Frame, rts: any[], context: any): void {
     const newEnv = Frame.extend(env)
     this.init.forEach(statement => statement.execute(newEnv, rts, context))
-    while (this.condition?.evaluate(newEnv, rts, context) != 0) {
+    while (
+      this.condition == undefined ||
+      (this.condition.evaluate(env, rts, context) as NumericLiteral).toBoolean()
+    ) {
       try {
         this.body.execute(newEnv, rts, context)
       } catch (err: any) {

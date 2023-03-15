@@ -1,40 +1,85 @@
-import { BuiltinFunction } from '../entity/function/builtinFunction'
+import { NumericLiteral } from '../entity/expression/numericLiteral'
+import { BuiltinFunction, RealBuiltinFunction } from '../entity/function/builtinFunction'
+import { Function } from '../entity/function/function'
 import { SelfDefinedFunction } from '../entity/function/selfDefinedFunction'
 import { Lexer } from '../parser/lexer'
 
 const RAND_MAX = 2147483647
 const MAX_INT = 2147483647
 
-export enum VariableType {
-  NUMBER,
-  FUNCTION
+export enum DataType {
+  INT = 'int',
+  FLOAT = 'float',
+  FUNCTION = 'function',
+  VOID = 'void'
 }
 
-function rand(env: Frame, rts: any[], context: any, args: (string | number)[]): number {
-  return Math.floor(Math.random() * MAX_INT)
+const rand: RealBuiltinFunction = (
+  env: Frame,
+  rts: any[],
+  context: any,
+  args: (string | NumericLiteral)[]
+): void => {
+  rts.push(new NumericLiteral(Math.floor(Math.random() * MAX_INT), DataType.INT))
 }
 
-function time(env: Frame, rts: any[], context: any, args: (string | number)[]): number {
-  return Math.floor(Date.now() / 1000)
+const time: RealBuiltinFunction = (
+  env: Frame,
+  rts: any[],
+  context: any,
+  args: (string | NumericLiteral)[]
+): void => {
+  rts.push(new NumericLiteral(Math.floor(Date.now() / 1000), DataType.INT))
 }
 
-function printf(env: Frame, rts: any[], context: any, args: (string | number)[]) {
+const printf: RealBuiltinFunction = (
+  env: Frame,
+  rts: any[],
+  context: any,
+  args: (string | NumericLiteral)[]
+): void => {
   let outputString = args[0] as string
   outputString = outputString.substring(1, outputString.length - 1)
-  const regex = /%d|%f|%lf/
-  for (let i = 1; i < args.length; i++) {
-    if (!regex.test(outputString)) {
+  const numberRegex = /%d|%f|%lf/
+  const stringRegex = /%s/
+  let i = 1
+  while (i < args.length) {
+    let matchedIndex = undefined
+    let matchedRegex = undefined
+    if (numberRegex.test(outputString)) {
+      matchedIndex = numberRegex.exec(outputString)?.index
+      matchedRegex = numberRegex
+    }
+    if (stringRegex.test(outputString)) {
+      const idx = stringRegex.exec(outputString)?.index
+      if (matchedIndex == undefined || (idx && idx < matchedIndex)) {
+        matchedRegex = stringRegex
+        outputString = outputString.replace(matchedRegex, args[i] as string)
+        continue
+      }
+    }
+    if (!matchedRegex) {
       throw new Error('data unused in format string')
     }
-    outputString = outputString.replace(regex, String(args[i]))
+    outputString = outputString.replace(
+      matchedRegex,
+      String((args[i] as NumericLiteral).getValue())
+    )
+    i++
   }
-  if (regex.test(outputString)) {
+  if (numberRegex.test(outputString) || stringRegex.test(outputString)) {
     throw new Error('expected more data arguments')
   }
   context['stdout'] += outputString
+  rts.push(new NumericLiteral(i - 1, DataType.INT))
 }
 
-function scanf(env: Frame, rts: any[], context: any, args: string[]) {
+const scanf: RealBuiltinFunction = (
+  env: Frame,
+  rts: any[],
+  context: any,
+  args: (string | NumericLiteral)[]
+): void => {
   let i = 1
   while (i < args.length) {
     const input = prompt(context['stdout'])
@@ -43,30 +88,32 @@ function scanf(env: Frame, rts: any[], context: any, args: string[]) {
     }
     const tokens = input?.split(/\s+/)
     for (let j = 0; tokens && j < tokens.length; j++) {
-      const variableName = args[i].replaceAll('"', '')
+      const variableName = (args[i] as string).replaceAll('"', '')
+      const variableType = env.lookupType(variableName)
       if (isNaN(parseFloat(tokens[j]))) {
-        env.assignValue(variableName, 0)
+        env.assignValue(variableName, new NumericLiteral(0, variableType))
       } else {
-        env.assignValue(variableName, parseFloat(tokens[j]))
+        env.assignValue(variableName, new NumericLiteral(parseFloat(tokens[j]), variableType))
       }
       i++
     }
     context['stdout'] += input + '\n'
   }
+  rts.push(new NumericLiteral(i - 1, DataType.INT))
 }
 
-function sqrt(env: Frame, rts: any[], context: any, args: string[]): number {
-  return Math.sqrt(parseFloat(args[0]))
+const sqrt: RealBuiltinFunction = (env: Frame, rts: any[], context: any, args: string[]): void => {
+  rts.push(new NumericLiteral(Math.sqrt(parseFloat(args[0])), DataType.FLOAT))
 }
 
 const BUILTINS = {
-  printf: [new BuiltinFunction('void', 'printf', printf), VariableType.FUNCTION],
-  scanf: [new BuiltinFunction('int', 'scanf', scanf), VariableType.FUNCTION],
-  rand: [new BuiltinFunction('int', 'rand', rand, 0), VariableType.FUNCTION],
-  time: [new BuiltinFunction('int', 'time', time, 0), VariableType.FUNCTION],
-  sqrt: [new BuiltinFunction('float', 'sqrt', sqrt, 1), VariableType.FUNCTION],
-  RAND_MAX: [RAND_MAX, VariableType.NUMBER],
-  MAX_INT: [MAX_INT, VariableType.NUMBER]
+  printf: [new BuiltinFunction(DataType.INT, 'printf', printf), DataType.FUNCTION],
+  scanf: [new BuiltinFunction(DataType.INT, 'scanf', scanf), DataType.FUNCTION],
+  rand: [new BuiltinFunction(DataType.INT, 'rand', rand, 0), DataType.FUNCTION],
+  time: [new BuiltinFunction(DataType.INT, 'time', time, 0), DataType.FUNCTION],
+  sqrt: [new BuiltinFunction(DataType.FLOAT, 'sqrt', sqrt, 1), DataType.FUNCTION],
+  RAND_MAX: [new NumericLiteral(RAND_MAX, DataType.INT), DataType.INT],
+  MAX_INT: [new NumericLiteral(MAX_INT, DataType.INT), DataType.INT]
 }
 
 export class Frame {
@@ -113,7 +160,23 @@ export class Frame {
     return this.getFrameWithName(name) != null
   }
 
-  lookup(name: string) {
+  lookupNumber(name: string): NumericLiteral {
+    const result = this.lookup(name)
+    if (!(result instanceof NumericLiteral)) {
+      throw new Error('unmatched variable type, expected number, got function object')
+    }
+    return result
+  }
+
+  lookupFunction(name: string): Function {
+    const result = this.lookup(name)
+    if (!(result instanceof Function)) {
+      throw new Error('unmatched variable type, expected function object, got number')
+    }
+    return result
+  }
+
+  private lookup(name: string): Function | NumericLiteral {
     const frame = this.findFrameWith(name)
     if (frame.boundings[name]['val'] == undefined) {
       throw new Error('unbounded identifier: ' + name)
@@ -121,23 +184,23 @@ export class Frame {
     return frame.boundings[name]['val']
   }
 
-  markType(name: string, type: VariableType) {
+  markType(name: string, type: DataType) {
     this.findFrameWith(name).boundings[name]['type'] = type
   }
 
-  lookupType(name: string): VariableType {
+  lookupType(name: string): DataType {
     return this.findFrameWith(name).boundings[name]['type']
   }
 
   private isRedefinition(name: string): boolean {
     return (
       name in this.boundings &&
-      (this.boundings[name]['type'] == VariableType.NUMBER ||
-        (this.boundings[name]['val'] as SelfDefinedFunction).body != null)
+      (!(this.boundings[name]['val'] instanceof SelfDefinedFunction) ||
+        this.boundings[name]['val'].body != null)
     )
   }
 
-  declare(nameOrLexer: string | Lexer, type: VariableType): string {
+  declare(nameOrLexer: string | Lexer, type: DataType): string {
     let name: string
     if (nameOrLexer instanceof Lexer) {
       nameOrLexer.hasNext()
@@ -156,8 +219,11 @@ export class Frame {
     return name
   }
 
-  assignValue(name: string, val: any): any {
+  assignValue<Type extends NumericLiteral | Function>(name: string, val: Type): Type {
     this.findFrameWith(name).boundings[name]['val'] = val
+    if (this.lookupType(name) == DataType.INT) {
+      ;(val as NumericLiteral).truncateDecimals()
+    }
     return val
   }
 

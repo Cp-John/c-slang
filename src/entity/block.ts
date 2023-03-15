@@ -1,4 +1,4 @@
-import { Frame } from '../interpreter/frame'
+import { DataType, Frame } from '../interpreter/frame'
 import { Lexer } from '../parser/lexer'
 import { Statement } from './statement/statement'
 
@@ -14,7 +14,7 @@ export class Block {
     lexer: Lexer,
     allowBreak: boolean,
     allowContinue: boolean,
-    returnType: string
+    returnType: DataType
   ): Block {
     lexer.eatDelimiter('{')
     const content: (Block | Statement)[] = []

@@ -1,16 +1,17 @@
-import { Frame, VariableType } from '../../interpreter/frame'
+import { DataType, Frame } from '../../interpreter/frame'
 import { Block } from '../block'
 import { Expression } from '../expression/expression'
+import { NumericLiteral } from '../expression/numericLiteral'
 import { Function } from './function'
 
 export class SelfDefinedFunction extends Function {
-  private parameterList: [string, string][]
+  private parameterList: [DataType, string][]
   body: Block | null
 
   constructor(
-    returnType: string,
+    returnType: DataType,
     functionName: string,
-    parameterList: [string, string][],
+    parameterList: [DataType, string][],
     body: Block | null
   ) {
     super(returnType, functionName, parameterList.length)
@@ -31,10 +32,19 @@ export class SelfDefinedFunction extends Function {
       )
     }
     const newEnv = Frame.extend(env)
-    this.parameterList.forEach(pair => newEnv.declare(pair[1], VariableType.NUMBER))
+    this.parameterList.forEach(pair => newEnv.declare(pair[1], pair[0]))
     actualParameterList.forEach((expr, index) =>
-      newEnv.assignValue(this.parameterList[index][1], expr.evaluate(env, rts, context))
+      newEnv.assignValue(
+        this.parameterList[index][1],
+        expr.evaluate(env, rts, context) as NumericLiteral
+      )
     )
-    this.body.execute(newEnv, rts, context)
+    try {
+      this.body.execute(newEnv, rts, context)
+    } catch (err) {
+      if (err != 'RETURN') {
+        throw err
+      }
+    }
   }
 }
