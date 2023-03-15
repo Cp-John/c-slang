@@ -1,12 +1,12 @@
 import { NumericLiteral } from '../entity/expression/numericLiteral'
-import { DataType, Frame } from '../interpreter/frame'
+import { DataType } from '../interpreter/frame'
 
 const PREPROCESSOR_DIRECTIVEG = /^\s*#\s*include\b|^\s*#\s*define\b/
 const NUMBER_REGEX = /^[+-]?([0-9]*[.])?[0-9]+/
 const IDENTIFIER_REGEX = /^[_a-zA-Z][_a-zA-Z0-9]*/
 const STRING_LITERAL_REGEX = /^".*?(?<!\\)"/
 const CHARACTER_LITERAL_REGEX = /^'.(?<!\\)'|^'\\[abfnrtv'"?]'|^'\\\\'/
-const DATA_TYPE_REGEX = /^int\b|^char\b|^float\b/
+const DATA_TYPE_REGEX = /^int\b|^char\b|^float\b|^double\b/
 const SPACE_REGEX = /^\s+/
 const PRIORITIZED_ARITHMETIC_OPERATOR_REGEX = /^[*\/%](?!=)/
 const ARITHMETIC_OPERATOR_REGEX = /^[*\/%\+-](?!=)/
@@ -128,7 +128,8 @@ export class Lexer {
     }
     this.currentLine = this.currentLine.substring(match[0].length)
     this.col += match[0].length
-    return NumericLiteral.new(parseFloat(match[0]))
+    const type = match[0].includes('.') ? DataType.FLOAT : DataType.INT
+    return new NumericLiteral(parseFloat(match[0]), type)
   }
 
   matchIdentifier(): boolean {
