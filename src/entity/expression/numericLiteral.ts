@@ -144,7 +144,7 @@ export class NumericLiteral {
     }
   }
 
-  getDataType(): string {
+  getDataType(): DataType {
     return this.type
   }
 }
