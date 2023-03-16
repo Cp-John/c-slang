@@ -85,20 +85,6 @@ function assertIsFunction(identifier: string, env: Frame, row: number, col: numb
 }
 
 export class ExpressionParser {
-  private static parseActualParameterList(env: Frame, lexer: Lexer): Expression[] {
-    const result = []
-    lexer.eatDelimiter('(')
-    if (!lexer.matchDelimiter(')')) {
-      result.push(ExpressionParser.parse(env, lexer, true, false, false))
-    }
-    while (!lexer.matchDelimiter(')')) {
-      lexer.eatDelimiter(',')
-      result.push(ExpressionParser.parse(env, lexer, true, false, false))
-    }
-    lexer.eatDelimiter(')')
-    return result
-  }
-
   private static recurParseNumericTerm(
     env: Frame,
     lexer: Lexer,
@@ -153,13 +139,11 @@ export class ExpressionParser {
       assertIsDeclared(identifier, env, row, col, lexer)
       if (lexer.matchDelimiter('(')) {
         assertIsFunction(identifier, env, row, col, lexer)
+        const functionName = String(result.pop())
         const functionCall = new FunctionCall(
           env,
-          row,
-          col,
-          lexer,
-          String(result.pop()),
-          this.parseActualParameterList(env, lexer)
+          functionName,
+          env.lookupFunction(functionName).parseActualParameters(env, lexer)
         )
         if (!allowVoid && functionCall.getReturnType(env) == 'void') {
           throw new Error(

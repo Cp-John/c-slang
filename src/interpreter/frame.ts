@@ -11,7 +11,8 @@ export enum DataType {
   INT = 'int',
   FLOAT = 'float',
   FUNCTION = 'function',
-  VOID = 'void'
+  VOID = 'void',
+  STRING = 'char*'
 }
 
 export const DATA_TYPES = Object.values(DataType)
@@ -34,6 +35,8 @@ const time: RealBuiltinFunction = (
   rts.push(new NumericLiteral(Math.floor(Date.now() / 1000), DataType.INT))
 }
 
+export const PLACEHOLDER_REGEX = /%d|%ld|%f|%lf|%s|%c/
+
 const printf: RealBuiltinFunction = (
   env: Frame,
   rts: any[],
@@ -42,26 +45,28 @@ const printf: RealBuiltinFunction = (
 ): void => {
   let outputString = args[0] as string
   outputString = outputString.substring(1, outputString.length - 1)
-  const regex = /%d|%f|%lf|%s|%c/
   let i = 1
   while (i < args.length) {
-    const toReplace = regex.exec(outputString)
+    const toReplace = PLACEHOLDER_REGEX.exec(outputString)
     if (toReplace == null) {
       throw new Error('data unused in format string')
     } else if (toReplace[0] == '%s') {
       const str = args[i] as string
-      outputString = outputString.replace(regex, str.substring(1, str.length - 1))
+      outputString = outputString.replace(PLACEHOLDER_REGEX, str.substring(1, str.length - 1))
     } else if (toReplace[0] == '%c') {
       outputString = outputString.replace(
-        regex,
+        PLACEHOLDER_REGEX,
         String.fromCharCode((args[i] as NumericLiteral).getValue())
       )
     } else {
-      outputString = outputString.replace(regex, String((args[i] as NumericLiteral).getValue()))
+      outputString = outputString.replace(
+        PLACEHOLDER_REGEX,
+        String((args[i] as NumericLiteral).getValue())
+      )
     }
     i++
   }
-  if (regex.test(outputString)) {
+  if (PLACEHOLDER_REGEX.test(outputString)) {
     throw new Error('expected more data arguments')
   }
   context['stdout'] += outputString
@@ -101,11 +106,17 @@ const sqrt: RealBuiltinFunction = (env: Frame, rts: any[], context: any, args: s
 }
 
 const BUILTINS = {
-  printf: [new BuiltinFunction(DataType.INT, 'printf', printf), DataType.FUNCTION],
-  scanf: [new BuiltinFunction(DataType.INT, 'scanf', scanf), DataType.FUNCTION],
-  rand: [new BuiltinFunction(DataType.INT, 'rand', rand, 0), DataType.FUNCTION],
-  time: [new BuiltinFunction(DataType.INT, 'time', time, 0), DataType.FUNCTION],
-  sqrt: [new BuiltinFunction(DataType.FLOAT, 'sqrt', sqrt, 1), DataType.FUNCTION],
+  printf: [
+    new BuiltinFunction(DataType.INT, 'printf', [DataType.STRING], printf, true),
+    DataType.FUNCTION
+  ],
+  scanf: [
+    new BuiltinFunction(DataType.INT, 'scanf', [DataType.STRING], scanf, true),
+    DataType.FUNCTION
+  ],
+  rand: [new BuiltinFunction(DataType.INT, 'rand', [], rand), DataType.FUNCTION],
+  time: [new BuiltinFunction(DataType.INT, 'time', [], time), DataType.FUNCTION],
+  sqrt: [new BuiltinFunction(DataType.FLOAT, 'sqrt', [DataType.FLOAT], sqrt), DataType.FUNCTION],
   RAND_MAX: [new NumericLiteral(RAND_MAX, DataType.INT), DataType.INT],
   MAX_INT: [new NumericLiteral(MAX_INT, DataType.INT), DataType.INT]
 }

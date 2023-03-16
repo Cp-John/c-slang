@@ -71,6 +71,17 @@ export class Expression {
     }
   }
 
+  toStringLiteral(): string {
+    if (
+      this.elements.length != 1 ||
+      typeof this.elements[0] != 'string' ||
+      !this.elements[0].startsWith('"')
+    ) {
+      throw new Error('cannot cast ' + String(this.elements) + ' to string literal')
+    }
+    return this.elements[0]
+  }
+
   evaluate(env: Frame, rts: any[], context: any): NumericLiteral | string | undefined {
     const result: (NumericLiteral | string | undefined)[] = []
     let i = 0

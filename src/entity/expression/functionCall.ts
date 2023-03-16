@@ -20,43 +20,10 @@ export class FunctionCall {
     })
   }
 
-  constructor(
-    env: Frame,
-    row: number,
-    col: number,
-    lexer: Lexer,
-    functionName: string,
-    actualParameterList: Expression[]
-  ) {
+  constructor(env: Frame, functionName: string, actualParameterList: Expression[]) {
     this.functionObj = env.lookupFunction(functionName)
     FunctionCall.calledFunctions.add(functionName)
     this.actualParameterList = actualParameterList
-    if (this.functionObj.arity == -1 || this.functionObj.arity == actualParameterList.length) {
-      return
-    }
-    if (actualParameterList.length < this.functionObj.arity) {
-      throw new Error(
-        lexer.formatError(
-          'too few arguments to function call, expected ' +
-            String(this.functionObj.arity) +
-            ' have ' +
-            String(this.actualParameterList.length),
-          row,
-          col
-        )
-      )
-    } else {
-      throw new Error(
-        lexer.formatError(
-          'too many arguments to function call, expected ' +
-            String(this.functionObj.arity) +
-            ' have ' +
-            String(this.actualParameterList.length),
-          row,
-          col
-        )
-      )
-    }
   }
 
   getReturnType(env: Frame): DataType {

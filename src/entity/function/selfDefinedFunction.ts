@@ -1,4 +1,5 @@
 import { DataType, Frame } from '../../interpreter/frame'
+import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
 import { Expression } from '../expression/expression'
 import { NumericLiteral } from '../expression/numericLiteral'
@@ -14,7 +15,7 @@ export class SelfDefinedFunction extends Function {
     parameterList: [DataType, string][],
     body: Block | null
   ) {
-    super(returnType, functionName, parameterList.length)
+    super(returnType, functionName)
     this.parameterList = parameterList
     this.body = body
   }
@@ -50,5 +51,20 @@ export class SelfDefinedFunction extends Function {
         throw err
       }
     }
+  }
+
+  parseActualParameters(env: Frame, lexer: Lexer): Expression[] {
+    const actualParameters: Expression[] = []
+    lexer.eatDelimiter('(')
+    this.parameterList.forEach((pair, index) => {
+      this.checkTooFewArguments(lexer)
+      if (index != 0) {
+        lexer.eatDelimiter(',')
+      }
+      actualParameters.push(Function.parseParameterWithType(env, lexer, pair[0]))
+    })
+    this.checkTooManyArguments(lexer)
+    lexer.eatDelimiter(')')
+    return actualParameters
   }
 }
