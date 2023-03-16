@@ -18,32 +18,23 @@ export class Program {
         declarations.push(declaration)
       )
     }
-    return new Program(declarations)
-  }
-
-  private static getErrorMessage(err: any): string {
-    if (err instanceof Error) {
-      return err.message
-    } else {
-      return String(err)
+    try {
+      frame.lookupFunction('main')
+    } catch (err) {
+      throw new Error(
+        "entry of execution: 'main' function not found"
+      )
     }
+    return new Program(declarations)
   }
 
   execute(context: any): void {
     const frame = Frame.extend(Frame.getBuiltinFrame())
     this.declarations.forEach(declaration => declaration.execute(frame, [], {}))
-    let mainFunction
     try {
-      mainFunction = frame.lookupFunction('main')
-    } catch (err) {
-      throw new Error(
-        "entry of execution: 'main' function not found, " + Program.getErrorMessage(err)
-      )
-    }
-    try {
-      mainFunction.call(frame, [], context, [])
+      frame.lookupFunction('main').call(frame, [], context, [])
     } catch (err: any) {
-      throw new Error('execution failed, ' + Program.getErrorMessage(err))
+      throw new Error('execution failed, ' + (err instanceof Error ? err.message : String(err)))
     }
   }
 }
