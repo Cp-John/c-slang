@@ -114,7 +114,7 @@ export const BUILTINS = {
   ],
   rand: [new BuiltinFunction(DataType.INT, 'rand', [], rand), DataType.FUNCTION],
   time: [new BuiltinFunction(DataType.INT, 'time', [], time), DataType.FUNCTION],
-  sqrt: [new BuiltinFunction(DataType.FLOAT, 'sqrt', [DataType.FLOAT], sqrt), DataType.FUNCTION],
-  RAND_MAX: [new NumericLiteral(RAND_MAX, DataType.INT), DataType.INT],
-  MAX_INT: [new NumericLiteral(MAX_INT, DataType.INT), DataType.INT]
+  sqrt: [new BuiltinFunction(DataType.FLOAT, 'sqrt', [DataType.FLOAT], sqrt), DataType.FUNCTION]
+  //   RAND_MAX: [new NumericLiteral(RAND_MAX, DataType.INT), DataType.INT],
+  //   MAX_INT: [new NumericLiteral(MAX_INT, DataType.INT), DataType.INT]
 }

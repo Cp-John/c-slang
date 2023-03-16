@@ -1,12 +1,14 @@
 import { NumericLiteral } from '../entity/expression/numericLiteral'
 import { Function } from '../entity/function/function'
 import { SelfDefinedFunction } from '../entity/function/selfDefinedFunction'
+import { Memory } from '../memory/memory'
 import { Lexer } from '../parser/lexer'
 import { BUILTINS, DataType } from './builtins'
 
 export class Frame {
   private boundings
   private prev: Frame | null
+  private top: number
 
   private static addBuiltins(frame: Frame): Frame {
     for (const name in BUILTINS) {
@@ -17,12 +19,13 @@ export class Frame {
   }
 
   static getBuiltinFrame(): Frame {
-    return Frame.addBuiltins(new Frame(null))
+    return Frame.addBuiltins(new Frame(null, Math.ceil(Memory.getOrAllocate().getNumWords() / 2)))
   }
 
-  private constructor(prev: Frame | null) {
+  private constructor(prev: Frame | null, top: number) {
     this.boundings = {}
     this.prev = prev
+    this.top = top
   }
 
   private getFrameWithName(name: string): Frame | null {
@@ -73,12 +76,23 @@ export class Frame {
     return result
   }
 
-  private lookup(name: string): Function | NumericLiteral {
+  private lookup(name: string): Function | NumericLiteral | string {
     const frame = this.findFrameWith(name)
-    if (frame.boundings[name]['val'] == undefined) {
+    const val = frame.boundings[name]['val']
+    const type = frame.boundings[name]['type']
+    if (val == undefined) {
       throw new Error('unbounded identifier: ' + name)
+    } else if (type == DataType.FUNCTION) {
+      return val
+    } else if (type == DataType.INT) {
+      return Memory.getOrAllocate().readInt(val)
+    } else if (type == DataType.FLOAT) {
+      return Memory.getOrAllocate().readFloat(val)
+    } else if (type == DataType.STRING) {
+      return Memory.getOrAllocate().readStringLiteral(val)
+    } else {
+      throw new Error('lookup unknown datatype: ' + type)
     }
-    return frame.boundings[name]['val']
   }
 
   markType(name: string, type: DataType) {
@@ -116,15 +130,25 @@ export class Frame {
     return name
   }
 
-  assignValue<Type extends NumericLiteral | Function>(name: string, val: Type): Type {
-    this.findFrameWith(name).boundings[name]['val'] = val
-    if (this.lookupType(name) == DataType.INT) {
-      ;(val as NumericLiteral).truncateDecimals()
+  assignValue<Type extends NumericLiteral | Function | string>(name: string, val: Type): Type {
+    const variableType = this.lookupType(name)
+    this.findFrameWith(name).boundings[name]['val'] = this.top
+    if (variableType == DataType.INT) {
+      this.top = Memory.getOrAllocate().writeNumeric(
+        this.top,
+        (val as NumericLiteral).truncateDecimals()
+      )
+    } else if (variableType == DataType.FLOAT) {
+      this.top = Memory.getOrAllocate().writeNumeric(this.top, val as NumericLiteral)
+    } else if (variableType == DataType.STRING) {
+      this.top = Memory.getOrAllocate().writeStringLiteral(this.top, val as string)
+    } else {
+      this.findFrameWith(name).boundings[name]['val'] = val
     }
     return val
   }
 
   static extend(prev: Frame) {
-    return new Frame(prev)
+    return new Frame(prev, prev.top)
   }
 }

@@ -47,6 +47,9 @@ export class SelfDefinedFunction extends Function {
     )
     try {
       this.body.execute(newEnv, rts, context)
+      if (this.returnType == DataType.FLOAT || this.returnType == DataType.INT) {
+        rts.push(NumericLiteral.new(0))
+      }
     } catch (err) {
       if (err != 'RETURN') {
         throw err

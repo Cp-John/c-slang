@@ -19,11 +19,15 @@ export class Memory {
     Memory.allocatedMemory = null
   }
 
-  static getOrAllocateMemory(size: number = Memory.DEFAULT_MEMORY_SIZE): Memory {
+  static getOrAllocate(size: number = Memory.DEFAULT_MEMORY_SIZE): Memory {
     if (Memory.allocatedMemory == null) {
       Memory.allocatedMemory = new Memory(size)
     }
     return Memory.allocatedMemory
+  }
+
+  getNumWords(): number {
+    return this.words
   }
 
   private assertValidAddress(address: number, isRead: boolean) {
