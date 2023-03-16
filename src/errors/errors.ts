@@ -43,7 +43,7 @@ export class CProgramError implements SourceError {
   constructor(public error: Error) {}
 
   public explain() {
-    return this.error.toString()
+    return this.error.message
   }
 
   public elaborate() {
