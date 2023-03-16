@@ -1,5 +1,5 @@
 import { NumericLiteral } from '../entity/expression/numericLiteral'
-import { DataType } from '../interpreter/frame'
+import { DataType } from '../interpreter/builtins'
 
 const PREPROCESSOR_DIRECTIVEG =
   /^\s*#\s*include\b|^\s*#\s*define\b|^\s*#\s*ifdef\b|^\s*#\s*ifndef\b|^\s*#\s*if\b|^\s*#\s*elif\b|^\s*#\s*else\b|^\s*#\s*pragma\b/

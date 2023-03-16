@@ -1,4 +1,5 @@
-import { DataType, Frame, PLACEHOLDER_REGEX } from '../../interpreter/frame'
+import { DataType, PLACEHOLDER_REGEX } from '../../interpreter/builtins'
+import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Expression } from '../expression/expression'
 import { ExpressionParser } from '../expression/expressionParser'

@@ -32,7 +32,8 @@ export abstract class Statement {
   abstract execute(env: Frame, rts: any[], context: any): void
 }
 
-import { DataType, Frame } from '../../interpreter/frame'
+import { DataType } from '../../interpreter/builtins'
+import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { ConditionalStatement } from './conditionalStatement'
 import { Declaration } from './declaration'

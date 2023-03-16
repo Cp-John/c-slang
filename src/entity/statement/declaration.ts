@@ -1,4 +1,5 @@
-import { DataType, Frame } from '../../interpreter/frame'
+import { DataType } from '../../interpreter/builtins'
+import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
 import { Expression } from '../expression/expression'

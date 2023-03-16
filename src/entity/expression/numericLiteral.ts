@@ -1,4 +1,4 @@
-import { DataType } from '../../interpreter/frame'
+import { DataType } from '../../interpreter/builtins'
 
 interface BinaryArithmeticOperator {
   (right: NumericLiteral, left: NumericLiteral): NumericLiteral

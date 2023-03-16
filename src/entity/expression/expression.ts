@@ -1,4 +1,5 @@
-import { DATA_TYPES, DataType, Frame } from '../../interpreter/frame'
+import { DATA_TYPES, DataType } from '../../interpreter/builtins'
+import { Frame } from '../../interpreter/frame'
 import { FunctionCall } from './functionCall'
 import { NumericLiteral } from './numericLiteral'
 
