@@ -76,6 +76,10 @@ export class Frame {
     return result
   }
 
+  lookupAddress(name: string): NumericLiteral {
+    return NumericLiteral.new(this.findFrameWith(name).boundings[name]['val'])
+  }
+
   private lookup(name: string): Function | NumericLiteral | string {
     const frame = this.findFrameWith(name)
     const val = frame.boundings[name]['val']
@@ -126,22 +130,20 @@ export class Frame {
         throw new Error("redefinition of '" + name + "'")
       }
     }
-    this.boundings[name] = { type: type, val: undefined }
+    const value = type == DataType.FUNCTION ? undefined : this.top++
+    this.boundings[name] = { type: type, val: value }
     return name
   }
 
   assignValue<Type extends NumericLiteral | Function | string>(name: string, val: Type): Type {
     const variableType = this.lookupType(name)
-    this.findFrameWith(name).boundings[name]['val'] = this.top
+    const address = this.findFrameWith(name).boundings[name]['val']
     if (variableType == DataType.INT) {
-      this.top = Memory.getOrAllocate().writeNumeric(
-        this.top,
-        (val as NumericLiteral).truncateDecimals()
-      )
+      Memory.getOrAllocate().writeNumeric(address, (val as NumericLiteral).truncateDecimals())
     } else if (variableType == DataType.FLOAT) {
-      this.top = Memory.getOrAllocate().writeNumeric(this.top, val as NumericLiteral)
+      Memory.getOrAllocate().writeNumeric(address, val as NumericLiteral)
     } else if (variableType == DataType.STRING) {
-      this.top = Memory.getOrAllocate().writeStringLiteral(this.top, val as string)
+      Memory.getOrAllocate().writeStringLiteral(address, val as string)
     } else {
       this.findFrameWith(name).boundings[name]['val'] = val
     }

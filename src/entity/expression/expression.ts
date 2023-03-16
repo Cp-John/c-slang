@@ -125,7 +125,7 @@ export class Expression {
           )
         )
       } else if (ele == '&') {
-        result.push('"' + result.pop() + '"')
+        result.push(env.lookupAddress(result.pop() as string))
       } else if (NumericLiteral.UNARY_ARITHMETIC_OPERATORS.has(ele)) {
         result.push(
           NumericLiteral.UNARY_ARITHMETIC_OPERATORS.get(ele)?.apply(

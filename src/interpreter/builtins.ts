@@ -1,5 +1,6 @@
 import { NumericLiteral } from '../entity/expression/numericLiteral'
 import { BuiltinFunction, RealBuiltinFunction } from '../entity/function/builtinFunction'
+import { Memory } from '../memory/memory'
 import { Frame } from './frame'
 
 const RAND_MAX = 2147483647
@@ -11,6 +12,18 @@ export enum DataType {
   FUNCTION = 'function',
   VOID = 'void',
   STRING = 'char*'
+}
+
+function sizeof(type: DataType): number {
+  if (type == DataType.INT || type == DataType.FLOAT) {
+    return 4
+  } else if (type == DataType.STRING) {
+    return 8
+  } else if (type == DataType.FUNCTION) {
+    return 0
+  } else {
+    throw new Error('unsupported sizeof datatype: ' + type)
+  }
 }
 
 export const DATA_TYPES = Object.values(DataType)
@@ -78,6 +91,7 @@ const scanf: RealBuiltinFunction = (
   args: (string | NumericLiteral)[]
 ): void => {
   let i = 1
+  let formatString = args[0] as string
   while (i < args.length) {
     const input = prompt(context['stdout'])
     if (input == null) {
@@ -85,12 +99,32 @@ const scanf: RealBuiltinFunction = (
     }
     const tokens = input?.split(/\s+/)
     for (let j = 0; tokens && j < tokens.length; j++) {
-      const variableName = (args[i] as string).replaceAll('"', '')
-      const variableType = env.lookupType(variableName)
+      const match = PLACEHOLDER_REGEX.exec(formatString)
+      if (match == null) {
+        throw new Error('impossible execution path')
+      }
+      formatString = formatString.replace(PLACEHOLDER_REGEX, '0')
+      const numeric = isNaN(parseFloat(tokens[j]))
+        ? NumericLiteral.new(0)
+        : NumericLiteral.new(parseFloat(tokens[j]))
       if (isNaN(parseFloat(tokens[j]))) {
-        env.assignValue(variableName, new NumericLiteral(0, variableType))
+        Memory.getOrAllocate().writeNumeric(
+          (args[i] as NumericLiteral).getValue(),
+          NumericLiteral.new(0)
+        )
+      }
+      if (match[0] == '%c' || match[0] == '%d' || match[0] == '%ld') {
+        Memory.getOrAllocate().writeNumeric(
+          (args[i] as NumericLiteral).getValue(),
+          numeric.castToType(DataType.INT)
+        )
+      } else if (match[0] == '%f' || match[0] == '%lf') {
+        Memory.getOrAllocate().writeNumeric(
+          (args[i] as NumericLiteral).getValue(),
+          numeric.castToType(DataType.FLOAT)
+        )
       } else {
-        env.assignValue(variableName, new NumericLiteral(parseFloat(tokens[j]), variableType))
+        throw new Error('unsupported datatype for scanf: ' + match[0])
       }
       i++
     }
