@@ -31,4 +31,8 @@ export class BuiltinFunction extends Function {
     })
     this.realFunction(env, rts, context, realParameterList)
   }
+
+  isDefined(): boolean {
+    return true
+  }
 }

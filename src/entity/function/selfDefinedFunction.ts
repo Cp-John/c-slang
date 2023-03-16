@@ -19,6 +19,10 @@ export class SelfDefinedFunction extends Function {
     this.body = body
   }
 
+  isDefined(): boolean {
+    return this.body != null
+  }
+
   call(env: Frame, rts: any[], context: any, actualParameterList: Expression[]) {
     if (this.body == null) {
       throw new Error("function '" + this.functionName + "' has no definition yet")

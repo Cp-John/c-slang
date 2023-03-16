@@ -13,4 +13,6 @@ export abstract class Function {
   }
 
   abstract call(env: Frame, rts: any[], context: any, actualParameterList: Expression[]): void
+
+  abstract isDefined(): boolean
 }

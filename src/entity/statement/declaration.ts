@@ -92,7 +92,6 @@ export abstract class Declaration extends Statement {
       } else {
         lexer.eatDelimiter(';')
       }
-      console.log(functionObj.body)
       return [new FunctionDeclaration(type, identifier, formalParameterList, functionObj.body)]
     } else {
       if (type == 'void') {

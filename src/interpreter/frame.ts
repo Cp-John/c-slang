@@ -154,6 +154,15 @@ export class Frame {
     return this.getFrameWithName(name) != null
   }
 
+  isFunctionDefined(functionName: string): boolean {
+    const frame = this.getFrameWithName(functionName)
+    if (frame == null) {
+      return false
+    }
+    const obj = frame.boundings[functionName]
+    return obj['val'] instanceof Function && obj['val'].isDefined()
+  }
+
   lookupNumber(name: string): NumericLiteral {
     const result = this.lookup(name)
     if (!(result instanceof NumericLiteral)) {
@@ -190,7 +199,7 @@ export class Frame {
     return (
       name in this.boundings &&
       (!(this.boundings[name]['val'] instanceof SelfDefinedFunction) ||
-        this.boundings[name]['val'].body != null)
+        this.boundings[name]['val'].isDefined())
     )
   }
 

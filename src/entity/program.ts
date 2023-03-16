@@ -1,5 +1,6 @@
 import { DataType, Frame } from '../interpreter/frame'
 import { Lexer } from '../parser/lexer'
+import { FunctionCall } from './expression/functionCall'
 import { Declaration } from './statement/declaration'
 import { Statement } from './statement/statement'
 
@@ -13,11 +14,13 @@ export class Program {
   static parse(lexer: Lexer): Program {
     const declarations: Statement[] = []
     const frame = Frame.extend(Frame.getBuiltinFrame())
+    FunctionCall.clearCalledFunctions()
     while (lexer.hasNext()) {
       Declaration.parse(frame, lexer, false, false, DataType.VOID, true).forEach(declaration =>
         declarations.push(declaration)
       )
     }
+    FunctionCall.checkCalledFunctionDefinition(frame)
     try {
       frame.lookupFunction('main')
     } catch (err) {

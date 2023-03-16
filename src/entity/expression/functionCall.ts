@@ -6,6 +6,19 @@ import { Expression } from './expression'
 export class FunctionCall {
   private functionObj: Function
   private actualParameterList: Expression[]
+  private static calledFunctions: Set<string> = new Set<string>()
+
+  static clearCalledFunctions(): void {
+    FunctionCall.calledFunctions.clear()
+  }
+
+  static checkCalledFunctionDefinition(env: Frame): void {
+    FunctionCall.calledFunctions.forEach(functionName => {
+      if (!env.isFunctionDefined(functionName)) {
+        throw new Error("called function '" + functionName + "' has no definition yet")
+      }
+    })
+  }
 
   constructor(
     env: Frame,
@@ -16,6 +29,9 @@ export class FunctionCall {
     actualParameterList: Expression[]
   ) {
     this.functionObj = env.lookupFunction(functionName)
+    console.log('created function call:', functionName)
+    FunctionCall.calledFunctions.add(functionName)
+    console.log(FunctionCall.calledFunctions)
     this.actualParameterList = actualParameterList
     if (this.functionObj.arity == -1 || this.functionObj.arity == actualParameterList.length) {
       return
