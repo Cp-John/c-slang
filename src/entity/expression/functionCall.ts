@@ -29,9 +29,7 @@ export class FunctionCall {
     actualParameterList: Expression[]
   ) {
     this.functionObj = env.lookupFunction(functionName)
-    console.log('created function call:', functionName)
     FunctionCall.calledFunctions.add(functionName)
-    console.log(FunctionCall.calledFunctions)
     this.actualParameterList = actualParameterList
     if (this.functionObj.arity == -1 || this.functionObj.arity == actualParameterList.length) {
       return
