@@ -72,8 +72,10 @@ export abstract class Declaration extends Statement {
     let type = DataType.VOID
     if (lexer.matchKeyword('void')) {
       lexer.eatKeyword('void')
-    } else {
+    } else if (lexer.matchDataType()) {
       type = lexer.eatDataType()
+    } else {
+      throw new Error(lexer.formatError('declaration statement expected'))
     }
     const identifier = env.declare(lexer, type)
     if (lexer.matchDelimiter('(')) {
