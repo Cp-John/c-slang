@@ -143,7 +143,7 @@ export class ExpressionParser {
       this.recurParseNumericTerm(env, lexer, result, false, isConstantExpression)
       assertAssignable(result[result.length - 1], env, row, col, lexer)
       result.push(opr)
-    } else {
+    } else if (lexer.matchIdentifier()) {
       if (isConstantExpression) {
         throw new Error(lexer.formatError('expected a constant expression'))
       }
@@ -172,6 +172,8 @@ export class ExpressionParser {
         }
         result.push(functionCall)
       }
+    } else {
+      throw new Error(lexer.formatError('expression expected'))
     }
 
     if (lexer.matchIncrementDecrementOperator()) {
