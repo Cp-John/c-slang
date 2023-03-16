@@ -1,7 +1,8 @@
 import { NumericLiteral } from '../entity/expression/numericLiteral'
 import { DataType } from '../interpreter/frame'
 
-const PREPROCESSOR_DIRECTIVEG = /^\s*#\s*include\b|^\s*#\s*define\b/
+const PREPROCESSOR_DIRECTIVEG =
+  /^\s*#\s*include\b|^\s*#\s*define\b|^\s*#\s*ifdef\b|^\s*#\s*ifndef\b|^\s*#\s*if\b|^\s*#\s*elif\b|^\s*#\s*else\b|^\s*#\s*pragma\b/
 const NUMBER_REGEX = /^[+-]?([0-9]*[.])?[0-9]+/
 const IDENTIFIER_REGEX = /^[_a-zA-Z][_a-zA-Z0-9]*/
 const STRING_LITERAL_REGEX = /^".*?(?<!\\)"/
@@ -90,8 +91,13 @@ export class Lexer {
       this.currentLine = this.lines[this.row]
       this.row += 1
       this.col = 1
-      if (PREPROCESSOR_DIRECTIVEG.test(this.currentLine)) {
+      const match = PREPROCESSOR_DIRECTIVEG.exec(this.currentLine)
+      if (match == null) {
+        return
+      } else if (match[0].includes('include')) {
         this.skipToNextLine()
+      } else {
+        throw new Error(this.formatError('preprocessor directive is not supported'))
       }
     } else {
       this.col += this.currentLine.length
