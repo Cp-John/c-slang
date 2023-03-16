@@ -21,9 +21,7 @@ export class Program {
     try {
       frame.lookupFunction('main')
     } catch (err) {
-      throw new Error(
-        "entry of execution: 'main' function not found"
-      )
+      throw new Error("entry of execution: 'main' function not found")
     }
     return new Program(declarations)
   }
