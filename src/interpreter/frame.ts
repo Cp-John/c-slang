@@ -65,7 +65,7 @@ const printf: RealBuiltinFunction = (
     throw new Error('expected more data arguments')
   }
   context['stdout'] += outputString
-  rts.push(new NumericLiteral(i - 1, DataType.INT))
+  rts.push(new NumericLiteral(outputString.length, DataType.INT))
 }
 
 const scanf: RealBuiltinFunction = (
