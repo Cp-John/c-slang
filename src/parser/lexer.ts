@@ -102,7 +102,7 @@ export class Lexer {
   formatError(msg: string, row: number = this.row, col: number = this.col): string {
     return (
       msg +
-      ' before (' +
+      ' at (' +
       row +
       ', ' +
       col +
