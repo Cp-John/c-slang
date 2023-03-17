@@ -37,7 +37,7 @@ export class NumericLiteral {
   }
 
   static booleanToNumericLiteral(val: boolean): NumericLiteral {
-    return val ? new NumericLiteral(1, PrimitiveType.INT) : new NumericLiteral(0, PrimitiveType.INT)
+    return val ? NumericLiteral.new(1) : NumericLiteral.new(0)
   }
 
   dereferenceAsNumeric(): NumericLiteral {
@@ -184,7 +184,26 @@ export class NumericLiteral {
   }
 
   static new(val: number): NumericLiteral {
-    return new NumericLiteral(val, val % 1 == 0 ? PrimitiveType.INT : PrimitiveType.FLOAT)
+    return new NumericLiteral(
+      val,
+      val % 1 != 0
+        ? PrimitiveType.FLOAT
+        : val >= 0 && val < 256
+        ? PrimitiveType.CHAR
+        : PrimitiveType.INT
+    )
+  }
+
+  static parse(str: string): NumericLiteral {
+    const val = parseFloat(str)
+    if (isNaN(val)) {
+      return NumericLiteral.new(0)
+    }
+    if (str.includes('.')) {
+      return new NumericLiteral(val, PrimitiveType.FLOAT)
+    } else {
+      return NumericLiteral.new(val)
+    }
   }
 
   constructor(val: number, type: DataType) {

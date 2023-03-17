@@ -135,8 +135,7 @@ export class Lexer {
     }
     this.currentLine = this.currentLine.substring(match[0].length)
     this.col += match[0].length
-    const type = match[0].includes('.') ? PrimitiveType.FLOAT : PrimitiveType.INT
-    return new NumericLiteral(parseFloat(match[0]), type)
+    return NumericLiteral.parse(match[0])
   }
 
   matchIdentifier(): boolean {
@@ -295,7 +294,7 @@ export class Lexer {
     }
     this.currentLine = this.currentLine.substring(match[0].length)
     this.col += match[0].length
-    return new NumericLiteral(Lexer.restoreEscapeChars(match[0]).charCodeAt(1), PrimitiveType.INT)
+    return new NumericLiteral(Lexer.restoreEscapeChars(match[0]).charCodeAt(1), PrimitiveType.CHAR)
   }
 
   private static restoreEscapeChars(original: string): string {
