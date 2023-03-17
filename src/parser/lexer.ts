@@ -21,6 +21,7 @@ const RESERVED_KEYWORDS = new Set([
   'int',
   'char',
   'float',
+  'double',
   'break',
   'continue',
   'return',
