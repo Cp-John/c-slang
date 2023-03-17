@@ -124,6 +124,10 @@ export class Expression {
         result.push(ele)
       } else if (ele instanceof PointerType || PRIMITIVE_TYPES.includes(ele as PrimitiveType)) {
         result.push(Expression.toNumberLiteral(result.pop(), env).castToType(ele as DataType))
+      } else if (ele == '&') {
+        result.push(env.lookupAddress(result.pop() as string))
+      } else if (ele == '$DEREFERENCE') {
+        result.push(Expression.toNumberLiteral(result.pop(), env).dereference())
       } else if (ele in Expression.INCREMENT_DECREMENT_OPERATORS) {
         result.push(Expression.INCREMENT_DECREMENT_OPERATORS[ele](result.pop(), env))
       } else if (NumericLiteral.BINARY_ARITHMETIC_OPERATORS.has(ele)) {
@@ -137,8 +141,6 @@ export class Expression {
             Expression.toNumberLiteral(result.pop(), env)
           )
         )
-      } else if (ele == '&') {
-        result.push(env.lookupAddress(result.pop() as string))
       } else if (NumericLiteral.UNARY_ARITHMETIC_OPERATORS.has(ele)) {
         result.push(
           NumericLiteral.UNARY_ARITHMETIC_OPERATORS.get(ele)?.apply(

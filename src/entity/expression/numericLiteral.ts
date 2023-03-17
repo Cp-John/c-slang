@@ -47,7 +47,7 @@ export class NumericLiteral {
       this.truncateDecimals()
       return this.castToType(newType)
     } else if (newType == PrimitiveType.CHAR) {
-      return new NumericLiteral((this.val % 256) - 128, newType)
+      return new NumericLiteral(this.val % 256, newType)
     } else {
       return new NumericLiteral(this.val, newType)
     }

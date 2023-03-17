@@ -52,7 +52,7 @@ export class Memory {
     } else if (numeric.getDataType() == PrimitiveType.FLOAT) {
       this.view.setFloat32(address * Memory.WORD_SIZE, numeric.getValue())
     } else if (numeric.getDataType() == PrimitiveType.CHAR) {
-      this.view.setInt8(address * Memory.WORD_SIZE, numeric.getValue())
+      this.view.setUint8(address * Memory.WORD_SIZE, numeric.getValue())
     } else {
       throw new Error("attempt to write datatype '" + numeric.getDataType() + "' as numeric type")
     }
@@ -68,7 +68,7 @@ export class Memory {
 
   readChar(address: number): NumericLiteral {
     this.assertValidAddress(address, true)
-    return NumericLiteral.new(this.view.getInt8(address * Memory.WORD_SIZE)).castToType(
+    return NumericLiteral.new(this.view.getUint8(address * Memory.WORD_SIZE)).castToType(
       PrimitiveType.CHAR
     )
   }

@@ -76,6 +76,15 @@ export class ExpressionParser {
       assertAddressable(result[result.length - 1], env, row, col, lexer)
       result.push('&')
       dataType = new PointerType(type)
+    } else if (lexer.matchDelimiter('*')) {
+      const [row, col] = lexer.tell()
+      lexer.eatDelimiter('*')
+      const type = this.recurParseNumericTerm(env, lexer, result, false, isConstantExpression)
+      if (!(type instanceof PointerType)) {
+        throw new Error(lexer.formatError("indirection requires pointer operand, ('" + type + "' invalid)", row, col))
+      }
+      result.push('$DEREFERENCE')
+      dataType = type.dereference()
     } else if (lexer.matchDelimiter('(')) {
       lexer.eatDelimiter('(')
       if (lexer.matchDataType()) {
