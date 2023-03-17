@@ -1,5 +1,6 @@
 import { DataType, PointerType, PrimitiveType } from '../../interpreter/builtins'
 import { Memory } from '../../memory/memory'
+import { getHigherPrecisionType } from './typeCheck'
 
 interface BinaryArithmeticOperator {
   (right: NumericLiteral, left: NumericLiteral): NumericLiteral
@@ -37,7 +38,19 @@ export class NumericLiteral {
     if (newType == PrimitiveType.FUNCTION || newType == PrimitiveType.VOID) {
       throw new Error("attempt to cast '" + this.type + "' to '" + newType + "'")
     }
-    return new NumericLiteral(this.val, newType)
+    if (
+      newType.toString() == this.type.toString() ||
+      (newType instanceof PointerType && this.type instanceof PointerType)
+    ) {
+      return new NumericLiteral(this.val, newType)
+    } else if (this.type == PrimitiveType.FLOAT) {
+      this.truncateDecimals()
+      return this.castToType(newType)
+    } else if (newType == PrimitiveType.CHAR) {
+      return new NumericLiteral((this.val % 256) - 128, newType)
+    } else {
+      return new NumericLiteral(this.val, newType)
+    }
   }
 
   static booleanToNumericLiteral(val: boolean): NumericLiteral {
@@ -142,45 +155,40 @@ export class NumericLiteral {
     ['!', (literal: NumericLiteral) => this.booleanToNumericLiteral(!literal.toBoolean())]
   ])
 
-  truncateDecimals() {
+  private truncateDecimals() {
     this.type = PrimitiveType.INT
     this.val = Math[this.val < 0 ? 'ceil' : 'floor'](this.val)
     return this
   }
 
   divideBy(right: NumericLiteral): NumericLiteral {
-    if (this.type == PrimitiveType.INT && right.type == PrimitiveType.INT) {
-      return NumericLiteral.new(this.val / right.val).truncateDecimals()
-    }
-    return new NumericLiteral(this.val / right.val, PrimitiveType.FLOAT)
+    return NumericLiteral.new(this.val / right.val).castToType(
+      getHigherPrecisionType(this.type, right.type)
+    )
   }
 
   plus(right: NumericLiteral) {
-    if (this.type == PrimitiveType.INT && right.type == PrimitiveType.INT) {
-      return new NumericLiteral(this.val + right.val, PrimitiveType.INT)
-    }
-    return new NumericLiteral(this.val + right.val, PrimitiveType.FLOAT)
+    return NumericLiteral.new(this.val + right.val).castToType(
+      getHigherPrecisionType(this.type, right.type)
+    )
   }
 
   minus(right: NumericLiteral) {
-    if (this.type == PrimitiveType.INT && right.type == PrimitiveType.INT) {
-      return new NumericLiteral(this.val - right.val, PrimitiveType.INT)
-    }
-    return new NumericLiteral(this.val - right.val, PrimitiveType.FLOAT)
+    return NumericLiteral.new(this.val - right.val).castToType(
+      getHigherPrecisionType(this.type, right.type)
+    )
   }
 
   multiply(right: NumericLiteral) {
-    if (this.type == PrimitiveType.INT && right.type == PrimitiveType.INT) {
-      return new NumericLiteral(this.val * right.val, PrimitiveType.INT)
-    }
-    return new NumericLiteral(this.val * right.val, PrimitiveType.FLOAT)
+    return NumericLiteral.new(this.val * right.val).castToType(
+      getHigherPrecisionType(this.type, right.type)
+    )
   }
 
   modulo(right: NumericLiteral) {
-    if (this.type == PrimitiveType.INT && right.type == PrimitiveType.INT) {
-      return new NumericLiteral(this.val % right.val, PrimitiveType.INT)
-    }
-    return new NumericLiteral(this.val % right.val, PrimitiveType.FLOAT)
+    return NumericLiteral.new(this.val % right.val).castToType(
+      getHigherPrecisionType(this.type, right.type)
+    )
   }
 
   sqrt() {
@@ -192,7 +200,7 @@ export class NumericLiteral {
       val,
       val % 1 != 0
         ? PrimitiveType.FLOAT
-        : val >= 0 && val < 256
+        : val >= -128 && val <= 127
         ? PrimitiveType.CHAR
         : PrimitiveType.INT
     )
@@ -206,16 +214,13 @@ export class NumericLiteral {
     if (str.includes('.')) {
       return new NumericLiteral(val, PrimitiveType.FLOAT)
     } else {
-      return NumericLiteral.new(val)
+      return new NumericLiteral(val, PrimitiveType.INT)
     }
   }
 
-  constructor(val: number, type: DataType) {
+  private constructor(val: number, type: DataType) {
     this.val = val
     this.type = type
-    if (type == PrimitiveType.INT) {
-      this.truncateDecimals()
-    }
   }
 
   getDataType(): DataType {

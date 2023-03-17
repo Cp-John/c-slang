@@ -38,6 +38,9 @@ function checkImplicitConversion(
   leftType: DataType,
   rightType: DataType
 ) {
+  if (leftType == PrimitiveType.CHAR || rightType == PrimitiveType.INT) {
+    return
+  }
   if (getHigherPrecisionType(leftType, rightType).toString() != leftType.toString()) {
     throw new Error(
       lexer.formatError(

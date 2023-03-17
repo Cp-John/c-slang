@@ -38,7 +38,9 @@ export class Memory {
 
   readInt(address: number): NumericLiteral {
     this.assertValidAddress(address, true)
-    return new NumericLiteral(this.view.getInt32(address * Memory.WORD_SIZE), PrimitiveType.INT)
+    return NumericLiteral.new(this.view.getInt32(address * Memory.WORD_SIZE)).castToType(
+      PrimitiveType.INT
+    )
   }
 
   writeNumeric(address: number, numeric: NumericLiteral): number {
@@ -50,7 +52,7 @@ export class Memory {
     } else if (numeric.getDataType() == PrimitiveType.FLOAT) {
       this.view.setFloat32(address * Memory.WORD_SIZE, numeric.getValue())
     } else if (numeric.getDataType() == PrimitiveType.CHAR) {
-      this.view.setUint8(address * Memory.WORD_SIZE, numeric.getValue())
+      this.view.setInt8(address * Memory.WORD_SIZE, numeric.getValue())
     } else {
       throw new Error("attempt to write datatype '" + numeric.getDataType() + "' as numeric type")
     }
@@ -59,12 +61,16 @@ export class Memory {
 
   readFloat(address: number): NumericLiteral {
     this.assertValidAddress(address, true)
-    return new NumericLiteral(this.view.getFloat32(address * Memory.WORD_SIZE), PrimitiveType.FLOAT)
+    return NumericLiteral.new(this.view.getFloat32(address * Memory.WORD_SIZE)).castToType(
+      PrimitiveType.FLOAT
+    )
   }
 
   readChar(address: number): NumericLiteral {
     this.assertValidAddress(address, true)
-    return new NumericLiteral(this.view.getUint8(address * Memory.WORD_SIZE), PrimitiveType.CHAR)
+    return NumericLiteral.new(this.view.getInt8(address * Memory.WORD_SIZE)).castToType(
+      PrimitiveType.CHAR
+    )
   }
 
   writeStringLiteral(address: number, stringLiteral: string): number {

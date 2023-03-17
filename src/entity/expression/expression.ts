@@ -1,6 +1,5 @@
 import { DataType, PointerType, PRIMITIVE_TYPES, PrimitiveType } from '../../interpreter/builtins'
 import { Frame } from '../../interpreter/frame'
-import { Memory } from '../../memory/memory'
 import { FunctionCall } from './functionCall'
 import { NumericLiteral } from './numericLiteral'
 

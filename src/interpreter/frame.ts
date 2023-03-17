@@ -78,7 +78,7 @@ export class Frame {
 
   lookupAddress(name: string): NumericLiteral {
     const addrType = this.findFrameWith(name).boundings[name]
-    return new NumericLiteral(addrType['val'], new PointerType(addrType['type']))
+    return NumericLiteral.new(addrType['val']).castToType(new PointerType(addrType['type']))
   }
 
   private lookup(name: string): Function | NumericLiteral | string {
@@ -121,7 +121,7 @@ export class Frame {
   allocateStringLiteral(stringLiteral: string): NumericLiteral {
     const address = this.top
     this.top = Memory.getOrAllocate().writeStringLiteral(this.top, stringLiteral)
-    return new NumericLiteral(address, new PointerType(PrimitiveType.CHAR))
+    return NumericLiteral.new(address).castToType(new PointerType(PrimitiveType.CHAR))
   }
 
   declare(nameOrLexer: string | Lexer, type: DataType): string {

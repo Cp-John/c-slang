@@ -42,9 +42,7 @@ export class Return extends Statement {
       throw 'RETURN'
     }
     rts.push(this.expression.evaluate(env, rts, context))
-    if (this.returnType == PrimitiveType.INT) {
-      ;(rts[rts.length - 1] as NumericLiteral).truncateDecimals()
-    }
+    ;(rts[rts.length - 1] as NumericLiteral).castToType(this.returnType)
     throw 'RETURN'
   }
 }

@@ -294,7 +294,9 @@ export class Lexer {
     }
     this.currentLine = this.currentLine.substring(match[0].length)
     this.col += match[0].length
-    return new NumericLiteral(Lexer.restoreEscapeChars(match[0]).charCodeAt(1), PrimitiveType.CHAR)
+    return NumericLiteral.new(Lexer.restoreEscapeChars(match[0]).charCodeAt(1)).castToType(
+      PrimitiveType.CHAR
+    )
   }
 
   private static restoreEscapeChars(original: string): string {

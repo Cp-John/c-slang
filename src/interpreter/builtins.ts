@@ -52,7 +52,7 @@ const rand: RealBuiltinFunction = (
   context: any,
   args: NumericLiteral[]
 ): void => {
-  rts.push(new NumericLiteral(Math.floor(Math.random() * MAX_INT), PrimitiveType.INT))
+  rts.push(NumericLiteral.new(Math.floor(Math.random() * MAX_INT)).castToType(PrimitiveType.INT))
 }
 
 const time: RealBuiltinFunction = (
@@ -61,7 +61,7 @@ const time: RealBuiltinFunction = (
   context: any,
   args: NumericLiteral[]
 ): void => {
-  rts.push(new NumericLiteral(Math.floor(Date.now() / 1000), PrimitiveType.INT))
+  rts.push(NumericLiteral.new(Math.floor(Date.now() / 1000)).castToType(PrimitiveType.INT))
 }
 
 export const PLACEHOLDER_REGEX = /%d|%ld|%f|%lf|%s|%c|%p/
@@ -83,7 +83,7 @@ const printf: RealBuiltinFunction = (
     } else if (toReplace[0] == '%c') {
       outputString = outputString.replace(PLACEHOLDER_REGEX, args[i].toChar())
     } else {
-      outputString = outputString.replace(PLACEHOLDER_REGEX, args[i].toChar())
+      outputString = outputString.replace(PLACEHOLDER_REGEX, String(args[i].getValue()))
     }
     i++
   }
@@ -91,7 +91,7 @@ const printf: RealBuiltinFunction = (
     throw new Error('expected more data arguments')
   }
   context['stdout'] += outputString
-  rts.push(new NumericLiteral(outputString.length, PrimitiveType.INT))
+  rts.push(NumericLiteral.new(outputString.length).castToType(PrimitiveType.INT))
 }
 
 const scanf: RealBuiltinFunction = (
@@ -142,7 +142,7 @@ const scanf: RealBuiltinFunction = (
     }
     context['stdout'] += input + '\n'
   }
-  rts.push(new NumericLiteral(i - 1, PrimitiveType.INT))
+  rts.push(NumericLiteral.new(i - 1).castToType(PrimitiveType.INT))
 }
 
 const sqrt: RealBuiltinFunction = (
