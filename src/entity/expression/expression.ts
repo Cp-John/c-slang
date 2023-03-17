@@ -1,5 +1,6 @@
-import { DATA_TYPES, DataType } from '../../interpreter/builtins'
+import { DataType, PointerType, PRIMITIVE_TYPES, PrimitiveType } from '../../interpreter/builtins'
 import { Frame } from '../../interpreter/frame'
+import { Memory } from '../../memory/memory'
 import { FunctionCall } from './functionCall'
 import { NumericLiteral } from './numericLiteral'
 
@@ -46,17 +47,41 @@ export class Expression {
       env.assignValue(left, env.lookupNumber(left).modulo(right))
   }
 
-  private elements: (string | NumericLiteral | IncrementDecrement | FunctionCall | Jump)[]
+  private elements: (
+    | string
+    | DataType
+    | NumericLiteral
+    | IncrementDecrement
+    | FunctionCall
+    | Jump
+  )[]
+  private type: DataType
 
-  constructor(elements: (string | NumericLiteral | IncrementDecrement | FunctionCall | Jump)[]) {
+  constructor(
+    elements: (string | DataType | NumericLiteral | IncrementDecrement | FunctionCall | Jump)[],
+    type: DataType
+  ) {
     this.elements = elements
+    this.type = type
   }
 
-  assignTo(variableName: string): Expression {
-    let newElements: (string | NumericLiteral | FunctionCall | Jump)[] = [variableName]
-    newElements = newElements.concat(this.elements)
-    newElements.push('=')
-    return new Expression(newElements)
+  getType(): DataType {
+    return this.type
+  }
+
+  isImmediateString() {
+    return (
+      this.type.toString() == 'char*' &&
+      this.elements.length == 1 &&
+      this.elements[0] instanceof NumericLiteral
+    )
+  }
+
+  toImmediateString(): string {
+    if (!this.isImmediateString()) {
+      throw new Error('cannot get immediate string literal')
+    }
+    return (this.elements[0] as NumericLiteral).dereferenceAsString()
   }
 
   private static toNumberLiteral(
@@ -72,18 +97,7 @@ export class Expression {
     }
   }
 
-  toStringLiteral(): string {
-    if (
-      this.elements.length != 1 ||
-      typeof this.elements[0] != 'string' ||
-      !this.elements[0].startsWith('"')
-    ) {
-      throw new Error('cannot cast ' + String(this.elements) + ' to string literal')
-    }
-    return this.elements[0]
-  }
-
-  evaluate(env: Frame, rts: any[], context: any): NumericLiteral | string | undefined {
+  evaluate(env: Frame, rts: any[], context: any): NumericLiteral | undefined {
     const result: (NumericLiteral | string | undefined)[] = []
     let i = 0
     while (i < this.elements.length) {
@@ -104,12 +118,12 @@ export class Expression {
         }
       } else if (ele instanceof FunctionCall) {
         ele.execute(env, rts, context)
-        if (ele.getReturnType(env) != DataType.VOID) {
+        if (ele.getReturnType(env) != PrimitiveType.VOID) {
           result.push(rts.pop())
         }
       } else if (ele instanceof NumericLiteral) {
         result.push(ele)
-      } else if (DATA_TYPES.includes(ele as DataType)) {
+      } else if (ele instanceof PointerType || PRIMITIVE_TYPES.includes(ele as PrimitiveType)) {
         result.push(Expression.toNumberLiteral(result.pop(), env).castToType(ele as DataType))
       } else if (ele in Expression.INCREMENT_DECREMENT_OPERATORS) {
         result.push(Expression.INCREMENT_DECREMENT_OPERATORS[ele](result.pop(), env))
@@ -146,7 +160,7 @@ export class Expression {
       i++
     }
     const val = result.pop()
-    if (val == undefined || val instanceof NumericLiteral || val.startsWith('"')) {
+    if (val == undefined || val instanceof NumericLiteral) {
       return val
     } else {
       return env.lookupNumber(val)

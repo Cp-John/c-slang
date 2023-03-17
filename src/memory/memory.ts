@@ -1,5 +1,5 @@
 import { NumericLiteral } from '../entity/expression/numericLiteral'
-import { DataType } from '../interpreter/builtins'
+import { PointerType, PrimitiveType } from '../interpreter/builtins'
 
 export class Memory {
   private buffer: ArrayBuffer
@@ -38,15 +38,19 @@ export class Memory {
 
   readInt(address: number): NumericLiteral {
     this.assertValidAddress(address, true)
-    return new NumericLiteral(this.view.getInt32(address * Memory.WORD_SIZE), DataType.INT)
+    return new NumericLiteral(this.view.getInt32(address * Memory.WORD_SIZE), PrimitiveType.INT)
   }
 
   writeNumeric(address: number, numeric: NumericLiteral): number {
     this.assertValidAddress(address, false)
-    if (numeric.getDataType() == DataType.INT) {
+    if (numeric.getDataType() instanceof PointerType) {
       this.view.setInt32(address * Memory.WORD_SIZE, numeric.getValue())
-    } else if (numeric.getDataType() == DataType.FLOAT) {
+    } else if (numeric.getDataType() == PrimitiveType.INT) {
+      this.view.setInt32(address * Memory.WORD_SIZE, numeric.getValue())
+    } else if (numeric.getDataType() == PrimitiveType.FLOAT) {
       this.view.setFloat32(address * Memory.WORD_SIZE, numeric.getValue())
+    } else if (numeric.getDataType() == PrimitiveType.CHAR) {
+      this.view.setUint8(address * Memory.WORD_SIZE, numeric.getValue())
     } else {
       throw new Error("attempt to write datatype '" + numeric.getDataType() + "' as numeric type")
     }
@@ -55,7 +59,12 @@ export class Memory {
 
   readFloat(address: number): NumericLiteral {
     this.assertValidAddress(address, true)
-    return new NumericLiteral(this.view.getFloat32(address * Memory.WORD_SIZE), DataType.FLOAT)
+    return new NumericLiteral(this.view.getFloat32(address * Memory.WORD_SIZE), PrimitiveType.FLOAT)
+  }
+
+  readChar(address: number): NumericLiteral {
+    this.assertValidAddress(address, true)
+    return new NumericLiteral(this.view.getUint8(address * Memory.WORD_SIZE), PrimitiveType.CHAR)
   }
 
   writeStringLiteral(address: number, stringLiteral: string): number {
@@ -84,6 +93,6 @@ export class Memory {
       stringLiteral += String.fromCharCode(val)
       addr++
     }
-    return '"' + stringLiteral + '"'
+    return stringLiteral
   }
 }

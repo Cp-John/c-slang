@@ -1,4 +1,5 @@
-import { DataType } from '../../interpreter/builtins'
+import { DataType, PointerType, PrimitiveType } from '../../interpreter/builtins'
+import { Memory } from '../../memory/memory'
 
 interface BinaryArithmeticOperator {
   (right: NumericLiteral, left: NumericLiteral): NumericLiteral
@@ -29,14 +30,60 @@ export class NumericLiteral {
   }
 
   castToType(newType: DataType): NumericLiteral {
-    if (newType != DataType.FLOAT && newType != DataType.INT) {
-      throw new Error("invalid type '" + newType + "' for numeric literal")
+    if (newType == PrimitiveType.FUNCTION || newType == PrimitiveType.VOID) {
+      throw new Error("attempt to cast '" + this.type + "' to '" + newType + "'")
     }
     return new NumericLiteral(this.val, newType)
   }
 
   static booleanToNumericLiteral(val: boolean): NumericLiteral {
-    return val ? new NumericLiteral(1, DataType.INT) : new NumericLiteral(0, DataType.INT)
+    return val ? new NumericLiteral(1, PrimitiveType.INT) : new NumericLiteral(0, PrimitiveType.INT)
+  }
+
+  dereferenceAsNumeric(): NumericLiteral {
+    if (!(this.type instanceof PointerType)) {
+      throw new Error("attempt to dereference non-pointer type '" + this.type + "' to numeric type")
+    } else if (this.type.dereference() == PrimitiveType.CHAR) {
+      throw new Error("attempt to dereference type '" + this.type + "' to numeric type")
+    }
+    if (this.type.dereference() instanceof PointerType) {
+      return Memory.getOrAllocate().readInt(this.val).castToType(this.type.dereference())
+    } else if (this.type.dereference() == PrimitiveType.INT) {
+      return Memory.getOrAllocate().readInt(this.val)
+    } else if (this.type.dereference() == PrimitiveType.FLOAT) {
+      return Memory.getOrAllocate().readFloat(this.val)
+    } else if (this.type.dereference() == PrimitiveType.CHAR) {
+      return Memory.getOrAllocate().readChar(this.val)
+    } else {
+      throw new Error("attempt to read unknown type '" + this.type + "' as numeric type")
+    }
+  }
+
+  dereferenceAsString(): string {
+    if (!(this.type instanceof PointerType)) {
+      throw new Error("attempt to dereference non-pointer type '" + this.type + "' to 'char*'")
+    }
+    if (this.type.dereference() != PrimitiveType.CHAR) {
+      throw new Error("attempt to dereference type '" + this.type + "' to 'char*'")
+    }
+    return Memory.getOrAllocate().readStringLiteral(this.val)
+  }
+
+  dereference(): string | NumericLiteral {
+    if (!(this.type instanceof PointerType)) {
+      throw new Error("attempt to dereference non-pointer type '" + this.type + "'")
+    }
+    if (this.type.dereference() instanceof PointerType) {
+      return Memory.getOrAllocate().readInt(this.val).castToType(this.type.dereference())
+    } else if (this.type.dereference() == PrimitiveType.CHAR) {
+      return Memory.getOrAllocate().readStringLiteral(this.val)
+    } else if (this.type.dereference() == PrimitiveType.INT) {
+      return Memory.getOrAllocate().readInt(this.val)
+    } else if (this.type.dereference() == PrimitiveType.FLOAT) {
+      return Memory.getOrAllocate().readFloat(this.val)
+    } else {
+      throw new Error("attempt to read unknown type '" + this.type + "'")
+    }
   }
 
   static readonly BINARY_ARITHMETIC_OPERATORS: Map<string, BinaryArithmeticOperator> = new Map([
@@ -92,54 +139,58 @@ export class NumericLiteral {
   ])
 
   truncateDecimals() {
-    this.type = DataType.INT
+    this.type = PrimitiveType.INT
     this.val = Math[this.val < 0 ? 'ceil' : 'floor'](this.val)
     return this
   }
 
   divideBy(right: NumericLiteral): NumericLiteral {
-    if (this.type == DataType.INT && right.type == DataType.INT) {
+    if (this.type == PrimitiveType.INT && right.type == PrimitiveType.INT) {
       return NumericLiteral.new(this.val / right.val).truncateDecimals()
     }
-    return new NumericLiteral(this.val / right.val, DataType.FLOAT)
+    return new NumericLiteral(this.val / right.val, PrimitiveType.FLOAT)
   }
 
   plus(right: NumericLiteral) {
-    if (this.type == DataType.INT && right.type == DataType.INT) {
-      return new NumericLiteral(this.val + right.val, DataType.INT)
+    if (this.type == PrimitiveType.INT && right.type == PrimitiveType.INT) {
+      return new NumericLiteral(this.val + right.val, PrimitiveType.INT)
     }
-    return new NumericLiteral(this.val + right.val, DataType.FLOAT)
+    return new NumericLiteral(this.val + right.val, PrimitiveType.FLOAT)
   }
 
   minus(right: NumericLiteral) {
-    if (this.type == DataType.INT && right.type == DataType.INT) {
-      return new NumericLiteral(this.val - right.val, DataType.INT)
+    if (this.type == PrimitiveType.INT && right.type == PrimitiveType.INT) {
+      return new NumericLiteral(this.val - right.val, PrimitiveType.INT)
     }
-    return new NumericLiteral(this.val - right.val, DataType.FLOAT)
+    return new NumericLiteral(this.val - right.val, PrimitiveType.FLOAT)
   }
 
   multiply(right: NumericLiteral) {
-    if (this.type == DataType.INT && right.type == DataType.INT) {
-      return new NumericLiteral(this.val * right.val, DataType.INT)
+    if (this.type == PrimitiveType.INT && right.type == PrimitiveType.INT) {
+      return new NumericLiteral(this.val * right.val, PrimitiveType.INT)
     }
-    return new NumericLiteral(this.val * right.val, DataType.FLOAT)
+    return new NumericLiteral(this.val * right.val, PrimitiveType.FLOAT)
   }
 
   modulo(right: NumericLiteral) {
-    if (this.type == DataType.INT && right.type == DataType.INT) {
-      return new NumericLiteral(this.val % right.val, DataType.INT)
+    if (this.type == PrimitiveType.INT && right.type == PrimitiveType.INT) {
+      return new NumericLiteral(this.val % right.val, PrimitiveType.INT)
     }
-    return new NumericLiteral(this.val % right.val, DataType.FLOAT)
+    return new NumericLiteral(this.val % right.val, PrimitiveType.FLOAT)
+  }
+
+  sqrt() {
+    return new NumericLiteral(Math.sqrt(this.val), PrimitiveType.FLOAT)
   }
 
   static new(val: number): NumericLiteral {
-    return new NumericLiteral(val, val % 1 == 0 ? DataType.INT : DataType.FLOAT)
+    return new NumericLiteral(val, val % 1 == 0 ? PrimitiveType.INT : PrimitiveType.FLOAT)
   }
 
   constructor(val: number, type: DataType) {
     this.val = val
     this.type = type
-    if (type == DataType.INT) {
+    if (type == PrimitiveType.INT) {
       this.truncateDecimals()
     }
   }

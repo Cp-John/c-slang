@@ -6,64 +6,83 @@ import { Frame } from './frame'
 const RAND_MAX = 2147483647
 const MAX_INT = 2147483647
 
-export enum DataType {
+export enum PrimitiveType {
   INT = 'int',
   FLOAT = 'float',
   FUNCTION = 'function',
   VOID = 'void',
-  STRING = 'char*'
+  CHAR = 'char'
 }
 
+export class PointerType {
+  private pointingTo: DataType
+
+  constructor(pointingTo: DataType) {
+    this.pointingTo = pointingTo
+  }
+
+  dereference(): DataType {
+    return this.pointingTo
+  }
+
+  toString(): string {
+    return this.pointingTo.toString() + '*'
+  }
+}
+
+export type DataType = PrimitiveType | PointerType
+
 function sizeof(type: DataType): number {
-  if (type == DataType.INT || type == DataType.FLOAT) {
-    return 4
-  } else if (type == DataType.STRING) {
+  if (type instanceof PointerType) {
     return 8
-  } else if (type == DataType.FUNCTION) {
+  } else if (type == PrimitiveType.INT || type == PrimitiveType.FLOAT) {
+    return 4
+  } else if (type == PrimitiveType.FUNCTION) {
     return 0
   } else {
     throw new Error('unsupported sizeof datatype: ' + type)
   }
 }
 
-export const DATA_TYPES = Object.values(DataType)
+export const PRIMITIVE_TYPES = Object.values(PrimitiveType)
 
 const rand: RealBuiltinFunction = (
   env: Frame,
   rts: any[],
   context: any,
-  args: (string | NumericLiteral)[]
+  args: NumericLiteral[]
 ): void => {
-  rts.push(new NumericLiteral(Math.floor(Math.random() * MAX_INT), DataType.INT))
+  rts.push(new NumericLiteral(Math.floor(Math.random() * MAX_INT), PrimitiveType.INT))
 }
 
 const time: RealBuiltinFunction = (
   env: Frame,
   rts: any[],
   context: any,
-  args: (string | NumericLiteral)[]
+  args: NumericLiteral[]
 ): void => {
-  rts.push(new NumericLiteral(Math.floor(Date.now() / 1000), DataType.INT))
+  rts.push(new NumericLiteral(Math.floor(Date.now() / 1000), PrimitiveType.INT))
 }
 
-export const PLACEHOLDER_REGEX = /%d|%ld|%f|%lf|%s|%c/
+export const PLACEHOLDER_REGEX = /%d|%ld|%f|%lf|%s|%c|%p/
 
 const printf: RealBuiltinFunction = (
   env: Frame,
   rts: any[],
   context: any,
-  args: (string | NumericLiteral)[]
+  args: NumericLiteral[]
 ): void => {
-  let outputString = args[0] as string
-  outputString = outputString.substring(1, outputString.length - 1)
+  let outputString = args[0].dereferenceAsString()
   let i = 1
   while (i < args.length) {
     const toReplace = PLACEHOLDER_REGEX.exec(outputString)
     if (toReplace == null) {
       throw new Error('data unused in format string')
     } else if (toReplace[0] == '%s') {
-      const str = args[i] as string
-      outputString = outputString.replace(PLACEHOLDER_REGEX, str.substring(1, str.length - 1))
+      outputString = outputString.replace(
+        PLACEHOLDER_REGEX,
+        (args[i] as NumericLiteral).dereferenceAsString()
+      )
     } else if (toReplace[0] == '%c') {
       outputString = outputString.replace(
         PLACEHOLDER_REGEX,
@@ -81,17 +100,17 @@ const printf: RealBuiltinFunction = (
     throw new Error('expected more data arguments')
   }
   context['stdout'] += outputString
-  rts.push(new NumericLiteral(outputString.length, DataType.INT))
+  rts.push(new NumericLiteral(outputString.length, PrimitiveType.INT))
 }
 
 const scanf: RealBuiltinFunction = (
   env: Frame,
   rts: any[],
   context: any,
-  args: (string | NumericLiteral)[]
+  args: NumericLiteral[]
 ): void => {
   let i = 1
-  let formatString = args[0] as string
+  let formatString = args[0].dereferenceAsString()
   while (i < args.length) {
     const input = prompt(context['stdout'])
     if (input == null) {
@@ -113,15 +132,20 @@ const scanf: RealBuiltinFunction = (
           NumericLiteral.new(0)
         )
       }
-      if (match[0] == '%c' || match[0] == '%d' || match[0] == '%ld') {
+      if (match[0] == '%c') {
         Memory.getOrAllocate().writeNumeric(
           (args[i] as NumericLiteral).getValue(),
-          numeric.castToType(DataType.INT)
+          numeric.castToType(PrimitiveType.CHAR)
+        )
+      } else if (match[0] == '%d' || match[0] == '%ld') {
+        Memory.getOrAllocate().writeNumeric(
+          (args[i] as NumericLiteral).getValue(),
+          numeric.castToType(PrimitiveType.INT)
         )
       } else if (match[0] == '%f' || match[0] == '%lf') {
         Memory.getOrAllocate().writeNumeric(
           (args[i] as NumericLiteral).getValue(),
-          numeric.castToType(DataType.FLOAT)
+          numeric.castToType(PrimitiveType.FLOAT)
         )
       } else {
         throw new Error('unsupported datatype for scanf: ' + match[0])
@@ -130,25 +154,45 @@ const scanf: RealBuiltinFunction = (
     }
     context['stdout'] += input + '\n'
   }
-  rts.push(new NumericLiteral(i - 1, DataType.INT))
+  rts.push(new NumericLiteral(i - 1, PrimitiveType.INT))
 }
 
-const sqrt: RealBuiltinFunction = (env: Frame, rts: any[], context: any, args: string[]): void => {
-  rts.push(new NumericLiteral(Math.sqrt(parseFloat(args[0])), DataType.FLOAT))
+const sqrt: RealBuiltinFunction = (
+  env: Frame,
+  rts: any[],
+  context: any,
+  args: NumericLiteral[]
+): void => {
+  rts.push(args[0].sqrt())
 }
 
 export const BUILTINS = {
   printf: [
-    new BuiltinFunction(DataType.INT, 'printf', [DataType.STRING], printf, true),
-    DataType.FUNCTION
+    new BuiltinFunction(
+      PrimitiveType.INT,
+      'printf',
+      [new PointerType(PrimitiveType.CHAR)],
+      printf,
+      true
+    ),
+    PrimitiveType.FUNCTION
   ],
   scanf: [
-    new BuiltinFunction(DataType.INT, 'scanf', [DataType.STRING], scanf, true),
-    DataType.FUNCTION
+    new BuiltinFunction(
+      PrimitiveType.INT,
+      'scanf',
+      [new PointerType(PrimitiveType.CHAR)],
+      scanf,
+      true
+    ),
+    PrimitiveType.FUNCTION
   ],
-  rand: [new BuiltinFunction(DataType.INT, 'rand', [], rand), DataType.FUNCTION],
-  time: [new BuiltinFunction(DataType.INT, 'time', [], time), DataType.FUNCTION],
-  sqrt: [new BuiltinFunction(DataType.FLOAT, 'sqrt', [DataType.FLOAT], sqrt), DataType.FUNCTION]
-  //   RAND_MAX: [new NumericLiteral(RAND_MAX, DataType.INT), DataType.INT],
-  //   MAX_INT: [new NumericLiteral(MAX_INT, DataType.INT), DataType.INT]
+  rand: [new BuiltinFunction(PrimitiveType.INT, 'rand', [], rand), PrimitiveType.FUNCTION],
+  time: [new BuiltinFunction(PrimitiveType.INT, 'time', [], time), PrimitiveType.FUNCTION],
+  sqrt: [
+    new BuiltinFunction(PrimitiveType.FLOAT, 'sqrt', [PrimitiveType.FLOAT], sqrt),
+    PrimitiveType.FUNCTION
+  ]
+  //   RAND_MAX: [new NumericLiteral(RAND_MAX, PrimitiveType.INT), PrimitiveType.INT],
+  //   MAX_INT: [new NumericLiteral(MAX_INT, PrimitiveType.INT), PrimitiveType.INT]
 }

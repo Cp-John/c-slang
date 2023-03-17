@@ -1,5 +1,5 @@
 import { NumericLiteral } from '../entity/expression/numericLiteral'
-import { DataType } from '../interpreter/builtins'
+import { DataType, PointerType, PrimitiveType } from '../interpreter/builtins'
 
 const PREPROCESSOR_DIRECTIVEG =
   /^\s*#\s*include\b|^\s*#\s*define\b|^\s*#\s*ifdef\b|^\s*#\s*ifndef\b|^\s*#\s*if\b|^\s*#\s*elif\b|^\s*#\s*else\b|^\s*#\s*pragma\b/
@@ -12,7 +12,7 @@ const SPACE_REGEX = /^\s+/
 const PRIORITIZED_ARITHMETIC_OPERATOR_REGEX = /^[*\/%](?!=)/
 const ARITHMETIC_OPERATOR_REGEX = /^[*\/%\+-](?!=)/
 const INCREMENT_DECREMENT_REGEX = /^\+\+|^--/
-const RELATIONAL_OPERATOR_RETEX = /^>=|^<=|^>|^<|^==|^!=/
+export const RELATIONAL_OPERATOR_RETEX = /^>=|^<=|^>|^<|^==|^!=/
 const PRIORITIZED_RELATIONAL_OPERATOR_REGEX = /^>=|^<=|^>|^</
 const ASSIGNMENT_OPERATOR_REGEX = /^\+=|^-=|^\*=|^\/=|^%=|^=/
 
@@ -134,7 +134,7 @@ export class Lexer {
     }
     this.currentLine = this.currentLine.substring(match[0].length)
     this.col += match[0].length
-    const type = match[0].includes('.') ? DataType.FLOAT : DataType.INT
+    const type = match[0].includes('.') ? PrimitiveType.FLOAT : PrimitiveType.INT
     return new NumericLiteral(parseFloat(match[0]), type)
   }
 
@@ -200,7 +200,12 @@ export class Lexer {
     }
     this.currentLine = this.currentLine.substring(match[0].length)
     this.col += match[0].length
-    return match[0] == DataType.INT || match[0] == 'char' ? DataType.INT : DataType.FLOAT
+    let type: DataType = match[0] == 'double' ? PrimitiveType.FLOAT : (match[0] as PrimitiveType)
+    while (this.matchDelimiter('*')) {
+      this.eatDelimiter('*')
+      type = new PointerType(type)
+    }
+    return type
   }
 
   matchPrioritizedArithmeticOperator(): boolean {
@@ -289,7 +294,7 @@ export class Lexer {
     }
     this.currentLine = this.currentLine.substring(match[0].length)
     this.col += match[0].length
-    return new NumericLiteral(Lexer.restoreEscapeChars(match[0]).charCodeAt(1), DataType.INT)
+    return new NumericLiteral(Lexer.restoreEscapeChars(match[0]).charCodeAt(1), PrimitiveType.INT)
   }
 
   private static restoreEscapeChars(original: string): string {

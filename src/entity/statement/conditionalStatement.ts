@@ -29,7 +29,7 @@ export class ConditionalStatement extends Statement {
     while (true) {
       lexer.eatKeyword('if')
       lexer.eatDelimiter('(')
-      const expr = ExpressionParser.parse(env, lexer, false, false, false)
+      const expr = ExpressionParser.parse(env, lexer, false, false, null)
       lexer.eatDelimiter(')')
       const ifBlock = Block.parse(env, lexer, allowBreak, allowContinue, returnType)
       ifBlocks.push([expr, ifBlock])

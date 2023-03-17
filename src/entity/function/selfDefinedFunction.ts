@@ -1,8 +1,9 @@
-import { DataType } from '../../interpreter/builtins'
+import { DataType, PrimitiveType } from '../../interpreter/builtins'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
 import { Expression } from '../expression/expression'
+import { ExpressionParser } from '../expression/expressionParser'
 import { NumericLiteral } from '../expression/numericLiteral'
 import { Function } from './function'
 
@@ -47,7 +48,7 @@ export class SelfDefinedFunction extends Function {
     )
     try {
       this.body.execute(newEnv, rts, context)
-      if (this.returnType == DataType.FLOAT || this.returnType == DataType.INT) {
+      if (this.returnType == PrimitiveType.FLOAT || this.returnType == PrimitiveType.INT) {
         rts.push(NumericLiteral.new(0))
       }
     } catch (err) {
@@ -65,7 +66,7 @@ export class SelfDefinedFunction extends Function {
       if (index != 0) {
         lexer.eatDelimiter(',')
       }
-      actualParameters.push(Function.parseParameterWithType(env, lexer, pair[0]))
+      actualParameters.push(ExpressionParser.parse(env, lexer, false, false, pair[0]))
     })
     this.checkTooManyArguments(lexer)
     lexer.eatDelimiter(')')

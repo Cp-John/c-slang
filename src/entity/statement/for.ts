@@ -48,12 +48,12 @@ export class For extends Statement {
       ExpressionStatement.parse(env, lexer).forEach(statement => forStatement.init.push(statement))
     }
     if (!lexer.matchDelimiter(';')) {
-      forStatement.condition = ExpressionParser.parse(env, lexer, false, false, false)
+      forStatement.condition = ExpressionParser.parse(env, lexer, false, false, null)
     }
     lexer.eatDelimiter(';')
     if (!lexer.matchDelimiter(')')) {
       forStatement.updation = new ExpressionStatement(
-        ExpressionParser.parse(env, lexer, false, true, false)
+        ExpressionParser.parse(env, lexer, true, false, null)
       )
     }
     lexer.eatDelimiter(')')

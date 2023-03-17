@@ -1,4 +1,4 @@
-import { DataType, PLACEHOLDER_REGEX } from '../../interpreter/builtins'
+import { DataType, PLACEHOLDER_REGEX, PointerType, PrimitiveType } from '../../interpreter/builtins'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Expression } from '../expression/expression'
@@ -7,7 +7,7 @@ import { NumericLiteral } from '../expression/numericLiteral'
 import { Function } from './function'
 
 export interface RealBuiltinFunction {
-  (env: Frame, rts: any[], context: any, args: (string | NumericLiteral)[]): void
+  (env: Frame, rts: any[], context: any, args: NumericLiteral[]): void
 }
 
 export class BuiltinFunction extends Function {
@@ -29,7 +29,7 @@ export class BuiltinFunction extends Function {
   }
 
   call(env: Frame, rts: any[], context: any, actualParameterList: Expression[]): void {
-    const realParameterList: (string | NumericLiteral)[] = []
+    const realParameterList: NumericLiteral[] = []
     actualParameterList.forEach(expr => {
       const val = expr.evaluate(env, rts, context)
       if (val == undefined) {
@@ -47,28 +47,33 @@ export class BuiltinFunction extends Function {
   private parseFormatStringParameters(
     env: Frame,
     lexer: Lexer,
-    stringLiteral: string
+    formatString: string
   ): Expression[] {
-    let formatString = stringLiteral.substring(1, stringLiteral.length - 1)
     let match = PLACEHOLDER_REGEX.exec(formatString)
     const formatStringParameters: Expression[] = []
     while (match != null) {
       this.checkTooFewArguments(lexer)
       lexer.eatDelimiter(',')
-      if (
-        match[0] == '%d' ||
-        match[0] == '%ld' ||
-        match[0] == '%f' ||
-        match[0] == '%lf' ||
-        match[0] == '%c'
-      ) {
-        formatStringParameters.push(ExpressionParser.parse(env, lexer, false, false, false))
+      if (match[0] == '%d' || match[0] == '%ld') {
+        formatStringParameters.push(
+          ExpressionParser.parse(env, lexer, false, false, PrimitiveType.INT)
+        )
+      } else if (match[0] == '%f' || match[0] == '%lf') {
+        formatStringParameters.push(
+          ExpressionParser.parse(env, lexer, false, false, PrimitiveType.FLOAT)
+        )
+      } else if (match[0] == '%c') {
+        formatStringParameters.push(
+          ExpressionParser.parse(env, lexer, false, false, PrimitiveType.CHAR)
+        )
+      } else if (match[0] == '%s') {
+        formatStringParameters.push(
+          ExpressionParser.parse(env, lexer, false, false, new PointerType(PrimitiveType.CHAR))
+        )
+      } else if (match[0] == '%p') {
+        formatStringParameters.push(ExpressionParser.parse(env, lexer, false, false, null))
       } else {
-        if (!lexer.matchDelimiter('"')) {
-          lexer.eatStringLiteral()
-        } else {
-          formatStringParameters.push(ExpressionParser.parse(env, lexer, true, false, false))
-        }
+        throw new Error('impossible execution path')
       }
       formatString = formatString.replace(match[0], '0')
       match = PLACEHOLDER_REGEX.exec(formatString)
@@ -84,14 +89,22 @@ export class BuiltinFunction extends Function {
       if (index != 0) {
         lexer.eatDelimiter(',')
       }
-      actualParameters.push(Function.parseParameterWithType(env, lexer, type))
+      actualParameters.push(ExpressionParser.parse(env, lexer, false, false, type))
     })
-    if (this.isFormatString) {
-      this.parseFormatStringParameters(env, lexer, actualParameters[0].toStringLiteral()).forEach(
+    if (!this.isFormatString) {
+      this.checkTooManyArguments(lexer)
+      lexer.eatDelimiter(')')
+      return actualParameters
+    }
+    if (actualParameters[0].isImmediateString()) {
+      this.parseFormatStringParameters(env, lexer, actualParameters[0].toImmediateString()).forEach(
         param => actualParameters.push(param)
       )
+      this.checkTooManyArguments(lexer)
+    } else {
+      // TODO
+      // actualParameters.push(ExpressionParser.parse(env, lexer, false, false, null))
     }
-    this.checkTooManyArguments(lexer)
     lexer.eatDelimiter(')')
     return actualParameters
   }

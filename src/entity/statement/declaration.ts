@@ -1,4 +1,4 @@
-import { DataType } from '../../interpreter/builtins'
+import { DataType, PrimitiveType } from '../../interpreter/builtins'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
@@ -48,7 +48,7 @@ export abstract class Declaration extends Statement {
           lexer,
           false,
           false,
-          false
+          variableType
         )
       }
       if (!lexer.matchDelimiter(',')) {
@@ -70,7 +70,7 @@ export abstract class Declaration extends Statement {
     returnType: DataType,
     allowFunctionDeclaration: boolean = false
   ): Statement[] {
-    let type = DataType.VOID
+    let type: DataType = PrimitiveType.VOID
     if (lexer.matchKeyword('void')) {
       lexer.eatKeyword('void')
     } else if (lexer.matchDataType()) {
@@ -83,7 +83,7 @@ export abstract class Declaration extends Statement {
       if (!allowFunctionDeclaration) {
         throw new Error(lexer.formatError('function definition is not allowed here'))
       }
-      env.markType(identifier, DataType.FUNCTION)
+      env.markType(identifier, PrimitiveType.FUNCTION)
       const newEnv = Frame.extend(env)
       const formalParameterList = Declaration.parseFormalParameterList(newEnv, lexer)
       const functionObj = new SelfDefinedFunction(type, identifier, formalParameterList, null)
@@ -147,11 +147,10 @@ export class FunctionDeclaration extends Declaration {
   }
 
   execute(env: Frame, rts: any[], context: any): void {
-    env.declare(this.functionName, DataType.FUNCTION)
+    env.declare(this.functionName, PrimitiveType.FUNCTION)
     env.assignValue(
       this.functionName,
       new SelfDefinedFunction(this.returnType, this.functionName, this.parameterList, this.body)
     )
-    console.log(env)
   }
 }

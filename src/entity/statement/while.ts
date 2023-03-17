@@ -26,7 +26,7 @@ export class While extends Statement {
   ): While[] {
     lexer.eatKeyword('while')
     lexer.eatDelimiter('(')
-    const expression = ExpressionParser.parse(env, lexer, false, false, false)
+    const expression = ExpressionParser.parse(env, lexer, false, false, null)
     lexer.eatDelimiter(')')
     const body = Block.parse(env, lexer, true, true, returnType)
     return [new While(expression, body)]

@@ -28,7 +28,7 @@ export class DoWhile extends Statement {
     const body = Block.parse(env, lexer, true, true, returnType)
     lexer.eatKeyword('while')
     lexer.eatDelimiter('(')
-    const condition = ExpressionParser.parse(env, lexer, false, false, false)
+    const condition = ExpressionParser.parse(env, lexer, false, false, null)
     lexer.eatDelimiter(')')
     lexer.eatDelimiter(';')
     return [new DoWhile(body, condition)]

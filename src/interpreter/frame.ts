@@ -3,7 +3,7 @@ import { Function } from '../entity/function/function'
 import { SelfDefinedFunction } from '../entity/function/selfDefinedFunction'
 import { Memory } from '../memory/memory'
 import { Lexer } from '../parser/lexer'
-import { BUILTINS, DataType } from './builtins'
+import { BUILTINS, DataType, PointerType, PrimitiveType } from './builtins'
 
 export class Frame {
   private boundings
@@ -77,7 +77,8 @@ export class Frame {
   }
 
   lookupAddress(name: string): NumericLiteral {
-    return NumericLiteral.new(this.findFrameWith(name).boundings[name]['val'])
+    const addrType = this.findFrameWith(name).boundings[name]
+    return new NumericLiteral(addrType['val'], new PointerType(addrType['type']))
   }
 
   private lookup(name: string): Function | NumericLiteral | string {
@@ -86,14 +87,16 @@ export class Frame {
     const type = frame.boundings[name]['type']
     if (val == undefined) {
       throw new Error('unbounded identifier: ' + name)
-    } else if (type == DataType.FUNCTION) {
+    } else if (type instanceof PointerType) {
+      return Memory.getOrAllocate().readInt(val).castToType(type)
+    } else if (type == PrimitiveType.FUNCTION) {
       return val
-    } else if (type == DataType.INT) {
+    } else if (type == PrimitiveType.INT) {
       return Memory.getOrAllocate().readInt(val)
-    } else if (type == DataType.FLOAT) {
+    } else if (type == PrimitiveType.FLOAT) {
       return Memory.getOrAllocate().readFloat(val)
-    } else if (type == DataType.STRING) {
-      return Memory.getOrAllocate().readStringLiteral(val)
+    } else if (type == PrimitiveType.CHAR) {
+      return Memory.getOrAllocate().readChar(val)
     } else {
       throw new Error('lookup unknown datatype: ' + type)
     }
@@ -115,6 +118,12 @@ export class Frame {
     )
   }
 
+  allocateStringLiteral(stringLiteral: string): NumericLiteral {
+    const address = this.top
+    this.top = Memory.getOrAllocate().writeStringLiteral(this.top, stringLiteral)
+    return new NumericLiteral(address, new PointerType(PrimitiveType.CHAR))
+  }
+
   declare(nameOrLexer: string | Lexer, type: DataType): string {
     let name: string
     if (nameOrLexer instanceof Lexer) {
@@ -130,22 +139,25 @@ export class Frame {
         throw new Error("redefinition of '" + name + "'")
       }
     }
-    const value = type == DataType.FUNCTION ? undefined : this.top++
+    const value = type == PrimitiveType.FUNCTION ? undefined : this.top++ // TODO allocate memory for variable
     this.boundings[name] = { type: type, val: value }
     return name
   }
 
-  assignValue<Type extends NumericLiteral | Function | string>(name: string, val: Type): Type {
+  assignValue<Type extends NumericLiteral | Function>(name: string, val: Type): Type {
     const variableType = this.lookupType(name)
     const address = this.findFrameWith(name).boundings[name]['val']
-    if (variableType == DataType.INT) {
-      Memory.getOrAllocate().writeNumeric(address, (val as NumericLiteral).truncateDecimals())
-    } else if (variableType == DataType.FLOAT) {
-      Memory.getOrAllocate().writeNumeric(address, val as NumericLiteral)
-    } else if (variableType == DataType.STRING) {
-      Memory.getOrAllocate().writeStringLiteral(address, val as string)
-    } else {
+    if (variableType == PrimitiveType.FUNCTION) {
       this.findFrameWith(name).boundings[name]['val'] = val
+    } else if (
+      variableType instanceof PointerType ||
+      variableType == PrimitiveType.INT ||
+      variableType == PrimitiveType.FLOAT ||
+      variableType == PrimitiveType.CHAR
+    ) {
+      Memory.getOrAllocate().writeNumeric(address, (val as NumericLiteral).castToType(variableType))
+    } else {
+      throw new Error("attempt to assign to unknown varialble type '" + variableType + "'")
     }
     return val
   }

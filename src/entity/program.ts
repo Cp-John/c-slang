@@ -1,4 +1,4 @@
-import { DataType } from '../interpreter/builtins'
+import { PrimitiveType } from '../interpreter/builtins'
 import { Frame } from '../interpreter/frame'
 import { Lexer } from '../parser/lexer'
 import { FunctionCall } from './expression/functionCall'
@@ -17,7 +17,7 @@ export class Program {
     const frame = Frame.extend(Frame.getBuiltinFrame())
     FunctionCall.clearCalledFunctions()
     while (lexer.hasNext()) {
-      Declaration.parse(frame, lexer, false, false, DataType.VOID, true).forEach(declaration =>
+      Declaration.parse(frame, lexer, false, false, PrimitiveType.VOID, true).forEach(declaration =>
         declarations.push(declaration)
       )
     }
