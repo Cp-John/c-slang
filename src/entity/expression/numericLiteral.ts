@@ -17,6 +17,10 @@ export class NumericLiteral {
     return this.val
   }
 
+  toChar(): string {
+    return String.fromCharCode(this.val)
+  }
+
   increment(): NumericLiteral {
     return new NumericLiteral(this.val + 1, this.type)
   }

@@ -79,20 +79,11 @@ const printf: RealBuiltinFunction = (
     if (toReplace == null) {
       throw new Error('data unused in format string')
     } else if (toReplace[0] == '%s') {
-      outputString = outputString.replace(
-        PLACEHOLDER_REGEX,
-        (args[i] as NumericLiteral).dereferenceAsString()
-      )
+      outputString = outputString.replace(PLACEHOLDER_REGEX, args[i].dereferenceAsString())
     } else if (toReplace[0] == '%c') {
-      outputString = outputString.replace(
-        PLACEHOLDER_REGEX,
-        String.fromCharCode((args[i] as NumericLiteral).getValue())
-      )
+      outputString = outputString.replace(PLACEHOLDER_REGEX, args[i].toChar())
     } else {
-      outputString = outputString.replace(
-        PLACEHOLDER_REGEX,
-        String((args[i] as NumericLiteral).getValue())
-      )
+      outputString = outputString.replace(PLACEHOLDER_REGEX, args[i].toChar())
     }
     i++
   }
@@ -127,24 +118,21 @@ const scanf: RealBuiltinFunction = (
         ? NumericLiteral.new(0)
         : NumericLiteral.new(parseFloat(tokens[j]))
       if (isNaN(parseFloat(tokens[j]))) {
-        Memory.getOrAllocate().writeNumeric(
-          (args[i] as NumericLiteral).getValue(),
-          NumericLiteral.new(0)
-        )
+        Memory.getOrAllocate().writeNumeric(args[i].getValue(), NumericLiteral.new(0))
       }
       if (match[0] == '%c') {
         Memory.getOrAllocate().writeNumeric(
-          (args[i] as NumericLiteral).getValue(),
+          args[i].getValue(),
           numeric.castToType(PrimitiveType.CHAR)
         )
       } else if (match[0] == '%d' || match[0] == '%ld') {
         Memory.getOrAllocate().writeNumeric(
-          (args[i] as NumericLiteral).getValue(),
+          args[i].getValue(),
           numeric.castToType(PrimitiveType.INT)
         )
       } else if (match[0] == '%f' || match[0] == '%lf') {
         Memory.getOrAllocate().writeNumeric(
-          (args[i] as NumericLiteral).getValue(),
+          args[i].getValue(),
           numeric.castToType(PrimitiveType.FLOAT)
         )
       } else {

@@ -33,7 +33,7 @@ export class While extends Statement {
   }
 
   execute(env: Frame, rts: any[], context: any): void {
-    while ((this.expression.evaluate(env, rts, context) as NumericLiteral).getValue()) {
+    while ((this.expression.evaluate(env, rts, context) as NumericLiteral).toBoolean()) {
       try {
         this.body.execute(env, rts, context)
       } catch (err: any) {
