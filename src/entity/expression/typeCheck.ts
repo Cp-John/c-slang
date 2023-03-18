@@ -44,6 +44,13 @@ function checkImplicitConversion(
   if (leftType == PrimitiveType.CHAR && rightType == PrimitiveType.INT) {
     return
   }
+  if (
+    leftType instanceof PointerType &&
+    rightType instanceof PointerType &&
+    (leftType.dereference() == PrimitiveType.VOID || rightType.dereference() == PrimitiveType.VOID)
+  ) {
+    return
+  }
   const error = new Error(
     lexer.formatError(
       "implicit conversion from '" + rightType + "' to '" + leftType + "'",

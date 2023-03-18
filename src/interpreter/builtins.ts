@@ -200,7 +200,7 @@ export const BUILTINS = {
     PrimitiveType.FUNCTION
   ],
   free: [
-    new BuiltinFunction(PrimitiveType.VOID, 'free', [PrimitiveType.INT], free),
+    new BuiltinFunction(PrimitiveType.VOID, 'free', [new PointerType(PrimitiveType.VOID)], free),
     PrimitiveType.FUNCTION
   ]
   //   RAND_MAX: [new NumericLiteral(RAND_MAX, PrimitiveType.INT), PrimitiveType.INT],

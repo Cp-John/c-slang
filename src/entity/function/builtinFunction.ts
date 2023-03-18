@@ -58,6 +58,7 @@ export class BuiltinFunction extends Function {
       this.checkTooFewArguments(lexer)
       lexer.eatDelimiter(',')
       let expectedType: DataType | null
+      const isPointer = false
       if (match[0] == '%d' || match[0] == '%ld') {
         expectedType = PrimitiveType.INT
       } else if (match[0] == '%f' || match[0] == '%lf') {
@@ -67,7 +68,7 @@ export class BuiltinFunction extends Function {
       } else if (match[0] == '%s') {
         expectedType = new PointerType(PrimitiveType.CHAR)
       } else if (match[0] == '%p') {
-        expectedType = null
+        expectedType = new PointerType(PrimitiveType.VOID)
       } else {
         throw new Error('impossible execution path')
       }
