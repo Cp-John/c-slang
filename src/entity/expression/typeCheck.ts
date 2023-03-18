@@ -38,17 +38,24 @@ function checkImplicitConversion(
   leftType: DataType,
   rightType: DataType
 ) {
-  if (leftType == PrimitiveType.CHAR || rightType == PrimitiveType.INT) {
+  if (leftType.toString() == rightType.toString()) {
     return
   }
-  if (getHigherPrecisionType(leftType, rightType).toString() != leftType.toString()) {
-    throw new Error(
-      lexer.formatError(
-        "implicit conversion from '" + rightType + "' to '" + leftType + "'",
-        row,
-        col
-      )
+  if (leftType == PrimitiveType.CHAR && rightType == PrimitiveType.INT) {
+    return
+  }
+  const error = new Error(
+    lexer.formatError(
+      "implicit conversion from '" + rightType + "' to '" + leftType + "'",
+      row,
+      col
     )
+  )
+  if (leftType instanceof PointerType || rightType instanceof PointerType) {
+    throw error
+  }
+  if (getHigherPrecisionType(leftType, rightType).toString() != leftType.toString()) {
+    throw error
   }
 }
 
@@ -57,18 +64,22 @@ export function checkAssignmentOperandType(
   col: number,
   lexer: Lexer,
   leftType: DataType,
+  assignOpr: string,
   rightType: DataType
 ): DataType {
-  if (leftType.toString() == rightType.toString()) {
-    return leftType
-  } else if (leftType instanceof PointerType || rightType instanceof PointerType) {
-    throw new Error(
-      lexer.formatError("'" + rightType + "' cannot be assigned to '" + leftType + "'", row, col)
+  let rightResultType = rightType
+  if (assignOpr != '=') {
+    rightResultType = checkBinaryExprssionOperandType(
+      row,
+      col,
+      lexer,
+      leftType,
+      assignOpr.replace('=', ''),
+      rightType
     )
-  } else {
-    checkImplicitConversion(row, col, lexer, leftType, rightType)
-    return leftType
   }
+  checkImplicitConversion(row, col, lexer, leftType, rightResultType)
+  return leftType
 }
 
 export function checkBinaryExprssionOperandType(
@@ -79,18 +90,20 @@ export function checkBinaryExprssionOperandType(
   opr: string,
   rightType: DataType
 ): DataType {
+  const arithPrimitiveTypes = new Set<string>([
+    PrimitiveType.CHAR,
+    PrimitiveType.FLOAT,
+    PrimitiveType.INT
+  ])
+  const wholePrimitiveTypes = new Set<string>([PrimitiveType.CHAR, PrimitiveType.INT])
   if (opr == '+' || opr == '-') {
-    if (
-      !(leftType instanceof PointerType) &&
-      !new Set<string>([PrimitiveType.CHAR, PrimitiveType.FLOAT, PrimitiveType.INT]).has(
-        leftType.toString()
-      )
-    ) {
-      invalidBinaryExprssionOperandType(row, col, lexer, leftType, rightType)
+    if (leftType instanceof PointerType) {
+      if (!wholePrimitiveTypes.has(rightType.toString())) {
+        invalidBinaryExprssionOperandType(row, col, lexer, leftType, rightType)
+      }
     } else if (
-      !new Set<string>([PrimitiveType.CHAR, PrimitiveType.FLOAT, PrimitiveType.INT]).has(
-        rightType.toString()
-      )
+      !arithPrimitiveTypes.has(leftType.toString()) ||
+      !arithPrimitiveTypes.has(rightType.toString())
     ) {
       invalidBinaryExprssionOperandType(row, col, lexer, leftType, rightType)
     }
@@ -99,20 +112,16 @@ export function checkBinaryExprssionOperandType(
       : getHigherPrecisionType(leftType, rightType as PrimitiveType)
   } else if (opr == '*' || opr == '/') {
     if (
-      !new Set<string>([PrimitiveType.CHAR, PrimitiveType.FLOAT, PrimitiveType.INT]).has(
-        leftType.toString()
-      ) ||
-      !new Set<string>([PrimitiveType.CHAR, PrimitiveType.FLOAT, PrimitiveType.INT]).has(
-        rightType.toString()
-      )
+      !arithPrimitiveTypes.has(leftType.toString()) ||
+      !arithPrimitiveTypes.has(rightType.toString())
     ) {
       invalidBinaryExprssionOperandType(row, col, lexer, leftType, rightType)
     }
     return getHigherPrecisionType(leftType as PrimitiveType, rightType as PrimitiveType)
   } else if (opr == '%') {
     if (
-      !new Set<string>([PrimitiveType.CHAR, PrimitiveType.INT]).has(leftType.toString()) ||
-      !new Set<string>([PrimitiveType.CHAR, PrimitiveType.INT]).has(rightType.toString())
+      !wholePrimitiveTypes.has(leftType.toString()) ||
+      !wholePrimitiveTypes.has(rightType.toString())
     ) {
       invalidBinaryExprssionOperandType(row, col, lexer, leftType, rightType)
     }
@@ -120,18 +129,11 @@ export function checkBinaryExprssionOperandType(
   } else {
     const relOprMatch = RELATIONAL_OPERATOR_RETEX.exec(opr)
     if (opr == '&&' || opr == '||' || (relOprMatch && relOprMatch[0].length == opr.length)) {
-      if (
-        !(leftType instanceof PointerType) &&
-        !new Set<string>([PrimitiveType.CHAR, PrimitiveType.FLOAT, PrimitiveType.INT]).has(
-          leftType.toString()
-        )
-      ) {
+      if (!(leftType instanceof PointerType) && !arithPrimitiveTypes.has(leftType.toString())) {
         invalidBinaryExprssionOperandType(row, col, lexer, leftType, rightType)
       } else if (
         !(rightType instanceof PointerType) &&
-        !new Set<string>([PrimitiveType.CHAR, PrimitiveType.FLOAT, PrimitiveType.INT]).has(
-          rightType.toString()
-        )
+        !arithPrimitiveTypes.has(rightType.toString())
       ) {
         invalidBinaryExprssionOperandType(row, col, lexer, leftType, rightType)
       }

@@ -413,7 +413,7 @@ export class ExpressionParser {
       assertAssignable(result[result.length - 1], env, row, col, lexer)
       const opr = lexer.eatAssignmentOperator()
       const rightType = this.recurParseExpression(env, lexer, result, false, isConstantExpression)
-      leftType = checkAssignmentOperandType(row, col, lexer, leftType, rightType)
+      leftType = checkAssignmentOperandType(row, col, lexer, leftType, opr, rightType)
       result.push(opr)
     }
     return leftType
@@ -443,7 +443,7 @@ export class ExpressionParser {
       isConstantExpression
     )
     if (expectedDataType != null) {
-      checkAssignmentOperandType(row, col, lexer, expectedDataType, actualType)
+      checkAssignmentOperandType(row, col, lexer, expectedDataType, '=', actualType)
     }
     return new Expression(result, actualType)
   }
