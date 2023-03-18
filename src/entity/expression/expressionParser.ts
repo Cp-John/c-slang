@@ -5,9 +5,11 @@ import { Expression, IncrementDecrement, Jump } from './expression'
 import { FunctionCall } from './functionCall'
 import { NumericLiteral } from './numericLiteral'
 import {
+  assertSubscritable,
   checkAssignmentOperandType,
   checkBinaryExprssionOperandType,
   checkConditionOperandType,
+  checkSubscriptType,
   getHigherPrecisionType
 } from './typeCheck'
 
@@ -18,11 +20,14 @@ function assertAddressable(
   col: number,
   lexer: Lexer
 ) {
-  if (
-    typeof ele != 'string' ||
-    !new Lexer(ele).matchIdentifier() ||
-    env.lookupType(ele) == PrimitiveType.FUNCTION
+  if (typeof ele != 'string') {
+    throw new Error(lexer.formatError('expression is not addressable', row, col))
+  } else if (
+    ele == DEREFERENCE_TAG ||
+    (new Lexer(ele).matchIdentifier() && env.lookupType(ele) != PrimitiveType.FUNCTION)
   ) {
+    return
+  } else {
     throw new Error(lexer.formatError('expression is not addressable', row, col))
   }
 }
@@ -200,6 +205,20 @@ export class ExpressionParser {
           ? IncrementDecrement.POST_INCREMENT
           : IncrementDecrement.POST_DECREMENT
       )
+    }
+    if (lexer.matchDelimiter('[')) {
+      assertSubscritable(dataType, lexer)
+      lexer.eatDelimiter('[')
+      const [row, col] = lexer.tell()
+      checkSubscriptType(
+        this.recurParseExpression(env, lexer, result, false, false),
+        row,
+        col,
+        lexer
+      )
+      lexer.eatDelimiter(']')
+      result.push('+', DEREFERENCE_TAG)
+      dataType = (dataType as PointerType).dereference()
     }
     return dataType
   }

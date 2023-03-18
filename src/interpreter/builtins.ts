@@ -31,6 +31,14 @@ export class PointerType {
 
 export type DataType = PrimitiveType | PointerType
 
+export const ARITH_PRIMITIVE_TYPES = new Set<string>([
+  PrimitiveType.CHAR,
+  PrimitiveType.FLOAT,
+  PrimitiveType.INT
+])
+
+export const WHOLE_PRIMITIVE_TYPES = new Set<string>([PrimitiveType.CHAR, PrimitiveType.INT])
+
 export function sizeof(type: DataType): number {
   if (type instanceof PointerType) {
     return 4
