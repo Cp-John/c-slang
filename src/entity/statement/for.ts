@@ -38,26 +38,29 @@ export class For extends Statement {
     const forStatement = new For([], null, null, new Block([]))
     lexer.eatKeyword('for')
     lexer.eatDelimiter('(')
+    const newEnv = Frame.extend(env)
     if (lexer.matchDelimiter(';')) {
       lexer.eatDelimiter(';')
     } else if (lexer.matchDataType()) {
-      Declaration.parse(env, lexer, false, false, returnType, false).forEach(statement =>
+      Declaration.parse(newEnv, lexer, false, false, returnType, false).forEach(statement =>
         forStatement.init.push(statement)
       )
     } else {
-      ExpressionStatement.parse(env, lexer).forEach(statement => forStatement.init.push(statement))
+      ExpressionStatement.parse(newEnv, lexer).forEach(statement =>
+        forStatement.init.push(statement)
+      )
     }
     if (!lexer.matchDelimiter(';')) {
-      forStatement.condition = ExpressionParser.parse(env, lexer, false, false, null)
+      forStatement.condition = ExpressionParser.parse(newEnv, lexer, false, false, null)
     }
     lexer.eatDelimiter(';')
     if (!lexer.matchDelimiter(')')) {
       forStatement.updation = new ExpressionStatement(
-        ExpressionParser.parse(env, lexer, true, false, null)
+        ExpressionParser.parse(newEnv, lexer, true, false, null)
       )
     }
     lexer.eatDelimiter(')')
-    forStatement.body = Block.parse(env, lexer, true, true, returnType)
+    forStatement.body = Block.parse(newEnv, lexer, true, true, returnType)
     return [forStatement]
   }
 
@@ -66,7 +69,7 @@ export class For extends Statement {
     this.init.forEach(statement => statement.execute(newEnv, rts, context))
     while (
       this.condition == undefined ||
-      (this.condition.evaluate(env, rts, context) as NumericLiteral).toBoolean()
+      (this.condition.evaluate(newEnv, rts, context) as NumericLiteral).toBoolean()
     ) {
       try {
         this.body.execute(newEnv, rts, context)

@@ -1,6 +1,5 @@
 import { NumericLiteral } from '../entity/expression/numericLiteral'
 import { BuiltinFunction, RealBuiltinFunction } from '../entity/function/builtinFunction'
-import { Memory } from '../memory/memory'
 import { Frame } from './frame'
 
 const RAND_MAX = 2147483647
@@ -32,13 +31,15 @@ export class PointerType {
 
 export type DataType = PrimitiveType | PointerType
 
-function sizeof(type: DataType): number {
+export function sizeof(type: DataType): number {
   if (type instanceof PointerType) {
-    return 8
+    return 4
   } else if (type == PrimitiveType.INT || type == PrimitiveType.FLOAT) {
     return 4
   } else if (type == PrimitiveType.FUNCTION) {
     return 0
+  } else if (type == PrimitiveType.CHAR) {
+    return 1
   } else {
     throw new Error('unsupported sizeof datatype: ' + type)
   }
@@ -88,7 +89,7 @@ const printf: RealBuiltinFunction = (
     i++
   }
   if (PLACEHOLDER_REGEX.test(outputString)) {
-    throw new Error('expected more data arguments')
+    throw new Error("expected more data arguments, '" + outputString + "'")
   }
   context['stdout'] += outputString
   rts.push(NumericLiteral.new(outputString.length).castToType(PrimitiveType.INT))
@@ -118,23 +119,14 @@ const scanf: RealBuiltinFunction = (
         ? NumericLiteral.new(0)
         : NumericLiteral.new(parseFloat(tokens[j]))
       if (isNaN(parseFloat(tokens[j]))) {
-        Memory.getOrAllocate().writeNumeric(args[i].getValue(), NumericLiteral.new(0))
+        env.assignValueByAddress(args[i].getValue(), NumericLiteral.new(0))
       }
       if (match[0] == '%c') {
-        Memory.getOrAllocate().writeNumeric(
-          args[i].getValue(),
-          numeric.castToType(PrimitiveType.CHAR)
-        )
+        env.assignValueByAddress(args[i].getValue(), numeric.castToType(PrimitiveType.CHAR))
       } else if (match[0] == '%d' || match[0] == '%ld') {
-        Memory.getOrAllocate().writeNumeric(
-          args[i].getValue(),
-          numeric.castToType(PrimitiveType.INT)
-        )
+        env.assignValueByAddress(args[i].getValue(), numeric.castToType(PrimitiveType.INT))
       } else if (match[0] == '%f' || match[0] == '%lf') {
-        Memory.getOrAllocate().writeNumeric(
-          args[i].getValue(),
-          numeric.castToType(PrimitiveType.FLOAT)
-        )
+        env.assignValueByAddress(args[i].getValue(), numeric.castToType(PrimitiveType.FLOAT))
       } else {
         throw new Error('unsupported datatype for scanf: ' + match[0])
       }
@@ -161,6 +153,7 @@ export const BUILTINS = {
       'printf',
       [new PointerType(PrimitiveType.CHAR)],
       printf,
+      false,
       true
     ),
     PrimitiveType.FUNCTION
@@ -171,6 +164,7 @@ export const BUILTINS = {
       'scanf',
       [new PointerType(PrimitiveType.CHAR)],
       scanf,
+      true,
       true
     ),
     PrimitiveType.FUNCTION

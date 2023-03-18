@@ -1,5 +1,6 @@
 import { DataType, PointerType, PRIMITIVE_TYPES, PrimitiveType } from '../../interpreter/builtins'
 import { Frame } from '../../interpreter/frame'
+import { DEREFERENCE_TAG } from './expressionParser'
 import { FunctionCall } from './functionCall'
 import { NumericLiteral } from './numericLiteral'
 
@@ -22,29 +23,13 @@ export enum IncrementDecrement {
 
 export class Expression {
   private static readonly INCREMENT_DECREMENT_OPERATORS = {
-    $PRE_INCREMENT: (identifier: string, env: Frame) =>
-      env.assignValue(identifier, env.lookupNumber(identifier).increment()),
-    $POST_INCREMENT: (identifier: string, env: Frame) =>
-      env.assignValue(identifier, env.lookupNumber(identifier).increment()).decrement(),
-    $PRE_DECREMENT: (identifier: string, env: Frame) =>
-      env.assignValue(identifier, env.lookupNumber(identifier).decrement()),
-    $POST_DECREMENT: (identifier: string, env: Frame) =>
-      env.assignValue(identifier, env.lookupNumber(identifier).decrement()).increment()
+    $PRE_INCREMENT: (lvalue: NumericLiteral, env: Frame) => lvalue.increment(env, true),
+    $POST_INCREMENT: (lvalue: NumericLiteral, env: Frame) => lvalue.increment(env, false),
+    $PRE_DECREMENT: (lvalue: NumericLiteral, env: Frame) => lvalue.decrement(env, true),
+    $POST_DECREMENT: (lvalue: NumericLiteral, env: Frame) => lvalue.decrement(env, false)
   }
 
-  public static readonly ASSIGNMENT_OPERATORS = {
-    '=': (right: NumericLiteral, left: string, env: Frame) => env.assignValue(left, right),
-    '+=': (right: NumericLiteral, left: string, env: Frame) =>
-      env.assignValue(left, env.lookupNumber(left).plus(right)),
-    '-=': (right: NumericLiteral, left: string, env: Frame) =>
-      env.assignValue(left, env.lookupNumber(left).minus(right)),
-    '*=': (right: NumericLiteral, left: string, env: Frame) =>
-      env.assignValue(left, env.lookupNumber(left).multiply(right)),
-    '/=': (right: NumericLiteral, left: string, env: Frame) =>
-      env.assignValue(left, env.lookupNumber(left).divideBy(right)),
-    '%=': (right: NumericLiteral, left: string, env: Frame) =>
-      env.assignValue(left, env.lookupNumber(left).modulo(right))
-  }
+  public static readonly ASSIGNMENT_OPERATORS = new Set<string>(['=', '+=', '-=', '*=', '/=', '%='])
 
   private elements: (
     | string
@@ -69,35 +54,26 @@ export class Expression {
   }
 
   isImmediateString() {
-    return (
-      this.type.toString() == 'char*' &&
-      this.elements.length == 1 &&
-      this.elements[0] instanceof NumericLiteral
-    )
+    return this.type.toString() == 'char*' && this.elements.length == 1
   }
 
   toImmediateString(): string {
     if (!this.isImmediateString()) {
       throw new Error('cannot get immediate string literal')
     }
-    return (this.elements[0] as NumericLiteral).dereferenceAsString()
+    return this.elements[0] as string
   }
 
-  private static toNumberLiteral(
-    val: NumericLiteral | string | undefined,
-    env: Frame
-  ): NumericLiteral {
+  private static toNumberLiteral(val: NumericLiteral | undefined, env: Frame): NumericLiteral {
     if (val == undefined) {
       throw new Error('undefined operand')
-    } else if (typeof val == 'string') {
-      return env.lookupNumber(val)
     } else {
       return val
     }
   }
 
   evaluate(env: Frame, rts: any[], context: any): NumericLiteral | undefined {
-    const result: (NumericLiteral | string | undefined)[] = []
+    const result: (NumericLiteral | undefined)[] = []
     let i = 0
     while (i < this.elements.length) {
       const ele = this.elements[i]
@@ -124,9 +100,11 @@ export class Expression {
         result.push(ele)
       } else if (ele instanceof PointerType || PRIMITIVE_TYPES.includes(ele as PrimitiveType)) {
         result.push(Expression.toNumberLiteral(result.pop(), env).castToType(ele as DataType))
+      } else if (ele.startsWith('"')) {
+        result.push(env.allocateStringLiteral(ele))
       } else if (ele == '&') {
-        result.push(env.lookupAddress(result.pop() as string))
-      } else if (ele == '$DEREFERENCE') {
+        result.push(Expression.toNumberLiteral(result.pop(), env).toAddress())
+      } else if (ele == DEREFERENCE_TAG) {
         result.push(Expression.toNumberLiteral(result.pop(), env).dereference())
       } else if (ele in Expression.INCREMENT_DECREMENT_OPERATORS) {
         result.push(Expression.INCREMENT_DECREMENT_OPERATORS[ele](result.pop(), env))
@@ -147,24 +125,20 @@ export class Expression {
             Expression.toNumberLiteral(result.pop(), env)
           )
         )
-      } else if (ele in Expression.ASSIGNMENT_OPERATORS) {
+      } else if (Expression.ASSIGNMENT_OPERATORS.has(ele)) {
+        const right = result.pop()
         result.push(
-          Expression.ASSIGNMENT_OPERATORS[ele](
-            Expression.toNumberLiteral(result.pop(), env),
-            result.pop(),
-            env
+          Expression.toNumberLiteral(result.pop(), env).assign(
+            env,
+            Expression.toNumberLiteral(right, env),
+            ele
           )
         )
       } else {
-        result.push(ele)
+        result.push(env.lookupNumber(ele))
       }
       i++
     }
-    const val = result.pop()
-    if (val == undefined || val instanceof NumericLiteral) {
-      return val
-    } else {
-      return env.lookupNumber(val)
-    }
+    return result.pop()
   }
 }

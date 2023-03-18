@@ -18,12 +18,16 @@ export abstract class Declaration extends Statement {
     }
     if (!lexer.matchDelimiter(')')) {
       const type = lexer.eatDataType()
-      result.push([type, env.declare(lexer, type)])
+      const [row, col] = lexer.tell()
+      const name = lexer.eatIdentifier()
+      result.push([type, env.declare(name, type, row, col, lexer)])
     }
     while (!lexer.matchDelimiter(')')) {
       lexer.eatDelimiter(',')
       const type = lexer.eatDataType()
-      result.push([type, env.declare(lexer, type)])
+      const [row, col] = lexer.tell()
+      const name = lexer.eatIdentifier()
+      result.push([type, env.declare(name, type, row, col, lexer)])
     }
     lexer.eatDelimiter(')')
     return result
@@ -55,7 +59,9 @@ export abstract class Declaration extends Statement {
         break
       }
       lexer.eatDelimiter(',')
-      declaredVariable = env.declare(lexer, variableType)
+      const [row, col] = lexer.tell()
+      declaredVariable = lexer.eatIdentifier()
+      env.declare(declaredVariable, variableType, row, col, lexer)
       statements.push(new VariableDeclaration(variableType, declaredVariable, null))
     }
     lexer.eatDelimiter(';')
@@ -78,12 +84,13 @@ export abstract class Declaration extends Statement {
     } else {
       throw new Error(lexer.formatError('declaration statement expected'))
     }
-    const identifier = env.declare(lexer, type)
+    const [row, col] = lexer.tell()
+    const identifier = lexer.eatIdentifier()
     if (lexer.matchDelimiter('(')) {
       if (!allowFunctionDeclaration) {
         throw new Error(lexer.formatError('function definition is not allowed here'))
       }
-      env.markType(identifier, PrimitiveType.FUNCTION)
+      env.declare(identifier, PrimitiveType.FUNCTION, row, col, lexer)
       const newEnv = Frame.extend(env)
       const formalParameterList = Declaration.parseFormalParameterList(newEnv, lexer)
       const functionObj = new SelfDefinedFunction(type, identifier, formalParameterList, null)
@@ -98,6 +105,7 @@ export abstract class Declaration extends Statement {
       if (type == 'void') {
         throw new Error(lexer.formatError("variable has incomplete type 'void'"))
       }
+      env.declare(identifier, type, row, col, lexer)
       return this.parseDeclaredVariables(env, type, identifier, lexer)
     }
   }
@@ -119,7 +127,7 @@ class VariableDeclaration extends Declaration {
     env.declare(this.variableName, this.variableType)
     if (this.expression != null) {
       const val = this.expression.evaluate(env, rts, context)
-      if (val == undefined || typeof val == 'string') {
+      if (val == undefined) {
         throw new Error('impossible execution path')
       }
       env.assignValue(this.variableName, val)

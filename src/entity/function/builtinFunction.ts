@@ -14,17 +14,20 @@ export class BuiltinFunction extends Function {
   private realFunction: RealBuiltinFunction
   private parameterTypes: DataType[]
   private isFormatString: boolean
+  private isAddress: boolean
 
   constructor(
     returnType: DataType,
     functionName: string,
     parameterTypes: DataType[],
     realFunction: RealBuiltinFunction,
+    isAddress: boolean = false,
     isFormatString: boolean = false
   ) {
     super(returnType, functionName)
     this.parameterTypes = parameterTypes
     this.realFunction = realFunction
+    this.isAddress = isAddress
     this.isFormatString = isFormatString
   }
 
@@ -54,27 +57,24 @@ export class BuiltinFunction extends Function {
     while (match != null) {
       this.checkTooFewArguments(lexer)
       lexer.eatDelimiter(',')
+      let expectedType: DataType | null
       if (match[0] == '%d' || match[0] == '%ld') {
-        formatStringParameters.push(
-          ExpressionParser.parse(env, lexer, false, false, PrimitiveType.INT)
-        )
+        expectedType = PrimitiveType.INT
       } else if (match[0] == '%f' || match[0] == '%lf') {
-        formatStringParameters.push(
-          ExpressionParser.parse(env, lexer, false, false, PrimitiveType.FLOAT)
-        )
+        expectedType = PrimitiveType.FLOAT
       } else if (match[0] == '%c') {
-        formatStringParameters.push(
-          ExpressionParser.parse(env, lexer, false, false, PrimitiveType.CHAR)
-        )
+        expectedType = PrimitiveType.CHAR
       } else if (match[0] == '%s') {
-        formatStringParameters.push(
-          ExpressionParser.parse(env, lexer, false, false, new PointerType(PrimitiveType.CHAR))
-        )
+        expectedType = new PointerType(PrimitiveType.CHAR)
       } else if (match[0] == '%p') {
-        formatStringParameters.push(ExpressionParser.parse(env, lexer, false, false, null))
+        expectedType = null
       } else {
         throw new Error('impossible execution path')
       }
+      if (this.isAddress && expectedType != null && !(expectedType instanceof PointerType)) {
+        expectedType = new PointerType(expectedType)
+      }
+      formatStringParameters.push(ExpressionParser.parse(env, lexer, false, false, expectedType))
       formatString = formatString.replace(match[0], '0')
       match = PLACEHOLDER_REGEX.exec(formatString)
     }
@@ -104,6 +104,7 @@ export class BuiltinFunction extends Function {
     } else {
       // TODO
       // actualParameters.push(ExpressionParser.parse(env, lexer, false, false, null))
+      throw new Error('TODO: is not immediateString')
     }
     lexer.eatDelimiter(')')
     return actualParameters

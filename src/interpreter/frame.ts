@@ -3,7 +3,7 @@ import { Function } from '../entity/function/function'
 import { SelfDefinedFunction } from '../entity/function/selfDefinedFunction'
 import { Memory } from '../memory/memory'
 import { Lexer } from '../parser/lexer'
-import { BUILTINS, DataType, PointerType, PrimitiveType } from './builtins'
+import { BUILTINS, DataType, PointerType, PrimitiveType, sizeof } from './builtins'
 
 export class Frame {
   private boundings
@@ -19,7 +19,7 @@ export class Frame {
   }
 
   static getBuiltinFrame(): Frame {
-    return Frame.addBuiltins(new Frame(null, Math.ceil(Memory.getOrAllocate().getNumWords() / 2)))
+    return Frame.addBuiltins(new Frame(null, Memory.getOrAllocate().getHalfAddress()))
   }
 
   private constructor(prev: Frame | null, top: number) {
@@ -76,11 +76,6 @@ export class Frame {
     return result
   }
 
-  lookupAddress(name: string): NumericLiteral {
-    const addrType = this.findFrameWith(name).boundings[name]
-    return NumericLiteral.new(addrType['val']).castToType(new PointerType(addrType['type']))
-  }
-
   private lookup(name: string): Function | NumericLiteral | string {
     const frame = this.findFrameWith(name)
     const val = frame.boundings[name]['val']
@@ -88,7 +83,7 @@ export class Frame {
     if (val == undefined) {
       throw new Error('unbounded identifier: ' + name)
     } else if (type instanceof PointerType) {
-      return Memory.getOrAllocate().readInt(val).castToType(type)
+      return Memory.getOrAllocate().readPointer(val, type)
     } else if (type == PrimitiveType.FUNCTION) {
       return val
     } else if (type == PrimitiveType.INT) {
@@ -121,27 +116,33 @@ export class Frame {
   allocateStringLiteral(stringLiteral: string): NumericLiteral {
     const address = this.top
     this.top = Memory.getOrAllocate().writeStringLiteral(this.top, stringLiteral)
+    console.log('allocated stringLiteral: ' + stringLiteral + ', ' + this.top)
     return NumericLiteral.new(address).castToType(new PointerType(PrimitiveType.CHAR))
   }
 
-  declare(nameOrLexer: string | Lexer, type: DataType): string {
-    let name: string
-    if (nameOrLexer instanceof Lexer) {
-      nameOrLexer.hasNext()
-      const [row, col] = nameOrLexer.tell()
-      name = nameOrLexer.eatIdentifier()
-      if (this.isRedefinition(name)) {
-        throw new Error(nameOrLexer.formatError("redefinition of '" + name + "'", row, col))
+  declare(
+    name: string,
+    type: DataType,
+    row: number = -1,
+    col: number = -1,
+    lexer: Lexer | null = null
+  ): string {
+    if (this.isRedefinition(name)) {
+      let errMsg = "redefinition of '" + name + "'"
+      if (lexer != null) {
+        errMsg = lexer.formatError(errMsg, row, col)
       }
-    } else {
-      name = nameOrLexer
-      if (this.isRedefinition(name)) {
-        throw new Error("redefinition of '" + name + "'")
-      }
+      throw new Error(errMsg)
     }
-    const value = type == PrimitiveType.FUNCTION ? undefined : this.top++ // TODO allocate memory for variable
+    const value = type == PrimitiveType.FUNCTION ? undefined : this.top
+    this.top += type == PrimitiveType.FUNCTION ? 0 : 4
     this.boundings[name] = { type: type, val: value }
+    console.log('declared variable: (' + name + ', ' + type + '), ' + this.top)
     return name
+  }
+
+  assignValueByAddress(address: number, value: NumericLiteral) {
+    Memory.getOrAllocate().writeNumeric(address, value)
   }
 
   assignValue<Type extends NumericLiteral | Function>(name: string, val: Type): Type {

@@ -27,6 +27,8 @@ function assertAddressable(
   }
 }
 
+export const DEREFERENCE_TAG = '$DEREFERENCE'
+
 function assertAssignable(
   ele: string | DataType | NumericLiteral | IncrementDecrement | FunctionCall | Jump,
   env: Frame,
@@ -35,9 +37,10 @@ function assertAssignable(
   lexer: Lexer
 ) {
   if (
-    typeof ele != 'string' ||
-    !new Lexer(ele).matchIdentifier() ||
-    env.lookupType(ele) == PrimitiveType.FUNCTION
+    ele != DEREFERENCE_TAG &&
+    (typeof ele != 'string' ||
+      !new Lexer(ele).matchIdentifier() ||
+      env.lookupType(ele) == PrimitiveType.FUNCTION)
   ) {
     throw new Error(lexer.formatError('expression is not assignable', row, col))
   }
@@ -89,7 +92,7 @@ export class ExpressionParser {
           )
         )
       }
-      result.push('$DEREFERENCE')
+      result.push(DEREFERENCE_TAG)
       dataType = type.dereference()
     } else if (lexer.matchDelimiter('(')) {
       lexer.eatDelimiter('(')
@@ -111,9 +114,8 @@ export class ExpressionParser {
       result.push(lexer.eatCharacterLiteral())
       dataType = PrimitiveType.CHAR
     } else if (lexer.matchDelimiter('"')) {
-      const addr = env.allocateStringLiteral(lexer.eatStringLiteral())
-      result.push(addr)
-      dataType = addr.getDataType()
+      result.push(lexer.eatStringLiteral())
+      dataType = new PointerType(PrimitiveType.CHAR)
     } else if (lexer.matchIncrementDecrementOperator()) {
       if (isConstantExpression) {
         throw new Error(lexer.formatError('expected a constant expression'))

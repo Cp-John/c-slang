@@ -1,4 +1,5 @@
-import { DataType, PointerType, PrimitiveType } from '../../interpreter/builtins'
+import { DataType, PointerType, PrimitiveType, sizeof } from '../../interpreter/builtins'
+import { Frame } from '../../interpreter/frame'
 import { Memory } from '../../memory/memory'
 import { getHigherPrecisionType } from './typeCheck'
 
@@ -13,28 +14,42 @@ interface UnaryArithmeticOperator {
 export class NumericLiteral {
   private val: number
   private type: DataType
+  private address: number | null
 
   getValue(): number {
     return this.val
+  }
+
+  private getStep(): number {
+    if (this.type instanceof PointerType) {
+      return sizeof(this.type.dereference())
+    }
+    return 1
   }
 
   toChar(): string {
     return String.fromCharCode(this.val)
   }
 
-  increment(): NumericLiteral {
-    return new NumericLiteral(this.val + 1, this.type)
+  increment(env: Frame, isPrefix: boolean): NumericLiteral {
+    this.assertIsLValue()
+    this.val += this.getStep()
+    env.assignValueByAddress(this.address as number, this)
+    return new NumericLiteral(isPrefix ? this.val : this.val - this.getStep(), this.type)
   }
 
-  decrement(): NumericLiteral {
-    return new NumericLiteral(this.val - 1, this.type)
+  decrement(env: Frame, isPrefix: boolean): NumericLiteral {
+    this.assertIsLValue()
+    this.val -= this.getStep()
+    env.assignValueByAddress(this.address as number, this)
+    return new NumericLiteral(isPrefix ? this.val : this.val + this.getStep(), this.type)
   }
 
   toBoolean(): boolean {
     return this.val != 0
   }
 
-  castToType(newType: DataType): NumericLiteral {
+  castToType(newType: DataType, isInPlace: boolean = false): NumericLiteral {
     if (newType == PrimitiveType.FUNCTION || newType == PrimitiveType.VOID) {
       throw new Error("attempt to cast '" + this.type + "' to '" + newType + "'")
     }
@@ -42,38 +57,19 @@ export class NumericLiteral {
       newType.toString() == this.type.toString() ||
       (newType instanceof PointerType && this.type instanceof PointerType)
     ) {
-      return new NumericLiteral(this.val, newType)
+      return new NumericLiteral(this.val, newType, isInPlace ? this.address : null)
     } else if (this.type == PrimitiveType.FLOAT) {
       this.truncateDecimals()
-      return this.castToType(newType)
+      return this.castToType(newType, isInPlace)
     } else if (newType == PrimitiveType.CHAR) {
-      return new NumericLiteral(this.val % 256, newType)
+      return new NumericLiteral(this.val % 256, newType, isInPlace ? this.address : null)
     } else {
-      return new NumericLiteral(this.val, newType)
+      return new NumericLiteral(this.val, newType, isInPlace ? this.address : null)
     }
   }
 
   static booleanToNumericLiteral(val: boolean): NumericLiteral {
     return val ? NumericLiteral.new(1) : NumericLiteral.new(0)
-  }
-
-  dereferenceAsNumeric(): NumericLiteral {
-    if (!(this.type instanceof PointerType)) {
-      throw new Error("attempt to dereference non-pointer type '" + this.type + "' to numeric type")
-    } else if (this.type.dereference() == PrimitiveType.CHAR) {
-      throw new Error("attempt to dereference type '" + this.type + "' to numeric type")
-    }
-    if (this.type.dereference() instanceof PointerType) {
-      return Memory.getOrAllocate().readInt(this.val).castToType(this.type.dereference())
-    } else if (this.type.dereference() == PrimitiveType.INT) {
-      return Memory.getOrAllocate().readInt(this.val)
-    } else if (this.type.dereference() == PrimitiveType.FLOAT) {
-      return Memory.getOrAllocate().readFloat(this.val)
-    } else if (this.type.dereference() == PrimitiveType.CHAR) {
-      return Memory.getOrAllocate().readChar(this.val)
-    } else {
-      throw new Error("attempt to read unknown type '" + this.type + "' as numeric type")
-    }
   }
 
   dereferenceAsString(): string {
@@ -86,20 +82,36 @@ export class NumericLiteral {
     return Memory.getOrAllocate().readStringLiteral(this.val)
   }
 
-  dereference(): string | NumericLiteral {
+  dereference(): NumericLiteral {
     if (!(this.type instanceof PointerType)) {
       throw new Error("attempt to dereference non-pointer type '" + this.type + "'")
     }
     if (this.type.dereference() instanceof PointerType) {
-      return Memory.getOrAllocate().readInt(this.val).castToType(this.type.dereference())
+      return Memory.getOrAllocate().readPointer(this.val, this.type.dereference() as PointerType)
     } else if (this.type.dereference() == PrimitiveType.CHAR) {
-      return Memory.getOrAllocate().readStringLiteral(this.val)
+      return Memory.getOrAllocate().readChar(this.val)
     } else if (this.type.dereference() == PrimitiveType.INT) {
       return Memory.getOrAllocate().readInt(this.val)
     } else if (this.type.dereference() == PrimitiveType.FLOAT) {
       return Memory.getOrAllocate().readFloat(this.val)
     } else {
-      throw new Error("attempt to read unknown type '" + this.type + "'")
+      throw new Error("attempt to dereference unknown pointer type '" + this.type + "'")
+    }
+  }
+
+  assign(env: Frame, right: NumericLiteral, assignOpr: string): NumericLiteral {
+    this.assertIsLValue()
+    if (assignOpr == '=') {
+      env.assignValueByAddress(this.address as number, right)
+      return right
+    } else {
+      const operator = NumericLiteral.BINARY_ARITHMETIC_OPERATORS.get(assignOpr.replace('=', ''))
+      if (operator == undefined) {
+        throw new Error('unknown assign operator: ' + assignOpr)
+      }
+      const result = operator(right, this)
+      env.assignValueByAddress(this.address as number, result)
+      return result
     }
   }
 
@@ -168,13 +180,13 @@ export class NumericLiteral {
   }
 
   plus(right: NumericLiteral) {
-    return NumericLiteral.new(this.val + right.val).castToType(
+    return NumericLiteral.new(this.val + right.val * this.getStep()).castToType(
       getHigherPrecisionType(this.type, right.type)
     )
   }
 
   minus(right: NumericLiteral) {
-    return NumericLiteral.new(this.val - right.val).castToType(
+    return NumericLiteral.new(this.val - right.val * this.getStep()).castToType(
       getHigherPrecisionType(this.type, right.type)
     )
   }
@@ -195,14 +207,15 @@ export class NumericLiteral {
     return new NumericLiteral(Math.sqrt(this.val), PrimitiveType.FLOAT)
   }
 
-  static new(val: number): NumericLiteral {
+  static new(val: number, address: number | null = null): NumericLiteral {
     return new NumericLiteral(
       val,
       val % 1 != 0
         ? PrimitiveType.FLOAT
         : val >= -128 && val <= 127
         ? PrimitiveType.CHAR
-        : PrimitiveType.INT
+        : PrimitiveType.INT,
+      address
     )
   }
 
@@ -218,9 +231,29 @@ export class NumericLiteral {
     }
   }
 
-  private constructor(val: number, type: DataType) {
+  private constructor(val: number, type: DataType, address: number | null = null) {
     this.val = val
     this.type = type
+    this.address = address
+  }
+
+  isLValue(): boolean {
+    return this.address != null
+  }
+
+  assertIsLValue(): void {
+    if (!this.isLValue()) {
+      throw new Error('attempt to access the address of rvalue')
+    }
+  }
+
+  getAddress(): number {
+    this.assertIsLValue()
+    return this.address as number
+  }
+
+  toAddress(): NumericLiteral {
+    return new NumericLiteral(this.getAddress(), new PointerType(this.type))
   }
 
   getDataType(): DataType {

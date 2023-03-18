@@ -63,6 +63,7 @@ export class Lexer {
   }
 
   tell(): [number, number] {
+    this.hasNext()
     return [this.row, this.col]
   }
 
