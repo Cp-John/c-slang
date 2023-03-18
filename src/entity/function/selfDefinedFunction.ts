@@ -48,8 +48,8 @@ export class SelfDefinedFunction extends Function {
     )
     try {
       this.body.execute(newEnv, rts, context)
-      if (this.returnType == PrimitiveType.FLOAT || this.returnType == PrimitiveType.INT) {
-        rts.push(NumericLiteral.new(0))
+      if (this.returnType != PrimitiveType.VOID) {
+        rts.push(NumericLiteral.new(0).castToType(this.returnType))
       }
     } catch (err) {
       if (err != 'RETURN') {
