@@ -32,7 +32,8 @@ const RESERVED_KEYWORDS = new Set([
   'for',
   'switch',
   'case',
-  'default'
+  'default',
+  'sizeof'
 ])
 
 const ESCAPE_CHARACTERS = {

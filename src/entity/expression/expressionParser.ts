@@ -1,4 +1,4 @@
-import { DataType, PointerType, PrimitiveType } from '../../interpreter/builtins'
+import { DataType, PointerType, PrimitiveType, sizeof } from '../../interpreter/builtins'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Expression, IncrementDecrement, Jump } from './expression'
@@ -168,6 +168,26 @@ export class ExpressionParser {
         result.push(functionCall)
         dataType = functionCall.getReturnType(env)
       }
+    } else if (lexer.matchKeyword('sizeof')) {
+      lexer.eatKeyword('sizeof')
+      lexer.eatDelimiter('(')
+      let type
+      if (lexer.matchDataType()) {
+        type = lexer.eatDataType()
+      } else {
+        const tempResult: (
+          | string
+          | DataType
+          | NumericLiteral
+          | IncrementDecrement
+          | FunctionCall
+          | Jump
+        )[] = []
+        type = this.recurParseExpression(env, lexer, tempResult, true, false)
+      }
+      lexer.eatDelimiter(')')
+      result.push(NumericLiteral.new(sizeof(type)).castToType(PrimitiveType.INT))
+      dataType = PrimitiveType.INT
     } else {
       throw new Error(lexer.formatError('expression expected'))
     }
