@@ -72,33 +72,6 @@ export class NumericLiteral {
     return val ? NumericLiteral.new(1) : NumericLiteral.new(0)
   }
 
-  dereferenceAsString(): string {
-    if (!(this.type instanceof PointerType)) {
-      throw new Error("attempt to dereference non-pointer type '" + this.type + "' to 'char*'")
-    }
-    if (this.type.dereference() != PrimitiveType.CHAR) {
-      throw new Error("attempt to dereference type '" + this.type + "' to 'char*'")
-    }
-    return Memory.getOrAllocate().readStringLiteral(this.val)
-  }
-
-  dereference(): NumericLiteral {
-    if (!(this.type instanceof PointerType)) {
-      throw new Error("attempt to dereference non-pointer type '" + this.type + "'")
-    }
-    if (this.type.dereference() instanceof PointerType) {
-      return Memory.getOrAllocate().readPointer(this.val, this.type.dereference() as PointerType)
-    } else if (this.type.dereference() == PrimitiveType.CHAR) {
-      return Memory.getOrAllocate().readChar(this.val)
-    } else if (this.type.dereference() == PrimitiveType.INT) {
-      return Memory.getOrAllocate().readInt(this.val)
-    } else if (this.type.dereference() == PrimitiveType.FLOAT) {
-      return Memory.getOrAllocate().readFloat(this.val)
-    } else {
-      throw new Error("attempt to dereference unknown pointer type '" + this.type + "'")
-    }
-  }
-
   assign(env: Frame, right: NumericLiteral, assignOpr: string): NumericLiteral {
     this.assertIsLValue()
     if (assignOpr == '=') {

@@ -105,7 +105,7 @@ export class Expression {
       } else if (ele == '&') {
         result.push(Expression.toNumberLiteral(result.pop(), env).toAddress())
       } else if (ele == DEREFERENCE_TAG) {
-        result.push(Expression.toNumberLiteral(result.pop(), env).dereference())
+        result.push(env.dereference(Expression.toNumberLiteral(result.pop(), env)))
       } else if (ele in Expression.INCREMENT_DECREMENT_OPERATORS) {
         result.push(Expression.INCREMENT_DECREMENT_OPERATORS[ele](result.pop(), env))
       } else if (NumericLiteral.BINARY_ARITHMETIC_OPERATORS.has(ele)) {

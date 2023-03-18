@@ -4,23 +4,11 @@ import { PointerType, PrimitiveType } from '../interpreter/builtins'
 export class Memory {
   private buffer: ArrayBuffer
   private view: DataView
-  static allocatedMemory: Memory | null = null
   static readonly DEFAULT_MEMORY_SIZE = Math.pow(2, 20)
 
-  private constructor(size: number) {
+  constructor(size: number = Memory.DEFAULT_MEMORY_SIZE) {
     this.buffer = new ArrayBuffer(size)
     this.view = new DataView(this.buffer)
-  }
-
-  static getOrAllocate(size: number = Memory.DEFAULT_MEMORY_SIZE): Memory {
-    if (Memory.allocatedMemory == null) {
-      Memory.allocatedMemory = new Memory(size)
-    }
-    return Memory.allocatedMemory
-  }
-
-  getHalfAddress(): number {
-    return ((this.view.byteLength / 2) >> 2) << 2
   }
 
   private assertValidAddress(address: number, isRead: boolean) {

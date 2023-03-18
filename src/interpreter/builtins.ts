@@ -73,14 +73,14 @@ const printf: RealBuiltinFunction = (
   context: any,
   args: NumericLiteral[]
 ): void => {
-  let outputString = args[0].dereferenceAsString()
+  let outputString = env.dereferenceAsString(args[0])
   let i = 1
   while (i < args.length) {
     const toReplace = PLACEHOLDER_REGEX.exec(outputString)
     if (toReplace == null) {
       throw new Error('data unused in format string')
     } else if (toReplace[0] == '%s') {
-      outputString = outputString.replace(PLACEHOLDER_REGEX, args[i].dereferenceAsString())
+      outputString = outputString.replace(PLACEHOLDER_REGEX, env.dereferenceAsString(args[i]))
     } else if (toReplace[0] == '%c') {
       outputString = outputString.replace(PLACEHOLDER_REGEX, args[i].toChar())
     } else {
@@ -102,7 +102,7 @@ const scanf: RealBuiltinFunction = (
   args: NumericLiteral[]
 ): void => {
   let i = 1
-  let formatString = args[0].dereferenceAsString()
+  let formatString = env.dereferenceAsString(args[0])
   while (i < args.length) {
     const input = prompt(context['stdout'])
     if (input == null) {

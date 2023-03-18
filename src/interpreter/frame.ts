@@ -9,6 +9,7 @@ export class Frame {
   private boundings
   private prev: Frame | null
   private top: number
+  private memory: Memory
 
   private static addBuiltins(frame: Frame): Frame {
     for (const name in BUILTINS) {
@@ -19,13 +20,14 @@ export class Frame {
   }
 
   static getBuiltinFrame(): Frame {
-    return Frame.addBuiltins(new Frame(null, Memory.getOrAllocate().getHalfAddress()))
+    return Frame.addBuiltins(new Frame(null, 0, new Memory()))
   }
 
-  private constructor(prev: Frame | null, top: number) {
+  private constructor(prev: Frame | null, top: number, memory: Memory) {
     this.boundings = {}
     this.prev = prev
     this.top = top
+    this.memory = memory
   }
 
   private getFrameWithName(name: string): Frame | null {
@@ -83,15 +85,15 @@ export class Frame {
     if (val == undefined) {
       throw new Error('unbounded identifier: ' + name)
     } else if (type instanceof PointerType) {
-      return Memory.getOrAllocate().readPointer(val, type)
+      return this.memory.readPointer(val, type)
     } else if (type == PrimitiveType.FUNCTION) {
       return val
     } else if (type == PrimitiveType.INT) {
-      return Memory.getOrAllocate().readInt(val)
+      return this.memory.readInt(val)
     } else if (type == PrimitiveType.FLOAT) {
-      return Memory.getOrAllocate().readFloat(val)
+      return this.memory.readFloat(val)
     } else if (type == PrimitiveType.CHAR) {
-      return Memory.getOrAllocate().readChar(val)
+      return this.memory.readChar(val)
     } else {
       throw new Error('lookup unknown datatype: ' + type)
     }
@@ -115,7 +117,7 @@ export class Frame {
 
   allocateStringLiteral(stringLiteral: string): NumericLiteral {
     const address = this.top
-    this.top = Memory.getOrAllocate().writeStringLiteral(this.top, stringLiteral)
+    this.top = this.memory.writeStringLiteral(this.top, stringLiteral)
     console.log('allocated stringLiteral: ' + stringLiteral + ', ' + this.top)
     return NumericLiteral.new(address).castToType(new PointerType(PrimitiveType.CHAR))
   }
@@ -142,7 +144,7 @@ export class Frame {
   }
 
   assignValueByAddress(address: number, value: NumericLiteral) {
-    Memory.getOrAllocate().writeNumeric(address, value)
+    this.memory.writeNumeric(address, value)
   }
 
   assignValue<Type extends NumericLiteral | Function>(name: string, val: Type): Type {
@@ -156,14 +158,43 @@ export class Frame {
       variableType == PrimitiveType.FLOAT ||
       variableType == PrimitiveType.CHAR
     ) {
-      Memory.getOrAllocate().writeNumeric(address, (val as NumericLiteral).castToType(variableType))
+      this.memory.writeNumeric(address, (val as NumericLiteral).castToType(variableType))
     } else {
       throw new Error("attempt to assign to unknown varialble type '" + variableType + "'")
     }
     return val
   }
 
+  dereferenceAsString(numeric: NumericLiteral): string {
+    const type = numeric.getDataType()
+    if (!(type instanceof PointerType)) {
+      throw new Error("attempt to dereference non-pointer type '" + type + "' to 'char*'")
+    } else if (type.dereference() != PrimitiveType.CHAR) {
+      throw new Error("attempt to dereference type '" + type + "' to 'char*'")
+    }
+    return this.memory.readStringLiteral(numeric.getValue())
+  }
+
+  dereference(numeric: NumericLiteral): NumericLiteral {
+    const type = numeric.getDataType()
+    if (!(type instanceof PointerType)) {
+      throw new Error("attempt to dereference non-pointer type '" + type + "'")
+    }
+    const val = numeric.getValue()
+    if (type.dereference() instanceof PointerType) {
+      return this.memory.readPointer(val, type.dereference() as PointerType)
+    } else if (type.dereference() == PrimitiveType.CHAR) {
+      return this.memory.readChar(val)
+    } else if (type.dereference() == PrimitiveType.INT) {
+      return this.memory.readInt(val)
+    } else if (type.dereference() == PrimitiveType.FLOAT) {
+      return this.memory.readFloat(val)
+    } else {
+      throw new Error("attempt to dereference unknown pointer type '" + type + "'")
+    }
+  }
+
   static extend(prev: Frame) {
-    return new Frame(prev, prev.top)
+    return new Frame(prev, prev.top, prev.memory)
   }
 }
