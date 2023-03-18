@@ -36,6 +36,34 @@ export class ExceptionError implements SourceError {
   }
 }
 
+export class CProgramError implements SourceError {
+  public type = ErrorType.SYNTAX
+  public severity = ErrorSeverity.ERROR
+
+  constructor(public error: Error) {}
+
+  public explain() {
+    return this.error.message
+  }
+
+  public elaborate() {
+    return 'TODO'
+  }
+}
+
+export class CRuntimeError extends RuntimeSourceError {
+  private error: Error
+
+  constructor(error: Error) {
+    super()
+    this.error = error
+  }
+
+  public explain(): string {
+    return this.error.message
+  }
+}
+
 export class MaximumStackLimitExceeded extends RuntimeSourceError {
   public static MAX_CALLS_TO_SHOW = 3
 

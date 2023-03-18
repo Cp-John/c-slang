@@ -1,15 +1,14 @@
 /* tslint:disable:max-classes-per-file */
-import { CharStreams, CommonTokenStream } from 'antlr4ts'
 import { ErrorNode } from 'antlr4ts/tree/ErrorNode'
 import { ParseTree } from 'antlr4ts/tree/ParseTree'
 import { RuleNode } from 'antlr4ts/tree/RuleNode'
 import { TerminalNode } from 'antlr4ts/tree/TerminalNode'
 import * as es from 'estree'
 
-import { CalcLexer } from '../lang/CalcLexer'
+import { Program } from '../entity/program'
+import { CProgramError } from '../errors/errors'
 import {
   AdditionContext,
-  CalcParser,
   DivisionContext,
   ExpressionContext,
   MultiplicationContext,
@@ -22,6 +21,7 @@ import {
 import { CalcVisitor } from '../lang/CalcVisitor'
 import { Context, ErrorSeverity, ErrorType, SourceError } from '../types'
 import { stripIndent } from '../utils/formatters'
+import { Lexer } from './lexer'
 
 export class DisallowedConstructError implements SourceError {
   public type = ErrorType.SYNTAX
@@ -236,31 +236,36 @@ function convertSource(expression: ExpressionContext): es.Program {
 }
 
 export function parse(source: string, context: Context) {
-  let program: es.Program | undefined
-
-  if (context.variant === 'calc') {
-    const inputStream = CharStreams.fromString(source)
-    const lexer = new CalcLexer(inputStream)
-    const tokenStream = new CommonTokenStream(lexer)
-    const parser = new CalcParser(tokenStream)
-    parser.buildParseTree = true
-    try {
-      const tree = parser.expression()
-      program = convertSource(tree)
-    } catch (error) {
-      if (error instanceof FatalSyntaxError) {
-        context.errors.push(error)
-      } else {
-        throw error
-      }
-    }
-    const hasErrors = context.errors.find(m => m.severity === ErrorSeverity.ERROR)
-    if (program && !hasErrors) {
-      return program
-    } else {
-      return undefined
-    }
-  } else {
-    return undefined
+  // let program: es.Program | undefined
+  try {
+    return Program.parse(new Lexer(source))
+  } catch (err) {
+    context.errors.push(new CProgramError(err))
   }
+  // if (context.variant === 'calc') {
+  //   const inputStream = CharStreams.fromString(source)
+  //   const lexer = new CalcLexer(inputStream)
+  //   const tokenStream = new CommonTokenStream(lexer)
+  //   const parser = new CalcParser(tokenStream)
+  //   parser.buildParseTree = true
+  //   try {
+  //     const tree = parser.expression()
+  //     program = convertSource(tree)
+  //   } catch (error) {
+  //     if (error instanceof FatalSyntaxError) {
+  //       context.errors.push(error)
+  //     } else {
+  //       throw error
+  //     }
+  //   }
+  //   const hasErrors = context.errors.find(m => m.severity === ErrorSeverity.ERROR)
+  //   if (program && !hasErrors) {
+  //     return program
+  //   } else {
+  //     return undefined
+  //   }
+  // } else {
+  //   return undefined
+  // }
+  return undefined
 }

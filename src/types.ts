@@ -37,7 +37,6 @@ export enum ErrorSeverity {
 export interface SourceError {
   type: ErrorType
   severity: ErrorSeverity
-  location: es.SourceLocation
   explain(): string
   elaborate(): string
 }

@@ -3,7 +3,7 @@ import { SourceMapConsumer } from 'source-map'
 
 import createContext from './createContext'
 import { InterruptedError } from './errors/errors'
-import { findDeclarationNode, findIdentifierNode } from './finder'
+// import { findDeclarationNode, findIdentifierNode } from './finder'
 import { parse } from './parser/parser'
 import {
   Context,
@@ -43,53 +43,51 @@ if (typeof window !== 'undefined') {
 
 export function parseError(errors: SourceError[]): string {
   const errorMessagesArr = errors.map(error => {
-    const line = error.location ? error.location.start.line : '<unknown>'
-    const explanation = error.explain()
-    return line < 1 ? explanation : `Line ${line}: ${explanation}`
+    return error.explain()
   })
   return errorMessagesArr.join('\n')
 }
 
-export function findDeclaration(
-  code: string,
-  context: Context,
-  loc: { line: number; column: number }
-): SourceLocation | null | undefined {
-  const program = parse(code, context)
-  if (!program) {
-    return null
-  }
-  const identifierNode = findIdentifierNode(program, context, loc)
-  if (!identifierNode) {
-    return null
-  }
-  const declarationNode = findDeclarationNode(program, identifierNode)
-  if (!declarationNode || identifierNode === declarationNode) {
-    return null
-  }
-  return declarationNode.loc
-}
+// export function findDeclaration(
+//   code: string,
+//   context: Context,
+//   loc: { line: number; column: number }
+// ): SourceLocation | null | undefined {
+//   const program = parse(code, context)
+//   if (!program) {
+//     return null
+//   }
+//   const identifierNode = findIdentifierNode(program, context, loc)
+//   if (!identifierNode) {
+//     return null
+//   }
+//   const declarationNode = findDeclarationNode(program, identifierNode)
+//   if (!declarationNode || identifierNode === declarationNode) {
+//     return null
+//   }
+//   return declarationNode.loc
+// }
 
-export function hasDeclaration(
-  code: string,
-  context: Context,
-  loc: { line: number; column: number }
-): boolean {
-  const program = parse(code, context)
-  if (!program) {
-    return false
-  }
-  const identifierNode = findIdentifierNode(program, context, loc)
-  if (!identifierNode) {
-    return false
-  }
-  const declarationNode = findDeclarationNode(program, identifierNode)
-  if (declarationNode == null || declarationNode.loc == null) {
-    return false
-  }
+// export function hasDeclaration(
+//   code: string,
+//   context: Context,
+//   loc: { line: number; column: number }
+// ): boolean {
+//   const program = parse(code, context)
+//   if (!program) {
+//     return false
+//   }
+//   const identifierNode = findIdentifierNode(program, context, loc)
+//   if (!identifierNode) {
+//     return false
+//   }
+//   const declarationNode = findDeclarationNode(program, identifierNode)
+//   if (declarationNode == null || declarationNode.loc == null) {
+//     return false
+//   }
 
-  return true
-}
+//   return true
+// }
 
 export async function runInContext(
   code: string,
