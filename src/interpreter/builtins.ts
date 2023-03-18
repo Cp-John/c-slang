@@ -34,6 +34,8 @@ export type DataType = PrimitiveType | PointerType
 export function sizeof(type: DataType): number {
   if (type instanceof PointerType) {
     return 4
+  } else if (type == PrimitiveType.VOID) {
+    return 1
   } else if (type == PrimitiveType.INT || type == PrimitiveType.FLOAT) {
     return 4
   } else if (type == PrimitiveType.FUNCTION) {
@@ -146,6 +148,24 @@ const sqrt: RealBuiltinFunction = (
   rts.push(args[0].sqrt())
 }
 
+const malloc: RealBuiltinFunction = (
+  env: Frame,
+  rts: any[],
+  context: any,
+  args: NumericLiteral[]
+): void => {
+  rts.push(env.allocateOnHeap(args[0]))
+}
+
+const free: RealBuiltinFunction = (
+  env: Frame,
+  rts: any[],
+  context: any,
+  args: NumericLiteral[]
+): void => {
+  env.free(args[0])
+}
+
 export const BUILTINS = {
   printf: [
     new BuiltinFunction(
@@ -173,6 +193,14 @@ export const BUILTINS = {
   time: [new BuiltinFunction(PrimitiveType.INT, 'time', [], time), PrimitiveType.FUNCTION],
   sqrt: [
     new BuiltinFunction(PrimitiveType.FLOAT, 'sqrt', [PrimitiveType.FLOAT], sqrt),
+    PrimitiveType.FUNCTION
+  ],
+  malloc: [
+    new BuiltinFunction(new PointerType(PrimitiveType.VOID), 'malloc', [PrimitiveType.INT], malloc),
+    PrimitiveType.FUNCTION
+  ],
+  free: [
+    new BuiltinFunction(PrimitiveType.VOID, 'free', [PrimitiveType.INT], free),
     PrimitiveType.FUNCTION
   ]
   //   RAND_MAX: [new NumericLiteral(RAND_MAX, PrimitiveType.INT), PrimitiveType.INT],

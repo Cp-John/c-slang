@@ -17,14 +17,22 @@ export abstract class Declaration extends Statement {
       return result
     }
     if (!lexer.matchDelimiter(')')) {
+      const [typeRow, typeCol] = lexer.tell()
       const type = lexer.eatDataType()
+      if (type == PrimitiveType.VOID) {
+        throw new Error(lexer.formatError("argument may not have 'void' type", typeRow, typeCol))
+      }
       const [row, col] = lexer.tell()
       const name = lexer.eatIdentifier()
       result.push([type, env.declare(name, type, row, col, lexer)])
     }
     while (!lexer.matchDelimiter(')')) {
       lexer.eatDelimiter(',')
+      const [typeRow, typeCol] = lexer.tell()
       const type = lexer.eatDataType()
+      if (type == PrimitiveType.VOID) {
+        throw new Error(lexer.formatError("argument may not have 'void' type", typeRow, typeCol))
+      }
       const [row, col] = lexer.tell()
       const name = lexer.eatIdentifier()
       result.push([type, env.declare(name, type, row, col, lexer)])
@@ -77,9 +85,7 @@ export abstract class Declaration extends Statement {
     allowFunctionDeclaration: boolean = false
   ): Statement[] {
     let type: DataType = PrimitiveType.VOID
-    if (lexer.matchKeyword('void')) {
-      lexer.eatKeyword('void')
-    } else if (lexer.matchDataType()) {
+    if (lexer.matchDataType()) {
       type = lexer.eatDataType()
     } else {
       throw new Error(lexer.formatError('declaration statement expected'))
@@ -102,7 +108,7 @@ export abstract class Declaration extends Statement {
       }
       return [new FunctionDeclaration(type, identifier, formalParameterList, functionObj.body)]
     } else {
-      if (type == 'void') {
+      if (type == PrimitiveType.VOID) {
         throw new Error(lexer.formatError("variable has incomplete type 'void'"))
       }
       env.declare(identifier, type, row, col, lexer)

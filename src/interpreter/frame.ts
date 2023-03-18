@@ -3,7 +3,7 @@ import { Function } from '../entity/function/function'
 import { SelfDefinedFunction } from '../entity/function/selfDefinedFunction'
 import { Memory } from '../memory/memory'
 import { Lexer } from '../parser/lexer'
-import { BUILTINS, DataType, PointerType, PrimitiveType, sizeof } from './builtins'
+import { BUILTINS, DataType, PointerType, PrimitiveType } from './builtins'
 
 export class Frame {
   private boundings
@@ -20,7 +20,8 @@ export class Frame {
   }
 
   static getBuiltinFrame(): Frame {
-    return Frame.addBuiltins(new Frame(null, 0, new Memory()))
+    const memory = new Memory()
+    return Frame.addBuiltins(new Frame(null, memory.getStackBottom(), memory))
   }
 
   private constructor(prev: Frame | null, top: number, memory: Memory) {
@@ -192,6 +193,14 @@ export class Frame {
     } else {
       throw new Error("attempt to dereference unknown pointer type '" + type + "'")
     }
+  }
+
+  allocateOnHeap(numeric: NumericLiteral): NumericLiteral {
+    return this.memory.allocate(numeric.getValue())
+  }
+
+  free(numeric: NumericLiteral) {
+    this.memory.free(numeric.getValue())
   }
 
   static extend(prev: Frame) {

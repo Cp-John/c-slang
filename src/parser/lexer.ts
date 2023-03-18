@@ -7,7 +7,7 @@ const NUMBER_REGEX = /^[+-]?([0-9]*[.])?[0-9]+/
 const IDENTIFIER_REGEX = /^[_a-zA-Z][_a-zA-Z0-9]*/
 const STRING_LITERAL_REGEX = /^".*?(?<!\\)"/
 const CHARACTER_LITERAL_REGEX = /^'.(?<!\\)'|^'\\[abfnrtv'"?]'|^'\\\\'/
-const DATA_TYPE_REGEX = /^int\b|^char\b|^float\b|^double\b/
+const DATA_TYPE_REGEX = /^int\b|^char\b|^float\b|^double\b|^void\b/
 const SPACE_REGEX = /^\s+/
 const PRIORITIZED_ARITHMETIC_OPERATOR_REGEX = /^[*\/%](?!=)/
 const ARITHMETIC_OPERATOR_REGEX = /^[*\/%\+-](?!=)/

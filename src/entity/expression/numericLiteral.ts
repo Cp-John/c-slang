@@ -1,6 +1,5 @@
 import { DataType, PointerType, PrimitiveType, sizeof } from '../../interpreter/builtins'
 import { Frame } from '../../interpreter/frame'
-import { Memory } from '../../memory/memory'
 import { getHigherPrecisionType } from './typeCheck'
 
 interface BinaryArithmeticOperator {

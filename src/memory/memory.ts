@@ -3,12 +3,25 @@ import { PointerType, PrimitiveType } from '../interpreter/builtins'
 
 export class Memory {
   private buffer: ArrayBuffer
-  private view: DataView
-  static readonly DEFAULT_MEMORY_SIZE = Math.pow(2, 20)
+  protected view: DataView
+  private allocatedAddresses: Set<number>
+  private heapTop: number
+
+  static readonly DEFAULT_MEMORY_SIZE = Math.pow(2, 21)
+  private static readonly FREE_OFFSET = 4
+  private static readonly LENGTH_OFFSET = 8
+  private static readonly TAG_LENGTH = 12
 
   constructor(size: number = Memory.DEFAULT_MEMORY_SIZE) {
     this.buffer = new ArrayBuffer(size)
     this.view = new DataView(this.buffer)
+    this.allocatedAddresses = new Set<number>()
+    this.heapTop = this.view.byteLength / 2
+    this.setTag(0, 0, true, this.heapTop)
+  }
+
+  getStackBottom(): number {
+    return this.heapTop
   }
 
   private assertValidAddress(address: number, isRead: boolean) {
@@ -88,5 +101,93 @@ export class Memory {
       addr++
     }
     return stringLiteral
+  }
+
+  private setTag(address: number, prev: number, free: boolean, length: number): void {
+    this.setPrev(address, prev)
+    this.setIsFree(address, free)
+    this.setLength(address, length)
+  }
+
+  private setPrev(address: number, prev: number): void {
+    this.view.setUint32(address, prev)
+  }
+
+  private getPrev(address: number): number {
+    return this.view.getUint32(address)
+  }
+
+  private setIsFree(address: number, free: boolean) {
+    this.view.setUint32(address + Memory.FREE_OFFSET, free ? 0 : 1)
+  }
+
+  private isFree(address: number): boolean {
+    return this.view.getUint32(address + Memory.FREE_OFFSET) == 0
+  }
+
+  private setLength(address: number, length: number) {
+    this.view.setUint32(address + Memory.LENGTH_OFFSET, length)
+  }
+
+  private getLength(address: number): number {
+    return this.view.getUint32(address + Memory.LENGTH_OFFSET)
+  }
+
+  free(address: number): void {
+    if (!this.allocatedAddresses.has(address)) {
+      throw new Error('pointer being freed was not allocated, at address ' + String(address))
+    }
+    const prev = this.getPrev(address)
+    let newAddress = address
+    if (prev != address && this.isFree(prev)) {
+      this.setLength(prev, this.getLength(prev) + this.getLength(address))
+      newAddress = prev
+    } else {
+      this.setIsFree(address, false)
+    }
+    const next = newAddress + this.getLength(newAddress)
+    let newNext = next
+    if (next < this.heapTop && this.isFree(next)) {
+      newNext = next + this.getLength(next)
+      this.setLength(newAddress, this.getLength(newAddress) + this.getLength(next))
+    }
+
+    if (newNext < this.heapTop) {
+      this.setPrev(newNext, newAddress)
+    }
+    this.allocatedAddresses.delete(address)
+  }
+
+  allocate(size: number): NumericLiteral {
+    if (size <= 0) {
+      throw new Error('allocated memory size must be > 0, but got ' + String(size))
+    }
+    let realSize = Math.ceil(size / 4) * 4
+    let addr = 0
+    while (addr < this.heapTop) {
+      if (this.isFree(addr) && this.getLength(addr) - Memory.TAG_LENGTH >= realSize) {
+        break
+      }
+      addr += this.getLength(addr)
+    }
+    if (addr >= this.heapTop) {
+      throw new Error('heap out of memory')
+    }
+    const originalLength = this.getLength(addr)
+    if (originalLength - Memory.TAG_LENGTH > realSize + Memory.TAG_LENGTH) {
+      this.setIsFree(addr, false)
+      this.setLength(addr, realSize + Memory.TAG_LENGTH)
+
+      this.setTag(addr + this.getLength(addr), addr, true, originalLength - this.getLength(addr))
+
+      if (addr + originalLength < this.heapTop) {
+        this.setPrev(addr + originalLength, addr + this.getLength(addr))
+      }
+    } else {
+      realSize = this.getLength(addr) - Memory.TAG_LENGTH
+      this.setIsFree(addr, false)
+    }
+    this.allocatedAddresses.add(addr)
+    return NumericLiteral.new(addr).castToType(new PointerType(PrimitiveType.VOID))
   }
 }

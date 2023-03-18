@@ -97,7 +97,17 @@ export class ExpressionParser {
     } else if (lexer.matchDelimiter('(')) {
       lexer.eatDelimiter('(')
       if (lexer.matchDataType()) {
+        const [row, col] = lexer.tell()
         const typeToCast = lexer.eatDataType()
+        if (typeToCast == PrimitiveType.VOID && !allowVoid) {
+          throw new Error(
+            lexer.formatError(
+              "statement requires expression of scalar type ('void' invalid)",
+              row,
+              col
+            )
+          )
+        }
         lexer.eatDelimiter(')')
         this.recurParseNumericTerm(env, lexer, result, false, isConstantExpression)
         result.push(typeToCast)
