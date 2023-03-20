@@ -22,7 +22,7 @@ export class DoWhile extends Statement {
     lexer: Lexer,
     allowBreak: boolean,
     allowContinue: boolean,
-    returnType: DataType
+    returnType: DataType | null
   ): DoWhile[] {
     lexer.eatKeyword('do')
     const body = Block.parse(env, lexer, true, true, returnType)

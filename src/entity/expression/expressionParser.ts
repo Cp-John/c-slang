@@ -151,10 +151,13 @@ export class ExpressionParser {
       const identifier = lexer.eatIdentifier()
       result.push(identifier)
       assertIsDeclared(identifier, env, row, col, lexer)
-      if (!lexer.matchDelimiter('(')) {
-        dataType = env.lookupType(identifier)
+      const type = env.lookupType(identifier)
+      if (type != PrimitiveType.FUNCTION) {
+        dataType = type
+        if (lexer.matchDelimiter('(')) {
+          throw new Error(lexer.formatError('called object type is not a function', row, col))
+        }
       } else {
-        assertIsFunction(identifier, env, row, col, lexer)
         const functionName = String(result.pop())
         const functionCall = new FunctionCall(
           env,

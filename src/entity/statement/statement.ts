@@ -4,7 +4,8 @@ export abstract class Statement {
     lexer: Lexer,
     allowBreak: boolean,
     allowContinue: boolean,
-    returnType: DataType
+    returnType: DataType | null,
+    allowFunctionDeclaration: boolean = false
   ): Statement[] {
     if (lexer.matchKeyword('if')) {
       return ConditionalStatement.parse(env, lexer, allowBreak, allowContinue, returnType)
@@ -23,7 +24,14 @@ export abstract class Statement {
     } else if (lexer.matchKeyword('break')) {
       return Break.parse(env, lexer, allowBreak, allowContinue, returnType)
     } else if (lexer.matchDataType()) {
-      return Declaration.parse(env, lexer, allowBreak, allowContinue, returnType, false)
+      return Declaration.parse(
+        env,
+        lexer,
+        allowBreak,
+        allowContinue,
+        returnType,
+        allowFunctionDeclaration
+      )
     } else {
       return ExpressionStatement.parse(env, lexer)
     }

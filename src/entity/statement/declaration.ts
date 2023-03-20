@@ -81,8 +81,8 @@ export abstract class Declaration extends Statement {
     lexer: Lexer,
     allowBreak: boolean,
     allowContinue: boolean,
-    returnType: DataType,
-    allowFunctionDeclaration: boolean = false
+    returnType: DataType | null,
+    allowFunctionDeclaration: boolean
   ): Statement[] {
     let type: DataType = PrimitiveType.VOID
     if (lexer.matchDataType()) {

@@ -33,7 +33,7 @@ export class For extends Statement {
     lexer: Lexer,
     allowBreak: boolean,
     allowContinue: boolean,
-    returnType: DataType
+    returnType: DataType | null
   ): For[] {
     const forStatement = new For([], null, null, new Block([]))
     lexer.eatKeyword('for')

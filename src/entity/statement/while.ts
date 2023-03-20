@@ -22,7 +22,7 @@ export class While extends Statement {
     lexer: Lexer,
     allowBreak: boolean,
     allowContinue: boolean,
-    returnType: DataType
+    returnType: DataType | null
   ): While[] {
     lexer.eatKeyword('while')
     lexer.eatDelimiter('(')

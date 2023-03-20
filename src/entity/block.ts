@@ -15,7 +15,7 @@ export class Block {
     lexer: Lexer,
     allowBreak: boolean,
     allowContinue: boolean,
-    returnType: DataType
+    returnType: DataType | null
   ): Block {
     lexer.eatDelimiter('{')
     const content: (Block | Statement)[] = []

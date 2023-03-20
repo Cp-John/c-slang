@@ -21,8 +21,11 @@ export class Return extends Statement {
     lexer: Lexer,
     allowBreak: boolean,
     allowContinue: boolean,
-    returnType: DataType
+    returnType: DataType | null
   ): [Return] {
+    if (returnType == null) {
+      throw new Error(lexer.formatError('return statement not in function definition'))
+    }
     lexer.eatKeyword('return')
     let expression = null
     if (lexer.matchDelimiter(';') && returnType != PrimitiveType.VOID) {

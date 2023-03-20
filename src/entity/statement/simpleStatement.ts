@@ -9,7 +9,7 @@ export class Break extends Statement {
     lexer: Lexer,
     allowBreak: boolean,
     allowContinue: boolean,
-    returnType: DataType
+    returnType: DataType | null
   ): Continue[] {
     if (!allowBreak) {
       throw new Error(lexer.formatError('break statement not in loop statement'))
@@ -30,7 +30,7 @@ export class Continue extends Statement {
     lexer: Lexer,
     allowBreak: boolean,
     allowContinue: boolean,
-    returnType: DataType
+    returnType: DataType | null
   ): [Continue] {
     if (!allowContinue) {
       throw new Error(lexer.formatError('continue statement not in loop statement'))

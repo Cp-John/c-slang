@@ -22,7 +22,7 @@ export class ConditionalStatement extends Statement {
     lexer: Lexer,
     allowBreak: boolean,
     allowContinue: boolean,
-    returnType: DataType
+    returnType: DataType | null
   ): ConditionalStatement[] {
     const ifBlocks: [Expression, Block][] = []
     let hasElseBlock = true

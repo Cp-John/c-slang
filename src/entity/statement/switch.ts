@@ -47,7 +47,7 @@ export class Switch extends Statement {
     lexer: Lexer,
     allowBreak: boolean,
     allowContinue: boolean,
-    returnType: DataType
+    returnType: DataType | null
   ): Switch[] {
     lexer.eatKeyword('switch')
     lexer.eatDelimiter('(')
