@@ -147,7 +147,7 @@ export class NumericLiteral {
 
   divideBy(right: NumericLiteral): NumericLiteral {
     if (right.val == 0) {
-      throw new Error ('division by 0 is undefined')
+      throw new Error('division by 0 is undefined')
     }
     return NumericLiteral.new(this.val / right.val).castToType(
       getHigherPrecisionType(this.type, right.type)
