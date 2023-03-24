@@ -57,12 +57,6 @@ function assertIsDeclared(identifier: string, env: Frame, row: number, col: numb
   }
 }
 
-function assertIsFunction(identifier: string, env: Frame, row: number, col: number, lexer: Lexer) {
-  if (env.lookupType(identifier) != PrimitiveType.FUNCTION) {
-    throw new Error(lexer.formatError('called object type is not a function', row, col))
-  }
-}
-
 export class ExpressionParser {
   private static recurParseNumericTerm(
     env: Frame,
