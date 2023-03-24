@@ -75,7 +75,7 @@ export class NumericLiteral {
   assign(env: Frame, right: NumericLiteral, assignOpr: string): NumericLiteral {
     this.assertIsLValue()
     if (assignOpr == '=') {
-      env.assignValueByAddress(this.address as number, right)
+      env.assignValueByAddress(this.address as number, right.castToType(this.type))
       return right
     } else {
       const operator = NumericLiteral.BINARY_ARITHMETIC_OPERATORS.get(assignOpr.replace('=', ''))
@@ -83,7 +83,7 @@ export class NumericLiteral {
         throw new Error('unknown assign operator: ' + assignOpr)
       }
       const result = operator(right, this)
-      env.assignValueByAddress(this.address as number, result)
+      env.assignValueByAddress(this.address as number, result.castToType(this.type))
       return result
     }
   }
