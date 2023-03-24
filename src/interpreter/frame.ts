@@ -8,7 +8,7 @@ import { BUILTINS, DataType, PointerType, PrimitiveType } from './builtins'
 export class Frame {
   private boundings
   private prev: Frame | null
-  private top: number
+  private stackTop: number
   private memory: Memory
 
   private static addBuiltins(frame: Frame): Frame {
@@ -24,10 +24,10 @@ export class Frame {
     return Frame.addBuiltins(new Frame(null, memory.getStackBottom(), memory))
   }
 
-  private constructor(prev: Frame | null, top: number, memory: Memory) {
+  private constructor(prev: Frame | null, stackTop: number, memory: Memory) {
     this.boundings = {}
     this.prev = prev
-    this.top = top
+    this.stackTop = stackTop
     this.memory = memory
   }
 
@@ -117,10 +117,8 @@ export class Frame {
   }
 
   allocateStringLiteral(stringLiteral: string): NumericLiteral {
-    const address = this.top
-    this.top = this.memory.writeStringLiteral(this.top, stringLiteral)
-    console.log('allocated stringLiteral: ' + stringLiteral + ', ' + this.top)
-    return NumericLiteral.new(address).castToType(new PointerType(PrimitiveType.CHAR))
+    const addr = this.memory.allocateStringLiteral(stringLiteral)
+    return NumericLiteral.new(addr).castToType(new PointerType(PrimitiveType.CHAR))
   }
 
   declare(
@@ -137,10 +135,10 @@ export class Frame {
       }
       throw new Error(errMsg)
     }
-    const value = type == PrimitiveType.FUNCTION ? undefined : this.top
-    this.top += type == PrimitiveType.FUNCTION ? 0 : 4
+    const value = type == PrimitiveType.FUNCTION ? undefined : this.stackTop
+    this.stackTop += type == PrimitiveType.FUNCTION ? 0 : 4
     this.boundings[name] = { type: type, val: value }
-    console.log('declared variable: (' + name + ', ' + type + '), ' + this.top)
+    console.log('declared variable: (' + name + ', ' + type + '), ' + this.stackTop)
     return name
   }
 
@@ -204,6 +202,6 @@ export class Frame {
   }
 
   static extend(prev: Frame) {
-    return new Frame(prev, prev.top, prev.memory)
+    return new Frame(prev, prev.stackTop, prev.memory)
   }
 }

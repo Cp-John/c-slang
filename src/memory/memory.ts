@@ -5,6 +5,8 @@ export class Memory {
   private buffer: ArrayBuffer
   protected view: DataView
   private allocatedAddresses: Set<number>
+  private stringLiteralToAddress: Map<string, number>
+  private readonlyTop: number
   private stackBottom: number // the start address of stack
   private heapBottom: number
 
@@ -23,6 +25,8 @@ export class Memory {
     )
     this.view = new DataView(this.buffer)
     this.allocatedAddresses = new Set<number>()
+    this.stringLiteralToAddress = new Map<string, number>()
+    this.readonlyTop = 0
     this.stackBottom = Memory.DEFAULT_READONLY_MEMORY_SIZE + Memory.DEFAULT_HEAP_SIZE
     this.heapBottom = Memory.DEFAULT_READONLY_MEMORY_SIZE
     this.setTag(this.heapBottom, this.heapBottom, true, Memory.DEFAULT_HEAP_SIZE)
@@ -35,6 +39,8 @@ export class Memory {
   private assertValidAddress(address: number, isRead: boolean) {
     if (address < 0 || address >= this.view.byteLength) {
       throw new Error((isRead ? 'read from' : 'write to') + ' invalid address: ' + String(address))
+    } else if (!isRead && address < this.heapBottom) {
+      throw new Error('attempt to write to readonly memory')
     }
   }
 
@@ -84,18 +90,23 @@ export class Memory {
     )
   }
 
-  writeStringLiteral(address: number, stringLiteral: string): number {
-    this.assertValidAddress(address, false)
-    const lastAddr = address + stringLiteral.length - 2
-    if (lastAddr >= this.view.byteLength) {
-      throw new Error('insufficient memory to write string literal ' + stringLiteral)
+  allocateStringLiteral(stringLiteral: string): number {
+    const exist = this.stringLiteralToAddress.get(stringLiteral)
+    if (exist != undefined) {
+      return exist
+    }
+    const lastAddr = this.readonlyTop + stringLiteral.length - 2
+    const addr = this.readonlyTop
+    if (lastAddr >= this.heapBottom) {
+      throw new Error('insufficient memory to allocate string literal ' + stringLiteral)
     }
     for (let i = 1; i < stringLiteral.length - 1; i++) {
-      this.view.setUint8(address + i - 1, stringLiteral.charCodeAt(i))
+      this.view.setUint8(addr + i - 1, stringLiteral.charCodeAt(i))
     }
     this.view.setUint8(lastAddr, 0)
-    // word alignment
-    return Math.ceil((lastAddr + 1) / 4) * 4
+    this.readonlyTop = lastAddr + 1
+    this.stringLiteralToAddress.set(stringLiteral, addr)
+    return addr
   }
 
   readStringLiteral(address: number): string {
