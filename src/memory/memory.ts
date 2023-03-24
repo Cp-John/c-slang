@@ -5,24 +5,31 @@ export class Memory {
   private buffer: ArrayBuffer
   protected view: DataView
   private allocatedAddresses: Set<number>
-  private heapTop: number
+  private stackBottom: number // the start address of stack
+  private heapBottom: number
 
-  static readonly DEFAULT_MEMORY_SIZE = Math.pow(2, 21)
+  // address from low to high: readonly memory => heap => stack
+  static readonly DEFAULT_READONLY_MEMORY_SIZE = Math.pow(2, 10)
+  static readonly DEFAULT_HEAP_SIZE = Math.pow(2, 18)
+  static readonly DEFAULT_STACK_SIZE = Math.pow(2, 18)
 
   // heap tag design: address of previous node (4 bytes) + free bit (1 bit) + length (4 bytes - 1 bit)
   private static readonly FREE_LENGTH_OFFSET = 4
   private static readonly TAG_LENGTH = 8
 
-  constructor(size: number = Memory.DEFAULT_MEMORY_SIZE) {
-    this.buffer = new ArrayBuffer(size)
+  constructor() {
+    this.buffer = new ArrayBuffer(
+      Memory.DEFAULT_READONLY_MEMORY_SIZE + Memory.DEFAULT_HEAP_SIZE + Memory.DEFAULT_STACK_SIZE
+    )
     this.view = new DataView(this.buffer)
     this.allocatedAddresses = new Set<number>()
-    this.heapTop = this.view.byteLength / 2
-    this.setTag(0, 0, true, this.heapTop)
+    this.stackBottom = Memory.DEFAULT_READONLY_MEMORY_SIZE + Memory.DEFAULT_HEAP_SIZE
+    this.heapBottom = Memory.DEFAULT_READONLY_MEMORY_SIZE
+    this.setTag(this.heapBottom, this.heapBottom, true, Memory.DEFAULT_HEAP_SIZE)
   }
 
   getStackBottom(): number {
-    return this.heapTop
+    return this.stackBottom
   }
 
   private assertValidAddress(address: number, isRead: boolean) {
@@ -154,12 +161,12 @@ export class Memory {
     }
     const next = newAddress + this.getLength(newAddress)
     let newNext = next
-    if (next < this.heapTop && this.isFree(next)) {
+    if (next < this.stackBottom && this.isFree(next)) {
       newNext = next + this.getLength(next)
       this.setLength(newAddress, this.getLength(newAddress) + this.getLength(next))
     }
 
-    if (newNext < this.heapTop) {
+    if (newNext < this.stackBottom) {
       this.setPrev(newNext, newAddress)
     }
     this.allocatedAddresses.delete(address)
@@ -171,14 +178,14 @@ export class Memory {
     }
     // real allocated size is multiple of 4 bytes
     let realSize = Math.ceil(size / 4) * 4
-    let addr = 0
-    while (addr < this.heapTop) {
+    let addr = this.heapBottom
+    while (addr < this.stackBottom) {
       if (this.isFree(addr) && this.getLength(addr) - Memory.TAG_LENGTH >= realSize) {
         break
       }
       addr += this.getLength(addr)
     }
-    if (addr >= this.heapTop) {
+    if (addr >= this.stackBottom) {
       throw new Error('heap out of memory')
     }
     const originalLength = this.getLength(addr)
@@ -188,7 +195,7 @@ export class Memory {
 
       this.setTag(addr + this.getLength(addr), addr, true, originalLength - this.getLength(addr))
 
-      if (addr + originalLength < this.heapTop) {
+      if (addr + originalLength < this.stackBottom) {
         this.setPrev(addr + originalLength, addr + this.getLength(addr))
       }
     } else {
