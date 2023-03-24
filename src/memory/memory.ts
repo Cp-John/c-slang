@@ -8,9 +8,10 @@ export class Memory {
   private heapTop: number
 
   static readonly DEFAULT_MEMORY_SIZE = Math.pow(2, 21)
-  private static readonly FREE_OFFSET = 4
-  private static readonly LENGTH_OFFSET = 8
-  private static readonly TAG_LENGTH = 12
+
+  // heap tag design: address of previous node (4 bytes) + free bit (1 bit) + length (4 bytes - 1 bit)
+  private static readonly FREE_LENGTH_OFFSET = 4
+  private static readonly TAG_LENGTH = 8
 
   constructor(size: number = Memory.DEFAULT_MEMORY_SIZE) {
     this.buffer = new ArrayBuffer(size)
@@ -118,19 +119,23 @@ export class Memory {
   }
 
   private setIsFree(address: number, free: boolean) {
-    this.view.setUint32(address + Memory.FREE_OFFSET, free ? 0 : 1)
+    // free bit is 0 if free else 1
+    const oldVal = this.view.getUint32(address + Memory.FREE_LENGTH_OFFSET)
+    const newVal = free ? (oldVal & (Math.pow(2, 31) - 1)) : (oldVal | Math.pow(2, 31))
+    this.view.setUint32(address + Memory.FREE_LENGTH_OFFSET, newVal)
   }
 
   private isFree(address: number): boolean {
-    return this.view.getUint32(address + Memory.FREE_OFFSET) == 0
+    return (this.view.getUint32(address + Memory.FREE_LENGTH_OFFSET) & Math.pow(2, 31)) == 0
   }
 
   private setLength(address: number, length: number) {
-    this.view.setUint32(address + Memory.LENGTH_OFFSET, length)
+    const freeBit = this.isFree(address) ? 0 : 1
+    this.view.setUint32(address + Memory.FREE_LENGTH_OFFSET, length | (freeBit << 31))
   }
 
   private getLength(address: number): number {
-    return this.view.getUint32(address + Memory.LENGTH_OFFSET)
+    return this.view.getUint32(address + Memory.FREE_LENGTH_OFFSET) & (Math.pow(2, 31) - 1)
   }
 
   free(address: number): void {
@@ -143,7 +148,7 @@ export class Memory {
       this.setLength(prev, this.getLength(prev) + this.getLength(address))
       newAddress = prev
     } else {
-      this.setIsFree(address, false)
+      this.setIsFree(address, true)
     }
     const next = newAddress + this.getLength(newAddress)
     let newNext = next
