@@ -22,7 +22,10 @@ export class Program {
     try {
       frame.lookupFunction('main')
     } catch (err) {
-      throw new Error("entry of execution 'main' function not found, " + (err instanceof Error ? err.message : String(err)))
+      throw new Error(
+        "entry of execution 'main' function not found, " +
+          (err instanceof Error ? err.message : String(err))
+      )
     }
     FunctionCall.checkCalledFunctionDefinition(frame)
     return new Program(declarations)
