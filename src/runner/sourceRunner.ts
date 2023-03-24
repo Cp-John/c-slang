@@ -50,7 +50,7 @@ export async function sourceRunner(
   const cProgramContext = { stdout: '' }
 
   try {
-    context['env'] = program.execute(cProgramContext, context['env'])
+    program.execute(cProgramContext)
     return Promise.resolve({
       status: 'finished',
       value: cProgramContext['stdout'],

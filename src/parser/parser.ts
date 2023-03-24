@@ -238,7 +238,7 @@ function convertSource(expression: ExpressionContext): es.Program {
 export function parse(source: string, context: Context) {
   // let program: es.Program | undefined
   try {
-    return Program.parse(new Lexer(source), context['env'])
+    return Program.parse(new Lexer(source))
   } catch (err) {
     context.errors.push(new CProgramError(err))
   }
