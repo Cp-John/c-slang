@@ -53,6 +53,7 @@ export class Memory {
     } else if (numeric.getDataType() == PrimitiveType.FLOAT) {
       this.view.setFloat32(address, numeric.getValue())
     } else if (numeric.getDataType() == PrimitiveType.CHAR) {
+      // word alignment
       this.view.setUint8(address, numeric.getValue())
     } else {
       throw new Error("attempt to write datatype '" + numeric.getDataType() + "' as numeric type")
@@ -86,6 +87,7 @@ export class Memory {
       this.view.setUint8(address + i - 1, stringLiteral.charCodeAt(i))
     }
     this.view.setUint8(lastAddr, 0)
+    // word alignment
     return Math.ceil((lastAddr + 1) / 4) * 4
   }
 
@@ -167,6 +169,7 @@ export class Memory {
     if (size <= 0) {
       throw new Error('allocated memory size must be > 0, but got ' + String(size))
     }
+    // real allocated size is multiple of 4 bytes
     let realSize = Math.ceil(size / 4) * 4
     let addr = 0
     while (addr < this.heapTop) {
