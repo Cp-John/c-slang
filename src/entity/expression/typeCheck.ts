@@ -121,6 +121,10 @@ export function checkBinaryExprssionOperandType(
       if (!WHOLE_PRIMITIVE_TYPES.has(rightType.toString())) {
         invalidBinaryExprssionOperandType(row, col, lexer, leftType, rightType)
       }
+    } else if (opr == '+' && rightType instanceof PointerType) {
+      if (!WHOLE_PRIMITIVE_TYPES.has(leftType.toString())) {
+        invalidBinaryExprssionOperandType(row, col, lexer, leftType, rightType)
+      }
     } else if (
       !ARITH_PRIMITIVE_TYPES.has(leftType.toString()) ||
       !ARITH_PRIMITIVE_TYPES.has(rightType.toString())
