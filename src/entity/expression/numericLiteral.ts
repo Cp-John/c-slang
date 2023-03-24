@@ -159,10 +159,16 @@ export class NumericLiteral {
     )
   }
 
-  plus(right: NumericLiteral) {
-    return NumericLiteral.new(this.val + right.val * this.getStep()).castToType(
-      getHigherPrecisionType(this.type, right.type)
-    )
+  plus(right: NumericLiteral): NumericLiteral {
+    if (this.type instanceof PointerType && right.type instanceof PointerType) {
+      throw new Error('impossible execution path')
+    } else if (right.type instanceof PointerType) {
+      return right.plus(this)
+    } else {
+      return NumericLiteral.new(this.val + right.val * this.getStep()).castToType(
+        getHigherPrecisionType(this.type, right.type)
+      )
+    }
   }
 
   minus(right: NumericLiteral) {
