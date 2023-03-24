@@ -124,9 +124,7 @@ export class Expression {
         if (!operator) {
           throw new Error('impossible execution path')
         }
-        result.push(
-          operator(Expression.toNumberLiteral(result.pop(), env))
-        )
+        result.push(operator(Expression.toNumberLiteral(result.pop(), env)))
       } else if (Expression.ASSIGNMENT_OPERATORS.has(ele)) {
         const right = result.pop()
         result.push(

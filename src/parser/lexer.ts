@@ -303,7 +303,7 @@ export class Lexer {
   }
 
   matchUnaryPlusMinus(): boolean {
-    return this.hasNext() && UNARY_PLUS_MINUS.test(this.currentLine);
+    return this.hasNext() && UNARY_PLUS_MINUS.test(this.currentLine)
   }
 
   eatUnaryPlusMinus(): string {
