@@ -12,6 +12,7 @@ const SPACE_REGEX = /^\s+/
 const PRIORITIZED_ARITHMETIC_OPERATOR_REGEX = /^[*\/%](?!=)/
 const ARITHMETIC_OPERATOR_REGEX = /^[*\/%\+-](?!=)/
 const INCREMENT_DECREMENT_REGEX = /^\+\+|^--/
+const UNARY_PLUS_MINUS = /^\+(?!\+)|^-(?!-)/
 export const RELATIONAL_OPERATOR_RETEX = /^>=|^<=|^>|^<|^==|^!=/
 const PRIORITIZED_RELATIONAL_OPERATOR_REGEX = /^>=|^<=|^>|^</
 const ASSIGNMENT_OPERATOR_REGEX = /^\+=|^-=|^\*=|^\/=|^%=|^=/
@@ -299,6 +300,23 @@ export class Lexer {
     return NumericLiteral.new(Lexer.restoreEscapeChars(match[0]).charCodeAt(1)).castToType(
       PrimitiveType.CHAR
     )
+  }
+
+  matchUnaryPlusMinus(): boolean {
+    return this.hasNext() && UNARY_PLUS_MINUS.test(this.currentLine);
+  }
+
+  eatUnaryPlusMinus(): string {
+    if (!this.hasNext()) {
+      throw new Error(this.formatError('expected a unary plus or minus operator'))
+    }
+    const match = UNARY_PLUS_MINUS.exec(this.currentLine)
+    if (!match) {
+      throw new Error(this.formatError('expected a unary plus or minus operator'))
+    }
+    this.currentLine = this.currentLine.substring(match[0].length)
+    this.col += match[0].length
+    return match[0]
   }
 
   private static restoreEscapeChars(original: string): string {

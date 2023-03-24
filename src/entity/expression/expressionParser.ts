@@ -10,6 +10,7 @@ import {
   checkBinaryExprssionOperandType,
   checkConditionOperandType,
   checkSubscriptType,
+  checkUnaryMinusOperandType,
   getHigherPrecisionType
 } from './typeCheck'
 
@@ -33,6 +34,7 @@ function assertAddressable(
 }
 
 export const DEREFERENCE_TAG = '$DEREFERENCE'
+export const UNARY_MINUS_TAG = '$UNARY_MINUS'
 
 function assertAssignable(
   ele: string | DataType | NumericLiteral | IncrementDecrement | FunctionCall | Jump,
@@ -137,6 +139,14 @@ export class ExpressionParser {
       dataType = this.recurParseNumericTerm(env, lexer, result, false, isConstantExpression)
       assertAssignable(result[result.length - 1], env, row, col, lexer)
       result.push(opr)
+    } else if (lexer.matchUnaryPlusMinus()) {
+      const [row, col] = lexer.tell()
+      const opr = lexer.eatUnaryPlusMinus()
+      dataType = this.recurParseNumericTerm(env, lexer, result, false, isConstantExpression)
+      if (opr == '-') {
+        checkUnaryMinusOperandType(dataType, row, col, lexer)
+        result.push(UNARY_MINUS_TAG)
+      }
     } else if (lexer.matchIdentifier()) {
       if (isConstantExpression) {
         throw new Error(lexer.formatError('expected a constant expression'))

@@ -73,7 +73,7 @@ export class Expression {
   }
 
   evaluate(env: Frame, rts: any[], context: any): NumericLiteral | undefined {
-    const result: (NumericLiteral | undefined)[] = []
+    const result: NumericLiteral[] = []
     let i = 0
     while (i < this.elements.length) {
       const ele = this.elements[i]
@@ -120,10 +120,12 @@ export class Expression {
           )
         )
       } else if (NumericLiteral.UNARY_ARITHMETIC_OPERATORS.has(ele)) {
+        const operator = NumericLiteral.UNARY_ARITHMETIC_OPERATORS.get(ele)
+        if (!operator) {
+          throw new Error('impossible execution path')
+        }
         result.push(
-          NumericLiteral.UNARY_ARITHMETIC_OPERATORS.get(ele)?.apply(
-            Expression.toNumberLiteral(result.pop(), env)
-          )
+          operator(Expression.toNumberLiteral(result.pop(), env))
         )
       } else if (Expression.ASSIGNMENT_OPERATORS.has(ele)) {
         const right = result.pop()

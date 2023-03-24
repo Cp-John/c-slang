@@ -1,5 +1,6 @@
 import { DataType, PointerType, PrimitiveType, sizeof } from '../../interpreter/builtins'
 import { Frame } from '../../interpreter/frame'
+import { UNARY_MINUS_TAG } from './expressionParser'
 import { getHigherPrecisionType } from './typeCheck'
 
 interface BinaryArithmeticOperator {
@@ -7,7 +8,7 @@ interface BinaryArithmeticOperator {
 }
 
 interface UnaryArithmeticOperator {
-  apply(literal: NumericLiteral): NumericLiteral
+  (literal: NumericLiteral): NumericLiteral
 }
 
 export class NumericLiteral {
@@ -136,7 +137,8 @@ export class NumericLiteral {
   ])
 
   static readonly UNARY_ARITHMETIC_OPERATORS: Map<string, UnaryArithmeticOperator> = new Map([
-    ['!', (literal: NumericLiteral) => this.booleanToNumericLiteral(!literal.toBoolean())]
+    ['!', (literal: NumericLiteral) => this.booleanToNumericLiteral(!literal.toBoolean())],
+    [UNARY_MINUS_TAG, (literal: NumericLiteral) => NumericLiteral.new(-literal.val).castToType(literal.type)]
   ])
 
   private truncateDecimals() {
