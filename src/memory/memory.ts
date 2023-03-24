@@ -121,7 +121,7 @@ export class Memory {
   private setIsFree(address: number, free: boolean) {
     // free bit is 0 if free else 1
     const oldVal = this.view.getUint32(address + Memory.FREE_LENGTH_OFFSET)
-    const newVal = free ? (oldVal & (Math.pow(2, 31) - 1)) : (oldVal | Math.pow(2, 31))
+    const newVal = free ? oldVal & (Math.pow(2, 31) - 1) : oldVal | Math.pow(2, 31)
     this.view.setUint32(address + Memory.FREE_LENGTH_OFFSET, newVal)
   }
 
