@@ -49,8 +49,10 @@ function invalidBinaryExprssionOperandType(
 }
 
 export function getHigherPrecisionType(leftType: DataType, rightType: DataType): DataType {
-  if (leftType instanceof PointerType || rightType instanceof PointerType) {
+  if (leftType instanceof PointerType) {
     return leftType
+  } else if (rightType instanceof PointerType) {
+    return rightType
   } else if (leftType == PrimitiveType.FLOAT || rightType == PrimitiveType.FLOAT) {
     return PrimitiveType.FLOAT
   } else if (leftType == PrimitiveType.INT || rightType == PrimitiveType.INT) {
@@ -143,9 +145,7 @@ export function checkBinaryExprssionOperandType(
     ) {
       invalidBinaryExprssionOperandType(row, col, lexer, leftType, rightType)
     }
-    return leftType instanceof PointerType
-      ? leftType
-      : getHigherPrecisionType(leftType, rightType as PrimitiveType)
+    return getHigherPrecisionType(leftType, rightType)
   } else if (opr == '*' || opr == '/') {
     if (
       !ARITH_PRIMITIVE_TYPES.has(leftType.toString()) ||
