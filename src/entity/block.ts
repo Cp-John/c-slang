@@ -40,7 +40,11 @@ export class Block {
           content.push(statement)
         )
         const lastStatement = content[content.length - 1]
-        reachable = !(lastStatement instanceof Return || lastStatement instanceof Break || lastStatement instanceof Continue)
+        reachable = !(
+          lastStatement instanceof Return ||
+          lastStatement instanceof Break ||
+          lastStatement instanceof Continue
+        )
       }
     }
     lexer.eatDelimiter('}')
