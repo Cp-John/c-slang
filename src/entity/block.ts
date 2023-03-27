@@ -2,6 +2,7 @@ import { DataType } from '../interpreter/builtins'
 import { Frame } from '../interpreter/frame'
 import { Lexer } from '../parser/lexer'
 import { Return } from './statement/return'
+import { Break, Continue } from './statement/simpleStatement'
 import { Statement } from './statement/statement'
 
 export class Block {
@@ -18,10 +19,16 @@ export class Block {
     allowContinue: boolean,
     returnType: DataType | null
   ): Block {
-    lexer.eatDelimiter('{')
     const content: (Block | Statement)[] = []
     const newEnv = Frame.extend(env)
     let reachable = true
+    if (!lexer.matchDelimiter('{')) {
+      Statement.parse(newEnv, lexer, allowBreak, allowContinue, returnType).forEach(statement =>
+        content.push(statement)
+      )
+      return new Block(content)
+    }
+    lexer.eatDelimiter('{')
     while (!lexer.matchDelimiter('}')) {
       if (!reachable) {
         throw new Error(lexer.formatError('unreachable statements'))
@@ -32,7 +39,8 @@ export class Block {
         Statement.parse(newEnv, lexer, allowBreak, allowContinue, returnType).forEach(statement =>
           content.push(statement)
         )
-        reachable = !(content[content.length - 1] instanceof Return)
+        const lastStatement = content[content.length - 1]
+        reachable = !(lastStatement instanceof Return || lastStatement instanceof Break || lastStatement instanceof Continue)
       }
     }
     lexer.eatDelimiter('}')
