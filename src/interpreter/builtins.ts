@@ -156,6 +156,15 @@ const sqrt: RealBuiltinFunction = (
   rts.push(args[0].sqrt())
 }
 
+const abs: RealBuiltinFunction = (
+  env: Frame,
+  rts: any[],
+  context: any,
+  args: NumericLiteral[]
+): void => {
+  rts.push(args[0].abs())
+}
+
 const malloc: RealBuiltinFunction = (
   env: Frame,
   rts: any[],
@@ -201,6 +210,10 @@ export const BUILTINS = {
   time: [new BuiltinFunction(PrimitiveType.INT, 'time', [], time), PrimitiveType.FUNCTION],
   sqrt: [
     new BuiltinFunction(PrimitiveType.FLOAT, 'sqrt', [PrimitiveType.FLOAT], sqrt),
+    PrimitiveType.FUNCTION
+  ],
+  abs: [
+    new BuiltinFunction(PrimitiveType.INT, 'abs', [PrimitiveType.INT], abs),
     PrimitiveType.FUNCTION
   ],
   malloc: [

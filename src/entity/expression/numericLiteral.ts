@@ -196,6 +196,10 @@ export class NumericLiteral {
     return new NumericLiteral(Math.sqrt(this.val), PrimitiveType.FLOAT)
   }
 
+  abs() {
+    return new NumericLiteral(Math.abs(this.val), PrimitiveType.INT)
+  }
+
   static new(val: number, address: number | null = null): NumericLiteral {
     return new NumericLiteral(
       val,
