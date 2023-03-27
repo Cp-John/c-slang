@@ -165,6 +165,15 @@ const abs: RealBuiltinFunction = (
   rts.push(args[0].abs())
 }
 
+const strlen: RealBuiltinFunction = (
+  env: Frame,
+  rts: any[],
+  context: any,
+  args: NumericLiteral[]
+): void => {
+  rts.push(NumericLiteral.new(env.dereferenceAsString(args[0]).length).castToType(PrimitiveType.INT))
+}
+
 const malloc: RealBuiltinFunction = (
   env: Frame,
   rts: any[],
@@ -214,6 +223,10 @@ export const BUILTINS = {
   ],
   abs: [
     new BuiltinFunction(PrimitiveType.INT, 'abs', [PrimitiveType.INT], abs),
+    PrimitiveType.FUNCTION
+  ],
+  strlen: [
+    new BuiltinFunction(PrimitiveType.INT, 'strlen', [new PointerType(PrimitiveType.CHAR)], strlen),
     PrimitiveType.FUNCTION
   ],
   malloc: [
