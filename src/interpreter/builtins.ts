@@ -171,7 +171,9 @@ const strlen: RealBuiltinFunction = (
   context: any,
   args: NumericLiteral[]
 ): void => {
-  rts.push(NumericLiteral.new(env.dereferenceAsString(args[0]).length).castToType(PrimitiveType.INT))
+  rts.push(
+    NumericLiteral.new(env.dereferenceAsString(args[0]).length).castToType(PrimitiveType.INT)
+  )
 }
 
 const malloc: RealBuiltinFunction = (
