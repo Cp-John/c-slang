@@ -72,6 +72,9 @@ export abstract class Declaration extends Statement {
       env.declare(declaredVariable, variableType, row, col, lexer)
       statements.push(new VariableDeclaration(variableType, declaredVariable, null))
     }
+    if (lexer.matchDelimiter('[')) {
+      throw new Error(lexer.formatError('array declaration is not supported, use malloc instead'))
+    }
     lexer.eatDelimiter(';')
     return statements
   }
