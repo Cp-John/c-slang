@@ -36,7 +36,7 @@
     "dist"
   ],
   "bin": {
-    "calc-slang": "dist/repl/repl.js"
+    "c-slang": "dist/repl/repl.js"
   },
   "scripts": {
     "antlr4ts": "antlr4ts -visitor ./src/lang/Calc.g4",
@@ -59,12 +59,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yangdinglou/calc-slang.git"
+    "url": "git+https://github.com/yangdinglou/c-slang.git"
   },
   "bugs": {
-    "url": "https://github.com/yangdinglou/calc-slang/issues"
+    "url": "https://github.com/yangdinglou/c-slang/issues"
   },
-  "homepage": "https://github.com/yangdinglou/calc-slang",
+  "homepage": "https://github.com/yangdinglou/c-slang",
   "devDependencies": {
     "@types/jest": "^29.0.0",
     "@types/lodash.assignin": "^4.2.6",
