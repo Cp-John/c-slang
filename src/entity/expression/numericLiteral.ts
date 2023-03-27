@@ -172,9 +172,15 @@ export class NumericLiteral {
   }
 
   minus(right: NumericLiteral) {
-    return NumericLiteral.new(this.val - right.val * this.getStep()).castToType(
-      getHigherPrecisionType(this.type, right.type)
-    )
+    if (this.type instanceof PointerType && right.type instanceof PointerType) {
+      return NumericLiteral.new((this.val - right.val) / this.getStep()).castToType(
+        PrimitiveType.INT
+      )
+    } else {
+      return NumericLiteral.new(this.val - right.val * this.getStep()).castToType(
+        getHigherPrecisionType(this.type, right.type)
+      )
+    }
   }
 
   multiply(right: NumericLiteral) {

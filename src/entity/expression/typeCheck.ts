@@ -132,7 +132,9 @@ export function checkBinaryExprssionOperandType(
 ): DataType {
   if (opr == '+' || opr == '-') {
     if (leftType instanceof PointerType) {
-      if (!WHOLE_PRIMITIVE_TYPES.has(rightType.toString())) {
+      if (opr == '-' && leftType.toString() == rightType.toString()) {
+        return PrimitiveType.INT
+      } else if (!WHOLE_PRIMITIVE_TYPES.has(rightType.toString())) {
         invalidBinaryExprssionOperandType(row, col, lexer, leftType, rightType)
       }
     } else if (opr == '+' && rightType instanceof PointerType) {
