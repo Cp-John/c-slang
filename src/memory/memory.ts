@@ -162,13 +162,15 @@ export class Memory {
     if (!this.allocatedAddresses.has(address)) {
       throw new Error('pointer being freed was not allocated, at address ' + String(address))
     }
-    const prev = this.getPrev(address)
-    let newAddress = address
-    if (prev != address && this.isFree(prev)) {
-      this.setLength(prev, this.getLength(prev) + this.getLength(address))
+    this.allocatedAddresses.delete(address)
+    const nodeAddr = address - Memory.TAG_LENGTH
+    const prev = this.getPrev(nodeAddr)
+    let newAddress = nodeAddr
+    if (prev != nodeAddr && this.isFree(prev)) {
+      this.setLength(prev, this.getLength(prev) + this.getLength(nodeAddr))
       newAddress = prev
     } else {
-      this.setIsFree(address, true)
+      this.setIsFree(nodeAddr, true)
     }
     const next = newAddress + this.getLength(newAddress)
     let newNext = next
@@ -180,7 +182,6 @@ export class Memory {
     if (newNext < this.stackBottom) {
       this.setPrev(newNext, newAddress)
     }
-    this.allocatedAddresses.delete(address)
   }
 
   allocate(size: number): NumericLiteral {
@@ -213,7 +214,9 @@ export class Memory {
       realSize = this.getLength(addr) - Memory.TAG_LENGTH
       this.setIsFree(addr, false)
     }
-    this.allocatedAddresses.add(addr)
-    return NumericLiteral.new(addr).castToType(new PointerType(PrimitiveType.VOID))
+    this.allocatedAddresses.add(addr + Memory.TAG_LENGTH)
+    return NumericLiteral.new(addr + Memory.TAG_LENGTH).castToType(
+      new PointerType(PrimitiveType.VOID)
+    )
   }
 }
