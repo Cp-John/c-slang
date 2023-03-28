@@ -219,4 +219,21 @@ export class Memory {
       new PointerType(PrimitiveType.VOID)
     )
   }
+
+  printHeap(context: any) {
+    let addr = this.heapBottom
+    context['stdout'] += '\n' + '='.repeat(10) + 'Heap Visualization' + '='.repeat(10) + '\n'
+    while (addr < this.stackBottom) {
+      context['stdout'] +=
+        String(addr) +
+        ': isfree=' +
+        String(this.isFree(addr)) +
+        '; length=' +
+        String(this.getLength(addr)) +
+        '; prev=' +
+        String(this.getPrev(addr)) +
+        '\n'
+      addr += this.getLength(addr)
+    }
+  }
 }

@@ -201,6 +201,10 @@ export class Frame {
     this.memory.free(numeric.getValue())
   }
 
+  printHeap(context: any) {
+    this.memory.printHeap(context)
+  }
+
   static extend(prev: Frame) {
     return new Frame(prev, prev.stackTop, prev.memory)
   }

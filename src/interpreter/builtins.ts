@@ -194,6 +194,15 @@ const free: RealBuiltinFunction = (
   env.free(args[0])
 }
 
+const printHeap: RealBuiltinFunction = (
+  env: Frame,
+  rts: any[],
+  context: any,
+  args: NumericLiteral[]
+): void => {
+  env.printHeap(context)
+}
+
 export const BUILTINS = {
   printf: [
     new BuiltinFunction(
@@ -237,6 +246,10 @@ export const BUILTINS = {
   ],
   free: [
     new BuiltinFunction(PrimitiveType.VOID, 'free', [new PointerType(PrimitiveType.VOID)], free),
+    PrimitiveType.FUNCTION
+  ],
+  printHeap: [
+    new BuiltinFunction(PrimitiveType.VOID, 'printHeap', [], printHeap),
     PrimitiveType.FUNCTION
   ]
   //   RAND_MAX: [new NumericLiteral(RAND_MAX, PrimitiveType.INT), PrimitiveType.INT],
