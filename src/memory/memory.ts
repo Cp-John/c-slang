@@ -235,5 +235,6 @@ export class Memory {
         '\n'
       addr += this.getLength(addr)
     }
+    context['stdout'] += '\n'
   }
 }
