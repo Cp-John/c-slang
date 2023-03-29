@@ -37,9 +37,7 @@ export class BuiltinFunction extends Function {
     context: CProgramContext,
     actualParameterList: NumericLiteral[]
   ): void | NumericLiteral {
-    const realParameterList: NumericLiteral[] = []
-    actualParameterList.forEach(val => realParameterList.push(val))
-    return this.realFunction(env, context, realParameterList)
+    return this.realFunction(env, context, actualParameterList)
   }
 
   isDefined(): boolean {

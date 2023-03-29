@@ -34,6 +34,10 @@ export class Frame {
     this.depth = depth
   }
 
+  getStackTop(): number {
+    return this.stackTop
+  }
+
   private getFrameWithName(name: string): Frame | null {
     if (name in this.boundings) {
       return this
@@ -208,8 +212,12 @@ export class Frame {
     this.memory.printHeap(context)
   }
 
+  static extendWithStackTop(prev: Frame, stackTop: number) {
+    return new Frame(prev, stackTop, prev.memory, prev.depth + 1)
+  }
+
   static extend(prev: Frame) {
-    return new Frame(prev, prev.stackTop, prev.memory, prev.depth + 1)
+    return this.extendWithStackTop(prev, prev.stackTop)
   }
 
   private recurPrintEnv(context: CProgramContext) {

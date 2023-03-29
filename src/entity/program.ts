@@ -33,14 +33,16 @@ export class Program {
   }
 
   execute(): string {
-    const baseFrame = Frame.extend(Frame.getBuiltinFrame())
-    const context: CProgramContext = { stdout: '', baseFrame: baseFrame }
+    const context: CProgramContext = {
+      stdout: '',
+      baseFrame: Frame.extend(Frame.getBuiltinFrame())
+    }
     try {
-      this.declarations.forEach(declaration => declaration.execute(baseFrame, context))
-      context.baseFrame = baseFrame
-      baseFrame.lookupFunction('main').call(baseFrame, context, [])
+      this.declarations.forEach(declaration => declaration.execute(context.baseFrame, context))
+      context.baseFrame.lookupFunction('main').call(context.baseFrame, context, [])
       return context.stdout
     } catch (err: any) {
+      console.log('stdout:', context.stdout)
       throw new Error('execution failed, ' + (err instanceof Error ? err.message : String(err)))
     }
   }
