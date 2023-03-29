@@ -6,6 +6,7 @@ import { Lexer } from '../parser/lexer'
 import { BUILTINS, DataType, PointerType, PrimitiveType } from './builtins'
 
 export class Frame {
+  private depth: number
   private boundings
   private prev: Frame | null
   private stackTop: number
@@ -21,14 +22,15 @@ export class Frame {
 
   static getBuiltinFrame(): Frame {
     const memory = new Memory()
-    return Frame.addBuiltins(new Frame(null, memory.getStackBottom(), memory))
+    return Frame.addBuiltins(new Frame(null, memory.getStackBottom(), memory, 0))
   }
 
-  private constructor(prev: Frame | null, stackTop: number, memory: Memory) {
+  private constructor(prev: Frame | null, stackTop: number, memory: Memory, depth: number) {
     this.boundings = {}
     this.prev = prev
     this.stackTop = stackTop
     this.memory = memory
+    this.depth = depth
   }
 
   private getFrameWithName(name: string): Frame | null {
@@ -206,14 +208,14 @@ export class Frame {
   }
 
   static extend(prev: Frame) {
-    return new Frame(prev, prev.stackTop, prev.memory)
+    return new Frame(prev, prev.stackTop, prev.memory, prev.depth + 1)
   }
 
   printEnv(context: any) {
     if (this.prev != null) {
       this.prev.printEnv(context)
     }
-    context['stdout'] += '='.repeat(40) + '\n'
+    context['stdout'] += '='.repeat(20) + 'depth: ' + String(this.depth) + '='.repeat(20) + '\n'
     for (const name in this.boundings) {
       const type = this.boundings[name]['type']
       if (type == PrimitiveType.FUNCTION) {
