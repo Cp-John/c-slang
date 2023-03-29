@@ -1,5 +1,6 @@
 import { NumericLiteral } from '../entity/expression/numericLiteral'
 import { BuiltinFunction, RealBuiltinFunction } from '../entity/function/builtinFunction'
+import { CProgramContext } from './cProgramContext'
 import { Frame } from './frame'
 
 const RAND_MAX = 2147483647
@@ -59,7 +60,7 @@ export const PRIMITIVE_TYPES = Object.values(PrimitiveType)
 
 const rand: RealBuiltinFunction = (
   env: Frame,
-  context: any,
+  context: CProgramContext,
   args: NumericLiteral[]
 ): NumericLiteral => {
   return NumericLiteral.new(Math.floor(Math.random() * MAX_INT)).castToType(PrimitiveType.INT)
@@ -67,7 +68,7 @@ const rand: RealBuiltinFunction = (
 
 const time: RealBuiltinFunction = (
   env: Frame,
-  context: any,
+  context: CProgramContext,
   args: NumericLiteral[]
 ): NumericLiteral => {
   return NumericLiteral.new(Math.floor(Date.now() / 1000)).castToType(PrimitiveType.INT)
@@ -77,7 +78,7 @@ export const PLACEHOLDER_REGEX = /%d|%ld|%f|%lf|%s|%c|%p/
 
 const printf: RealBuiltinFunction = (
   env: Frame,
-  context: any,
+  context: CProgramContext,
   args: NumericLiteral[]
 ): NumericLiteral => {
   let outputString = env.dereferenceAsString(args[0])
@@ -98,19 +99,19 @@ const printf: RealBuiltinFunction = (
   if (PLACEHOLDER_REGEX.test(outputString)) {
     throw new Error("expected more data arguments, '" + outputString + "'")
   }
-  context['stdout'] += outputString
+  context.stdout += outputString
   return NumericLiteral.new(outputString.length).castToType(PrimitiveType.INT)
 }
 
 const scanf: RealBuiltinFunction = (
   env: Frame,
-  context: any,
+  context: CProgramContext,
   args: NumericLiteral[]
 ): NumericLiteral => {
   let i = 1
   let formatString = env.dereferenceAsString(args[0])
   while (i < args.length) {
-    const input = prompt(context['stdout'])
+    const input = prompt(context.stdout)
     if (input == null) {
       throw Error('execution interrupted')
     }
@@ -138,14 +139,14 @@ const scanf: RealBuiltinFunction = (
       }
       i++
     }
-    context['stdout'] += input + '\n'
+    context.stdout += input + '\n'
   }
   return NumericLiteral.new(i - 1).castToType(PrimitiveType.INT)
 }
 
 const sqrt: RealBuiltinFunction = (
   env: Frame,
-  context: any,
+  context: CProgramContext,
   args: NumericLiteral[]
 ): NumericLiteral => {
   return args[0].sqrt()
@@ -153,7 +154,7 @@ const sqrt: RealBuiltinFunction = (
 
 const abs: RealBuiltinFunction = (
   env: Frame,
-  context: any,
+  context: CProgramContext,
   args: NumericLiteral[]
 ): NumericLiteral => {
   return args[0].abs()
@@ -161,7 +162,7 @@ const abs: RealBuiltinFunction = (
 
 const strlen: RealBuiltinFunction = (
   env: Frame,
-  context: any,
+  context: CProgramContext,
   args: NumericLiteral[]
 ): NumericLiteral => {
   return NumericLiteral.new(env.dereferenceAsString(args[0]).length).castToType(PrimitiveType.INT)
@@ -169,21 +170,33 @@ const strlen: RealBuiltinFunction = (
 
 const malloc: RealBuiltinFunction = (
   env: Frame,
-  context: any,
+  context: CProgramContext,
   args: NumericLiteral[]
 ): NumericLiteral => {
   return env.allocateOnHeap(args[0])
 }
 
-const free: RealBuiltinFunction = (env: Frame, context: any, args: NumericLiteral[]): void => {
+const free: RealBuiltinFunction = (
+  env: Frame,
+  context: CProgramContext,
+  args: NumericLiteral[]
+): void => {
   env.free(args[0])
 }
 
-const printHeap: RealBuiltinFunction = (env: Frame, context: any, args: NumericLiteral[]): void => {
+const printHeap: RealBuiltinFunction = (
+  env: Frame,
+  context: CProgramContext,
+  args: NumericLiteral[]
+): void => {
   env.printHeap(context)
 }
 
-const printEnv: RealBuiltinFunction = (env: Frame, context: any, args: NumericLiteral[]): void => {
+const printEnv: RealBuiltinFunction = (
+  env: Frame,
+  context: CProgramContext,
+  args: NumericLiteral[]
+): void => {
   env.printEnv(context)
 }
 

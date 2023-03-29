@@ -4,6 +4,7 @@ import { SelfDefinedFunction } from '../entity/function/selfDefinedFunction'
 import { Memory } from '../memory/memory'
 import { Lexer } from '../parser/lexer'
 import { BUILTINS, DataType, PointerType, PrimitiveType } from './builtins'
+import { CProgramContext } from './cProgramContext'
 
 export class Frame {
   private depth: number
@@ -203,7 +204,7 @@ export class Frame {
     this.memory.free(numeric.getValue())
   }
 
-  printHeap(context: any) {
+  printHeap(context: CProgramContext) {
     this.memory.printHeap(context)
   }
 
@@ -211,23 +212,23 @@ export class Frame {
     return new Frame(prev, prev.stackTop, prev.memory, prev.depth + 1)
   }
 
-  private recurPrintEnv(context: any) {
+  private recurPrintEnv(context: CProgramContext) {
     if (this.prev != null) {
       this.prev.recurPrintEnv(context)
     }
-    context['stdout'] += '='.repeat(20) + 'depth: ' + String(this.depth) + '='.repeat(20) + '\n'
+    context.stdout += '='.repeat(20) + 'depth: ' + String(this.depth) + '='.repeat(20) + '\n'
     for (const name in this.boundings) {
       const type = this.boundings[name]['type']
       if (type == PrimitiveType.FUNCTION) {
-        context['stdout'] += name + ': ' + this.boundings[name]['val'].toString() + '\n'
+        context.stdout += name + ': ' + this.boundings[name]['val'].toString() + '\n'
       } else {
-        context['stdout'] += name + ': ' + type.toString() + '\n'
+        context.stdout += name + ': ' + type.toString() + '\n'
       }
     }
   }
 
-  printEnv(context: any) {
+  printEnv(context: CProgramContext) {
     this.recurPrintEnv(context)
-    context['stdout'] += '\n'
+    context.stdout += '\n'
   }
 }

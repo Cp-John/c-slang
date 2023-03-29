@@ -1,4 +1,5 @@
 import { DataType } from '../../interpreter/builtins'
+import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { Function } from '../function/function'
 import { Expression } from './expression'
@@ -31,7 +32,7 @@ export class FunctionCall {
     return this.functionObj.returnType
   }
 
-  execute(env: Frame, context: any): void | NumericLiteral {
+  execute(env: Frame, context: CProgramContext): void | NumericLiteral {
     const parameters: NumericLiteral[] = []
     this.actualParameterList.forEach(expr =>
       parameters.push(expr.evaluate(env, context) as NumericLiteral)

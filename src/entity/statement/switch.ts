@@ -1,4 +1,5 @@
 import { DataType } from '../../interpreter/builtins'
+import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
@@ -18,7 +19,7 @@ class Case {
     return new Case(expr)
   }
 
-  evaluate(env: Frame, context: any) {
+  evaluate(env: Frame, context: CProgramContext) {
     return this.expression.evaluate(env, context)
   }
 
@@ -91,7 +92,7 @@ export class Switch extends Statement {
     return [new Switch(expression, body, defaultExecutables)]
   }
 
-  execute(env: Frame, context: any): void {
+  execute(env: Frame, context: CProgramContext): void {
     const result = (this.expression.evaluate(env, context) as NumericLiteral).getValue()
     let matched = false
     for (let i = 0; i < this.body.length; i++) {

@@ -1,4 +1,5 @@
 import { DataType } from '../../interpreter/builtins'
+import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
@@ -33,7 +34,7 @@ export class While extends Statement {
     return [new While(expression, body)]
   }
 
-  execute(env: Frame, context: any): void {
+  execute(env: Frame, context: CProgramContext): void {
     while ((this.expression.evaluate(env, context) as NumericLiteral).toBoolean()) {
       try {
         this.body.execute(env, context)

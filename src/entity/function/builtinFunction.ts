@@ -1,4 +1,5 @@
 import { DataType, PLACEHOLDER_REGEX, PointerType, PrimitiveType } from '../../interpreter/builtins'
+import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Expression } from '../expression/expression'
@@ -7,7 +8,7 @@ import { NumericLiteral } from '../expression/numericLiteral'
 import { Function } from './function'
 
 export interface RealBuiltinFunction {
-  (env: Frame, context: any, args: NumericLiteral[]): void | NumericLiteral
+  (env: Frame, context: CProgramContext, args: NumericLiteral[]): void | NumericLiteral
 }
 
 export class BuiltinFunction extends Function {
@@ -31,7 +32,11 @@ export class BuiltinFunction extends Function {
     this.isFormatString = isFormatString
   }
 
-  call(env: Frame, context: any, actualParameterList: NumericLiteral[]): void | NumericLiteral {
+  call(
+    env: Frame,
+    context: CProgramContext,
+    actualParameterList: NumericLiteral[]
+  ): void | NumericLiteral {
     const realParameterList: NumericLiteral[] = []
     actualParameterList.forEach(val => realParameterList.push(val))
     return this.realFunction(env, context, realParameterList)

@@ -1,3 +1,4 @@
+import { CProgramContext } from '../interpreter/cProgramContext'
 import { Frame } from '../interpreter/frame'
 import { Lexer } from '../parser/lexer'
 import { FunctionCall } from './expression/functionCall'
@@ -31,12 +32,14 @@ export class Program {
     return new Program(declarations)
   }
 
-  execute(context: any): void {
-    const frame = Frame.extend(Frame.getBuiltinFrame())
+  execute(): string {
+    const baseFrame = Frame.extend(Frame.getBuiltinFrame())
+    const context: CProgramContext = { stdout: '', baseFrame: baseFrame }
     try {
-      this.declarations.forEach(declaration => declaration.execute(frame, context))
-      context['base-frame'] = frame
-      frame.lookupFunction('main').call(frame, context, [])
+      this.declarations.forEach(declaration => declaration.execute(baseFrame, context))
+      context.baseFrame = baseFrame
+      baseFrame.lookupFunction('main').call(baseFrame, context, [])
+      return context.stdout
     } catch (err: any) {
       throw new Error('execution failed, ' + (err instanceof Error ? err.message : String(err)))
     }

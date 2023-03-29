@@ -1,4 +1,5 @@
 import { DataType } from '../../interpreter/builtins'
+import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
@@ -65,7 +66,7 @@ export class For extends Statement {
     return [forStatement]
   }
 
-  execute(env: Frame, context: any): void {
+  execute(env: Frame, context: CProgramContext): void {
     const newEnv = Frame.extend(env)
     this.init.forEach(statement => statement.execute(newEnv, context))
     while (

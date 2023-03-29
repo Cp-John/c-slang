@@ -1,4 +1,5 @@
 import { DataType } from '../../interpreter/builtins'
+import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Statement } from './statement'
@@ -19,7 +20,7 @@ export class Break extends Statement {
     return [new Break()]
   }
 
-  execute(env: Frame, context: any): void {
+  execute(env: Frame, context: CProgramContext): void {
     throw this
   }
 }
@@ -40,7 +41,7 @@ export class Continue extends Statement {
     return [new Continue()]
   }
 
-  execute(env: Frame, context: any): void {
+  execute(env: Frame, context: CProgramContext): void {
     throw this
   }
 }

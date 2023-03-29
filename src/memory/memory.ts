@@ -1,5 +1,6 @@
 import { NumericLiteral } from '../entity/expression/numericLiteral'
 import { PointerType, PrimitiveType } from '../interpreter/builtins'
+import { CProgramContext } from '../interpreter/cProgramContext'
 
 export class Memory {
   private buffer: ArrayBuffer
@@ -220,11 +221,11 @@ export class Memory {
     )
   }
 
-  printHeap(context: any) {
+  printHeap(context: CProgramContext) {
     let addr = this.heapBottom
-    context['stdout'] += '\n' + '='.repeat(10) + 'Heap Visualization' + '='.repeat(10) + '\n'
+    context.stdout += '\n' + '='.repeat(10) + 'Heap Visualization' + '='.repeat(10) + '\n'
     while (addr < this.stackBottom) {
-      context['stdout'] +=
+      context.stdout +=
         String(addr) +
         ': isfree=' +
         String(this.isFree(addr)) +
@@ -235,6 +236,6 @@ export class Memory {
         '\n'
       addr += this.getLength(addr)
     }
-    context['stdout'] += '\n'
+    context.stdout += '\n'
   }
 }

@@ -37,10 +37,11 @@ export abstract class Statement {
     }
   }
 
-  abstract execute(env: Frame, context: any): void
+  abstract execute(env: Frame, context: CProgramContext): void
 }
 
 import { DataType } from '../../interpreter/builtins'
+import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { ConditionalStatement } from './conditionalStatement'

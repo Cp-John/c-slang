@@ -1,4 +1,5 @@
 import { DataType, PrimitiveType } from '../../interpreter/builtins'
+import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
@@ -27,7 +28,11 @@ export class SelfDefinedFunction extends Function {
     return this.body != null
   }
 
-  call(env: Frame, context: any, actualParameterList: NumericLiteral[]): void | NumericLiteral {
+  call(
+    env: Frame,
+    context: CProgramContext,
+    actualParameterList: NumericLiteral[]
+  ): void | NumericLiteral {
     if (this.body == null) {
       throw new Error("function '" + this.functionName + "' has no definition yet")
     }
@@ -39,7 +44,7 @@ export class SelfDefinedFunction extends Function {
           String(actualParameterList.length)
       )
     }
-    const newEnv = Frame.extend(context['base-frame'])
+    const newEnv = Frame.extend(context.baseFrame)
     this.parameterList.forEach(pair => newEnv.declare(pair[1], pair[0]))
     actualParameterList.forEach((val, index) =>
       newEnv.assignValue(this.parameterList[index][1], val)

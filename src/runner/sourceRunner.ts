@@ -4,6 +4,7 @@ import { IOptions, Result } from '..'
 import { Program } from '../entity/program'
 import { CRuntimeError } from '../errors/errors'
 import { CannotFindModuleError } from '../errors/localImportErrors'
+import { Frame } from '../interpreter/frame'
 import { evaluate } from '../interpreter/interpreter'
 import { hoistAndMergeImports } from '../localImports/transformers/hoistAndMergeImports'
 import { removeExports } from '../localImports/transformers/removeExports'
@@ -47,17 +48,13 @@ export async function sourceRunner(
     return resolvedErrorPromise
   }
 
-  const cProgramContext = { stdout: '' }
-
   try {
-    program.execute(cProgramContext)
     return Promise.resolve({
       status: 'finished',
-      value: cProgramContext['stdout'],
+      value: program.execute(),
       context
     })
   } catch (err) {
-    console.log('output:', cProgramContext.stdout)
     context.errors.push(new CRuntimeError(err))
     return resolvedErrorPromise
   }

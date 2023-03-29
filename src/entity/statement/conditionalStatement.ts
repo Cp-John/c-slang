@@ -1,4 +1,5 @@
 import { DataType } from '../../interpreter/builtins'
+import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
@@ -49,7 +50,7 @@ export class ConditionalStatement extends Statement {
     return [new ConditionalStatement(ifBlocks, elseBlock)]
   }
 
-  execute(env: Frame, context: any): void {
+  execute(env: Frame, context: CProgramContext): void {
     let executed = false
     for (const [expr, body] of this.ifBlocks) {
       if ((expr.evaluate(env, context) as NumericLiteral).toBoolean()) {

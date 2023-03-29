@@ -1,4 +1,5 @@
 import { DataType, PrimitiveType } from '../../interpreter/builtins'
+import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
@@ -139,7 +140,7 @@ class VariableDeclaration extends Declaration {
     this.expression = expression
   }
 
-  execute(env: Frame, context: any): void {
+  execute(env: Frame, context: CProgramContext): void {
     env.declare(this.variableName, this.variableType)
     if (this.expression != null) {
       const val = this.expression.evaluate(env, context)
@@ -170,7 +171,7 @@ export class FunctionDeclaration extends Declaration {
     this.body = body
   }
 
-  execute(env: Frame, context: any): void {
+  execute(env: Frame, context: CProgramContext): void {
     env.declare(this.functionName, PrimitiveType.FUNCTION)
     env.assignValue(
       this.functionName,

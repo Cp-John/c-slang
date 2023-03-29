@@ -1,4 +1,5 @@
 import { DataType, PrimitiveType } from '../../interpreter/builtins'
+import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Expression } from '../expression/expression'
@@ -45,7 +46,7 @@ export class Return extends Statement {
     return this.evaluated
   }
 
-  execute(env: Frame, context: any): void {
+  execute(env: Frame, context: CProgramContext): void {
     this.evaluated = this.expression?.evaluate(env, context)?.castToType(this.returnType)
     throw this
   }

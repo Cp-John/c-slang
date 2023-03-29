@@ -1,4 +1,5 @@
 import { DataType, PointerType, PRIMITIVE_TYPES, PrimitiveType } from '../../interpreter/builtins'
+import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { DEREFERENCE_TAG } from './expressionParser'
 import { FunctionCall } from './functionCall'
@@ -72,7 +73,7 @@ export class Expression {
     }
   }
 
-  evaluate(env: Frame, context: any): NumericLiteral | undefined {
+  evaluate(env: Frame, context: CProgramContext): NumericLiteral | undefined {
     const result: NumericLiteral[] = []
     let i = 0
     while (i < this.elements.length) {

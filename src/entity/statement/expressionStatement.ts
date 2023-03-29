@@ -1,3 +1,4 @@
+import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Expression } from '../expression/expression'
@@ -12,7 +13,7 @@ export class ExpressionStatement extends Statement {
     this.expression = expression
   }
 
-  execute(env: Frame, context: any): void {
+  execute(env: Frame, context: CProgramContext): void {
     this.expression.evaluate(env, context)
   }
 

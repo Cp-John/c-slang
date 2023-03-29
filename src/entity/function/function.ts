@@ -1,4 +1,5 @@
 import { DataType } from '../../interpreter/builtins'
+import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Expression } from '../expression/expression'
@@ -15,7 +16,7 @@ export abstract class Function {
 
   abstract call(
     env: Frame,
-    context: any,
+    context: CProgramContext,
     actualParameterList: NumericLiteral[]
   ): void | NumericLiteral
 
