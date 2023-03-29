@@ -90,7 +90,6 @@ export class BuiltinFunction extends Function {
       actualParameters.push(ExpressionParser.parse(env, lexer, false, false, type))
     })
     if (!this.isFormatString) {
-      this.checkTooManyArguments(lexer)
       lexer.eatDelimiter(')')
       return actualParameters
     }
@@ -98,7 +97,6 @@ export class BuiltinFunction extends Function {
       this.parseFormatStringParameters(env, lexer, actualParameters[0].toImmediateString()).forEach(
         param => actualParameters.push(param)
       )
-      this.checkTooManyArguments(lexer)
     } else {
       // TODO
       // actualParameters.push(ExpressionParser.parse(env, lexer, false, false, null))

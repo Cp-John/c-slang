@@ -45,7 +45,7 @@ export class SelfDefinedFunction extends Function {
       )
     }
     const newEnv = Frame.extendWithStackTop(context.baseFrame, env.getStackTop())
-    this.parameterList.forEach(pair => newEnv.declare(pair[1], pair[0]))
+    this.parameterList.forEach(pair => newEnv.declareVariable(pair[1], pair[0]))
     actualParameterList.forEach((val, index) =>
       newEnv.assignValue(this.parameterList[index][1], val)
     )
@@ -75,7 +75,6 @@ export class SelfDefinedFunction extends Function {
       }
       actualParameters.push(ExpressionParser.parse(env, lexer, false, false, pair[0]))
     })
-    this.checkTooManyArguments(lexer)
     lexer.eatDelimiter(')')
     return actualParameters
   }

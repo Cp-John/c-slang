@@ -15,7 +15,7 @@ export class Frame {
 
   private static addBuiltins(frame: Frame): Frame {
     for (const name in BUILTINS) {
-      frame.declare(name, BUILTINS[name][1])
+      frame.declareVariable(name, BUILTINS[name][1])
       frame.assignValue(name, BUILTINS[name][0])
     }
     return frame
@@ -128,13 +128,12 @@ export class Frame {
     return NumericLiteral.new(addr).castToType(new PointerType(PrimitiveType.CHAR))
   }
 
-  declare(
+  private checkRedefinition(
     name: string,
-    type: DataType,
     row: number = -1,
     col: number = -1,
     lexer: Lexer | null = null
-  ): string {
+  ) {
     if (this.isRedefinition(name)) {
       let errMsg = "redefinition of '" + name + "'"
       if (lexer != null) {
@@ -142,10 +141,52 @@ export class Frame {
       }
       throw new Error(errMsg)
     }
-    const value = type == PrimitiveType.FUNCTION ? undefined : this.stackTop
-    this.stackTop += type == PrimitiveType.FUNCTION ? 0 : 4
+  }
+
+  private conflictingFunctionSignatures(
+    name: string,
+    row: number = -1,
+    col: number = -1,
+    lexer: Lexer | null = null
+  ) {
+    let errMsg = "conflicting signatures of function '" + name + "'"
+    if (lexer != null) {
+      errMsg = lexer.formatError(errMsg, row, col)
+    }
+    throw new Error(errMsg)
+  }
+
+  declareFunction(
+    name: string,
+    functionObj: Function,
+    row: number = -1,
+    col: number = -1,
+    lexer: Lexer | null = null
+  ): string {
+    this.checkRedefinition(name, row, col, lexer)
+    if (
+      name in this.boundings &&
+      (this.boundings[name]['val'] as Function).toString() != functionObj.toString()
+    ) {
+      this.conflictingFunctionSignatures(name, row, col, lexer)
+    }
+    this.boundings[name] = { type: PrimitiveType.FUNCTION, val: functionObj }
+    console.log('declared function: , ')
+    return name
+  }
+
+  declareVariable(
+    name: string,
+    type: DataType,
+    row: number = -1,
+    col: number = -1,
+    lexer: Lexer | null = null
+  ): string {
+    this.checkRedefinition(name, row, col, lexer)
+    const value = this.stackTop
+    this.stackTop += 4
     this.boundings[name] = { type: type, val: value }
-    console.log('declared variable: (' + name + ', ' + type + '), ' + this.stackTop)
+    console.log('declared variable: ' + name + ':' + type + ' [' + this.stackTop + ']')
     return name
   }
 

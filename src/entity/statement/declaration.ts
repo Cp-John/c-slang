@@ -32,7 +32,7 @@ export abstract class Declaration extends Statement {
       }
       const [row, col] = lexer.tell()
       const name = lexer.eatIdentifier()
-      result.push([type, env.declare(name, type, row, col, lexer)])
+      result.push([type, env.declareVariable(name, type, row, col, lexer)])
     }
     while (!lexer.matchDelimiter(')')) {
       lexer.eatDelimiter(',')
@@ -43,7 +43,7 @@ export abstract class Declaration extends Statement {
       }
       const [row, col] = lexer.tell()
       const name = lexer.eatIdentifier()
-      result.push([type, env.declare(name, type, row, col, lexer)])
+      result.push([type, env.declareVariable(name, type, row, col, lexer)])
     }
     lexer.eatDelimiter(')')
     return result
@@ -77,7 +77,7 @@ export abstract class Declaration extends Statement {
       lexer.eatDelimiter(',')
       const [row, col] = lexer.tell()
       declaredVariable = lexer.eatIdentifier()
-      env.declare(declaredVariable, variableType, row, col, lexer)
+      env.declareVariable(declaredVariable, variableType, row, col, lexer)
       statements.push(new VariableDeclaration(variableType, declaredVariable, null))
     }
     if (lexer.matchDelimiter('[')) {
@@ -107,11 +107,10 @@ export abstract class Declaration extends Statement {
       if (!allowFunctionDeclaration) {
         throw new Error(lexer.formatError('function definition is not allowed here'))
       }
-      env.declare(identifier, PrimitiveType.FUNCTION, row, col, lexer)
       const newEnv = Frame.extend(env)
       const formalParameterList = Declaration.parseFormalParameterList(newEnv, lexer, identifier)
       const functionObj = new SelfDefinedFunction(type, identifier, formalParameterList, null)
-      env.assignValue(identifier, functionObj)
+      env.declareFunction(identifier, functionObj, row, col, lexer)
       if (lexer.matchDelimiter('{')) {
         functionObj.body = Block.parse(newEnv, lexer, false, false, type, true)
       } else {
@@ -122,7 +121,7 @@ export abstract class Declaration extends Statement {
       if (type == PrimitiveType.VOID) {
         throw new Error(lexer.formatError("variable has incomplete type 'void'"))
       }
-      env.declare(identifier, type, row, col, lexer)
+      env.declareVariable(identifier, type, row, col, lexer)
       return this.parseDeclaredVariables(env, type, identifier, lexer)
     }
   }
@@ -141,7 +140,7 @@ class VariableDeclaration extends Declaration {
   }
 
   execute(env: Frame, context: CProgramContext): void {
-    env.declare(this.variableName, this.variableType)
+    env.declareVariable(this.variableName, this.variableType)
     if (this.expression != null) {
       const val = this.expression.evaluate(env, context)
       if (val == undefined) {
@@ -172,7 +171,7 @@ export class FunctionDeclaration extends Declaration {
   }
 
   execute(env: Frame, context: CProgramContext): void {
-    env.declare(this.functionName, PrimitiveType.FUNCTION)
+    env.declareVariable(this.functionName, PrimitiveType.FUNCTION)
     env.assignValue(
       this.functionName,
       new SelfDefinedFunction(this.returnType, this.functionName, this.parameterList, this.body)

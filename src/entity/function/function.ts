@@ -30,14 +30,6 @@ export abstract class Function {
     }
   }
 
-  protected checkTooManyArguments(lexer: Lexer) {
-    if (!lexer.matchDelimiter(')')) {
-      throw new Error(
-        lexer.formatError("too many arguments in call to '" + this.functionName + '"')
-      )
-    }
-  }
-
   abstract parseActualParameters(env: Frame, lexer: Lexer): Expression[]
 
   abstract toString(): string
