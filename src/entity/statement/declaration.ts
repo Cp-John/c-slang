@@ -8,7 +8,11 @@ import { SelfDefinedFunction } from '../function/selfDefinedFunction'
 import { Statement } from './statement'
 
 export abstract class Declaration extends Statement {
-  private static parseFormalParameterList(env: Frame, lexer: Lexer): [DataType, string][] {
+  private static parseFormalParameterList(
+    env: Frame,
+    lexer: Lexer,
+    functionName: string
+  ): [DataType, string][] {
     const result: [DataType, string][] = []
     lexer.eatDelimiter('(')
     if (lexer.matchKeyword('void')) {
@@ -17,6 +21,9 @@ export abstract class Declaration extends Statement {
       return result
     }
     if (!lexer.matchDelimiter(')')) {
+      if (functionName == 'main') {
+        throw new Error(lexer.formatError("expected no parameters on 'main' function declaration"))
+      }
       const [typeRow, typeCol] = lexer.tell()
       const type = lexer.eatDataType()
       if (type == PrimitiveType.VOID) {
@@ -101,7 +108,7 @@ export abstract class Declaration extends Statement {
       }
       env.declare(identifier, PrimitiveType.FUNCTION, row, col, lexer)
       const newEnv = Frame.extend(env)
-      const formalParameterList = Declaration.parseFormalParameterList(newEnv, lexer)
+      const formalParameterList = Declaration.parseFormalParameterList(newEnv, lexer, identifier)
       const functionObj = new SelfDefinedFunction(type, identifier, formalParameterList, null)
       env.assignValue(identifier, functionObj)
       if (lexer.matchDelimiter('{')) {
