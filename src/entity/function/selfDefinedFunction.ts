@@ -72,4 +72,15 @@ export class SelfDefinedFunction extends Function {
     lexer.eatDelimiter(')')
     return actualParameters
   }
+
+  toString(): string {
+    let result = this.returnType.toString() + ' ' + this.functionName + '('
+    if (this.parameterList.length > 0) {
+      result += this.parameterList[0][0].toString()
+      for (let i = 1; i < this.parameterList.length; i++) {
+        result += ', ' + this.parameterList[i][0].toString()
+      }
+    }
+    return result + ')'
+  }
 }

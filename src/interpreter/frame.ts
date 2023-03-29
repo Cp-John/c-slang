@@ -208,4 +208,19 @@ export class Frame {
   static extend(prev: Frame) {
     return new Frame(prev, prev.stackTop, prev.memory)
   }
+
+  printEnv(context: any) {
+    if (this.prev != null) {
+      this.prev.printEnv(context)
+    }
+    context['stdout'] += '='.repeat(40) + '\n'
+    for (const name in this.boundings) {
+      const type = this.boundings[name]['type']
+      if (type == PrimitiveType.FUNCTION) {
+        context['stdout'] += name + ': ' + this.boundings[name]['val'].toString() + '\n'
+      } else {
+        context['stdout'] += name + ': ' + type.toString() + '\n'
+      }
+    }
+  }
 }

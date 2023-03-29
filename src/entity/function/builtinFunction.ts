@@ -110,4 +110,17 @@ export class BuiltinFunction extends Function {
     lexer.eatDelimiter(')')
     return actualParameters
   }
+
+  toString(): string {
+    let result = this.returnType.toString() + ' ' + this.functionName + '('
+    if (this.isFormatString) {
+      result += 'char*, ...any'
+    } else if (this.parameterTypes.length > 0) {
+      result += this.parameterTypes[0].toString()
+      for (let i = 1; i < this.parameterTypes.length; i++) {
+        result += ', ' + this.parameterTypes[i].toString()
+      }
+    }
+    return result + ')'
+  }
 }

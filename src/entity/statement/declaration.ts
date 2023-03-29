@@ -105,7 +105,7 @@ export abstract class Declaration extends Statement {
       const functionObj = new SelfDefinedFunction(type, identifier, formalParameterList, null)
       env.assignValue(identifier, functionObj)
       if (lexer.matchDelimiter('{')) {
-        functionObj.body = Block.parse(newEnv, lexer, false, false, type)
+        functionObj.body = Block.parse(newEnv, lexer, false, false, type, true)
       } else {
         lexer.eatDelimiter(';')
       }

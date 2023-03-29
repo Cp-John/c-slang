@@ -33,4 +33,6 @@ export abstract class Function {
   }
 
   abstract parseActualParameters(env: Frame, lexer: Lexer): Expression[]
+
+  abstract toString(): string
 }

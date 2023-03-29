@@ -7,9 +7,11 @@ import { Statement } from './statement/statement'
 
 export class Block {
   private content: (Statement | Block)[]
+  private isFunctionBody: boolean
 
-  constructor(content: (Statement | Block)[]) {
+  constructor(content: (Statement | Block)[], isFunctionBody: boolean = false) {
     this.content = content
+    this.isFunctionBody = isFunctionBody
   }
 
   static parse(
@@ -17,10 +19,11 @@ export class Block {
     lexer: Lexer,
     allowBreak: boolean,
     allowContinue: boolean,
-    returnType: DataType | null
+    returnType: DataType | null,
+    isFunctionBody: boolean = false
   ): Block {
     const content: (Block | Statement)[] = []
-    const newEnv = Frame.extend(env)
+    const newEnv = isFunctionBody ? env : Frame.extend(env)
     let reachable = true
     if (!lexer.matchDelimiter('{')) {
       Statement.parse(newEnv, lexer, allowBreak, allowContinue, returnType).forEach(statement =>
@@ -48,11 +51,11 @@ export class Block {
       }
     }
     lexer.eatDelimiter('}')
-    return new Block(content)
+    return new Block(content, isFunctionBody)
   }
 
   execute(env: Frame, rts: any[], context: any): void {
-    const newEnv = Frame.extend(env)
+    const newEnv = this.isFunctionBody ? env : Frame.extend(env)
     this.content.forEach(executable => executable.execute(newEnv, rts, context))
   }
 }
