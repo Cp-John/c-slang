@@ -223,7 +223,7 @@ export class Memory {
 
   printHeap(context: CProgramContext) {
     let addr = this.heapBottom
-    context.stdout += '\n' + '='.repeat(10) + 'Heap Visualization' + '='.repeat(10) + '\n'
+    context.stdout += '\n' + '='.repeat(15) + 'Heap Visualization' + '='.repeat(15) + '\n'
     while (addr < this.stackBottom) {
       context.stdout +=
         String(addr) +
@@ -236,6 +236,6 @@ export class Memory {
         '\n'
       addr += this.getLength(addr)
     }
-    context.stdout += '\n'
+    context.stdout += '='.repeat(21) + 'ENDING' + '='.repeat(21) + '\n'
   }
 }

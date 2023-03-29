@@ -236,7 +236,8 @@ export class Frame {
   }
 
   printEnv(context: CProgramContext) {
-    this.recurPrintEnv(context)
     context.stdout += '\n'
+    this.recurPrintEnv(context)
+    context.stdout += '='.repeat(21) + 'ENDING' + '='.repeat(21) + '\n'
   }
 }
