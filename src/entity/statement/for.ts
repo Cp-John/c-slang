@@ -7,6 +7,7 @@ import { ExpressionParser } from '../expression/expressionParser'
 import { NumericLiteral } from '../expression/numericLiteral'
 import { Declaration } from './declaration'
 import { ExpressionStatement } from './expressionStatement'
+import { Break, Continue } from './simpleStatement'
 import { Statement } from './statement'
 
 export class For extends Statement {
@@ -74,9 +75,9 @@ export class For extends Statement {
       try {
         this.body.execute(newEnv, context)
       } catch (err: any) {
-        if (err == 'BREAK') {
+        if (err instanceof Break) {
           break
-        } else if (err == 'CONTINUE') {
+        } else if (err instanceof Continue) {
           // do nothing
         } else {
           throw err

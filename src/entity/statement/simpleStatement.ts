@@ -20,7 +20,7 @@ export class Break extends Statement {
   }
 
   execute(env: Frame, context: any): void {
-    throw 'BREAK'
+    throw this
   }
 }
 
@@ -41,6 +41,6 @@ export class Continue extends Statement {
   }
 
   execute(env: Frame, context: any): void {
-    throw 'CONTINUE'
+    throw this
   }
 }

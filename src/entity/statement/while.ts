@@ -5,6 +5,7 @@ import { Block } from '../block'
 import { Expression } from '../expression/expression'
 import { ExpressionParser } from '../expression/expressionParser'
 import { NumericLiteral } from '../expression/numericLiteral'
+import { Break, Continue } from './simpleStatement'
 import { Statement } from './statement'
 
 export class While extends Statement {
@@ -37,9 +38,9 @@ export class While extends Statement {
       try {
         this.body.execute(env, context)
       } catch (err: any) {
-        if (err == 'BREAK') {
+        if (err instanceof Break) {
           break
-        } else if (err == 'CONTINUE') {
+        } else if (err instanceof Continue) {
           continue
         } else {
           throw err

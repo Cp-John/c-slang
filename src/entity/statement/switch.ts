@@ -5,6 +5,7 @@ import { Block } from '../block'
 import { Expression } from '../expression/expression'
 import { ExpressionParser } from '../expression/expressionParser'
 import { NumericLiteral } from '../expression/numericLiteral'
+import { Break } from './simpleStatement'
 import { Statement } from './statement'
 
 class Case {
@@ -104,7 +105,7 @@ export class Switch extends Statement {
           ;(this.body[i] as Statement | Block).execute(env, context)
         }
       } catch (err: any) {
-        if (err == 'BREAK') {
+        if (err instanceof Break) {
           return
         } else {
           throw err
