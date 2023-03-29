@@ -111,16 +111,19 @@ export class Lexer {
 
   formatError(msg: string, row: number = this.row, col: number = this.col): string {
     return (
-      msg +
-      ' at (' +
-      row +
-      ', ' +
-      col +
-      ')\n\t' +
-      this.lines[row - 1] +
-      '\n\t' +
-      ' '.repeat(col - 1) +
-      '^'
+      'Line ' +
+      String(row) +
+      ': ' +
+      (msg +
+        ' at (' +
+        row +
+        ', ' +
+        col +
+        ')\n\t' +
+        this.lines[row - 1] +
+        '\n\t' +
+        ' '.repeat(col - 1) +
+        '^')
     )
   }
 
