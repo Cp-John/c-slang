@@ -17,8 +17,8 @@ class Case {
     return new Case(expr)
   }
 
-  evaluate(env: Frame, rts: Frame[], context: any) {
-    return this.expression.evaluate(env, rts, context)
+  evaluate(env: Frame, context: any) {
+    return this.expression.evaluate(env, context)
   }
 
   constructor(expression: Expression) {
@@ -90,18 +90,18 @@ export class Switch extends Statement {
     return [new Switch(expression, body, defaultExecutables)]
   }
 
-  execute(env: Frame, rts: Frame[], context: any): void {
-    const result = (this.expression.evaluate(env, rts, context) as NumericLiteral).getValue()
+  execute(env: Frame, context: any): void {
+    const result = (this.expression.evaluate(env, context) as NumericLiteral).getValue()
     let matched = false
     for (let i = 0; i < this.body.length; i++) {
       try {
         if (!matched && this.body[i] instanceof Case) {
           const toMatch = (
-            (this.body[i] as Case).evaluate(env, rts, context) as NumericLiteral
+            (this.body[i] as Case).evaluate(env, context) as NumericLiteral
           ).getValue()
           matched = result == toMatch
         } else if (matched && !(this.body[i] instanceof Case)) {
-          ;(this.body[i] as Statement | Block).execute(env, rts, context)
+          ;(this.body[i] as Statement | Block).execute(env, context)
         }
       } catch (err: any) {
         if (err == 'BREAK') {
@@ -112,7 +112,7 @@ export class Switch extends Statement {
       }
     }
     if (!matched) {
-      this.defaultExecutables.forEach(executable => executable.execute(env, rts, context))
+      this.defaultExecutables.forEach(executable => executable.execute(env, context))
     }
   }
 }

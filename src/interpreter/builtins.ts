@@ -59,30 +59,27 @@ export const PRIMITIVE_TYPES = Object.values(PrimitiveType)
 
 const rand: RealBuiltinFunction = (
   env: Frame,
-  rts: any[],
   context: any,
   args: NumericLiteral[]
-): void => {
-  rts.push(NumericLiteral.new(Math.floor(Math.random() * MAX_INT)).castToType(PrimitiveType.INT))
+): NumericLiteral => {
+  return NumericLiteral.new(Math.floor(Math.random() * MAX_INT)).castToType(PrimitiveType.INT)
 }
 
 const time: RealBuiltinFunction = (
   env: Frame,
-  rts: any[],
   context: any,
   args: NumericLiteral[]
-): void => {
-  rts.push(NumericLiteral.new(Math.floor(Date.now() / 1000)).castToType(PrimitiveType.INT))
+): NumericLiteral => {
+  return NumericLiteral.new(Math.floor(Date.now() / 1000)).castToType(PrimitiveType.INT)
 }
 
 export const PLACEHOLDER_REGEX = /%d|%ld|%f|%lf|%s|%c|%p/
 
 const printf: RealBuiltinFunction = (
   env: Frame,
-  rts: any[],
   context: any,
   args: NumericLiteral[]
-): void => {
+): NumericLiteral => {
   let outputString = env.dereferenceAsString(args[0])
   let i = 1
   while (i < args.length) {
@@ -102,15 +99,14 @@ const printf: RealBuiltinFunction = (
     throw new Error("expected more data arguments, '" + outputString + "'")
   }
   context['stdout'] += outputString
-  rts.push(NumericLiteral.new(outputString.length).castToType(PrimitiveType.INT))
+  return NumericLiteral.new(outputString.length).castToType(PrimitiveType.INT)
 }
 
 const scanf: RealBuiltinFunction = (
   env: Frame,
-  rts: any[],
   context: any,
   args: NumericLiteral[]
-): void => {
+): NumericLiteral => {
   let i = 1
   let formatString = env.dereferenceAsString(args[0])
   while (i < args.length) {
@@ -144,71 +140,50 @@ const scanf: RealBuiltinFunction = (
     }
     context['stdout'] += input + '\n'
   }
-  rts.push(NumericLiteral.new(i - 1).castToType(PrimitiveType.INT))
+  return NumericLiteral.new(i - 1).castToType(PrimitiveType.INT)
 }
 
 const sqrt: RealBuiltinFunction = (
   env: Frame,
-  rts: any[],
   context: any,
   args: NumericLiteral[]
-): void => {
-  rts.push(args[0].sqrt())
+): NumericLiteral => {
+  return args[0].sqrt()
 }
 
 const abs: RealBuiltinFunction = (
   env: Frame,
-  rts: any[],
   context: any,
   args: NumericLiteral[]
-): void => {
-  rts.push(args[0].abs())
+): NumericLiteral => {
+  return args[0].abs()
 }
 
 const strlen: RealBuiltinFunction = (
   env: Frame,
-  rts: any[],
   context: any,
   args: NumericLiteral[]
-): void => {
-  rts.push(
-    NumericLiteral.new(env.dereferenceAsString(args[0]).length).castToType(PrimitiveType.INT)
-  )
+): NumericLiteral => {
+  return NumericLiteral.new(env.dereferenceAsString(args[0]).length).castToType(PrimitiveType.INT)
 }
 
 const malloc: RealBuiltinFunction = (
   env: Frame,
-  rts: any[],
   context: any,
   args: NumericLiteral[]
-): void => {
-  rts.push(env.allocateOnHeap(args[0]))
+): NumericLiteral => {
+  return env.allocateOnHeap(args[0])
 }
 
-const free: RealBuiltinFunction = (
-  env: Frame,
-  rts: any[],
-  context: any,
-  args: NumericLiteral[]
-): void => {
+const free: RealBuiltinFunction = (env: Frame, context: any, args: NumericLiteral[]): void => {
   env.free(args[0])
 }
 
-const printHeap: RealBuiltinFunction = (
-  env: Frame,
-  rts: any[],
-  context: any,
-  args: NumericLiteral[]
-): void => {
+const printHeap: RealBuiltinFunction = (env: Frame, context: any, args: NumericLiteral[]): void => {
   env.printHeap(context)
 }
 
-const printEnv: RealBuiltinFunction = (
-  env: Frame,
-  rts: any[],
-  context: any,
-  args: NumericLiteral[]
-): void => {
+const printEnv: RealBuiltinFunction = (env: Frame, context: any, args: NumericLiteral[]): void => {
   env.printEnv(context)
 }
 

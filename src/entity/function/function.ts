@@ -1,7 +1,8 @@
-import { DataType, PrimitiveType } from '../../interpreter/builtins'
+import { DataType } from '../../interpreter/builtins'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Expression } from '../expression/expression'
+import { NumericLiteral } from '../expression/numericLiteral'
 
 export abstract class Function {
   returnType: DataType
@@ -12,7 +13,11 @@ export abstract class Function {
     this.functionName = functionName
   }
 
-  abstract call(env: Frame, rts: any[], context: any, actualParameterList: Expression[]): void
+  abstract call(
+    env: Frame,
+    context: any,
+    actualParameterList: NumericLiteral[]
+  ): void | NumericLiteral
 
   abstract isDefined(): boolean
 

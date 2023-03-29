@@ -7,7 +7,7 @@ import { NumericLiteral } from '../expression/numericLiteral'
 import { Function } from './function'
 
 export interface RealBuiltinFunction {
-  (env: Frame, rts: any[], context: any, args: NumericLiteral[]): void
+  (env: Frame, context: any, args: NumericLiteral[]): void | NumericLiteral
 }
 
 export class BuiltinFunction extends Function {
@@ -31,16 +31,10 @@ export class BuiltinFunction extends Function {
     this.isFormatString = isFormatString
   }
 
-  call(env: Frame, rts: any[], context: any, actualParameterList: Expression[]): void {
+  call(env: Frame, context: any, actualParameterList: NumericLiteral[]): void | NumericLiteral {
     const realParameterList: NumericLiteral[] = []
-    actualParameterList.forEach(expr => {
-      const val = expr.evaluate(env, rts, context)
-      if (val == undefined) {
-        throw new Error('impossible execution path')
-      }
-      realParameterList.push(val)
-    })
-    this.realFunction(env, rts, context, realParameterList)
+    actualParameterList.forEach(val => realParameterList.push(val))
+    return this.realFunction(env, context, realParameterList)
   }
 
   isDefined(): boolean {

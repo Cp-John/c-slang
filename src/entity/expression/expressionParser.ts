@@ -102,11 +102,7 @@ export class ExpressionParser {
         const typeToCast = lexer.eatDataType()
         if (typeToCast == PrimitiveType.VOID && !allowVoid) {
           throw new Error(
-            lexer.formatError(
-              "statement requires expression of scalar type ('void' invalid)",
-              row,
-              col
-            )
+            lexer.formatError("expected expression of scalar type ('void' invalid)", row, col)
           )
         }
         lexer.eatDelimiter(')')
@@ -170,11 +166,7 @@ export class ExpressionParser {
         )
         if (!allowVoid && functionCall.getReturnType(env) == 'void') {
           throw new Error(
-            lexer.formatError(
-              "statement requires expression of scalar type ('void' invalid)",
-              row,
-              col
-            )
+            lexer.formatError("expected expression of scalar type ('void' invalid)", row, col)
           )
         }
         result.push(functionCall)

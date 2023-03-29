@@ -8,6 +8,7 @@ import { Statement } from './statement'
 
 export class Return extends Statement {
   private expression: Expression | null
+  private evaluated: NumericLiteral | undefined
   private returnType: DataType
 
   private constructor(returnType: DataType, expression: Expression | null) {
@@ -40,12 +41,12 @@ export class Return extends Statement {
     return [new Return(returnType, expression)]
   }
 
-  execute(env: Frame, rts: any[], context: any): void {
-    if (this.expression == null) {
-      throw 'RETURN'
-    }
-    rts.push(this.expression.evaluate(env, rts, context))
-    ;(rts[rts.length - 1] as NumericLiteral).castToType(this.returnType)
-    throw 'RETURN'
+  getEvaluated(): NumericLiteral | undefined {
+    return this.evaluated
+  }
+
+  execute(env: Frame, context: any): void {
+    this.evaluated = this.expression?.evaluate(env, context)?.castToType(this.returnType)
+    throw this
   }
 }

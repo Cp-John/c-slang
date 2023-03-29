@@ -34,8 +34,9 @@ export class Program {
   execute(context: any): void {
     const frame = Frame.extend(Frame.getBuiltinFrame())
     try {
-      this.declarations.forEach(declaration => declaration.execute(frame, [], context))
-      frame.lookupFunction('main').call(frame, [], context, [])
+      this.declarations.forEach(declaration => declaration.execute(frame, context))
+      context['base-frame'] = frame
+      frame.lookupFunction('main').call(frame, context, [])
     } catch (err: any) {
       throw new Error('execution failed, ' + (err instanceof Error ? err.message : String(err)))
     }

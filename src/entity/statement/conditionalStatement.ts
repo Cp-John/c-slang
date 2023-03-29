@@ -49,17 +49,17 @@ export class ConditionalStatement extends Statement {
     return [new ConditionalStatement(ifBlocks, elseBlock)]
   }
 
-  execute(env: Frame, rts: any[], context: any): void {
+  execute(env: Frame, context: any): void {
     let executed = false
     for (const [expr, body] of this.ifBlocks) {
-      if ((expr.evaluate(env, rts, context) as NumericLiteral).toBoolean()) {
-        body.execute(env, rts, context)
+      if ((expr.evaluate(env, context) as NumericLiteral).toBoolean()) {
+        body.execute(env, context)
         executed = true
         break
       }
     }
     if (!executed) {
-      this.elseBlock?.execute(env, rts, context)
+      this.elseBlock?.execute(env, context)
     }
   }
 }

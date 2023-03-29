@@ -2,6 +2,7 @@ import { DataType } from '../../interpreter/builtins'
 import { Frame } from '../../interpreter/frame'
 import { Function } from '../function/function'
 import { Expression } from './expression'
+import { NumericLiteral } from './numericLiteral'
 
 export class FunctionCall {
   private functionObj: Function
@@ -30,9 +31,11 @@ export class FunctionCall {
     return this.functionObj.returnType
   }
 
-  execute(env: Frame, rts: any[], context: any): void {
-    env
-      .lookupFunction(this.functionObj.functionName)
-      .call(env, rts, context, this.actualParameterList)
+  execute(env: Frame, context: any): void | NumericLiteral {
+    const parameters: NumericLiteral[] = []
+    this.actualParameterList.forEach(expr =>
+      parameters.push(expr.evaluate(env, context) as NumericLiteral)
+    )
+    return env.lookupFunction(this.functionObj.functionName).call(env, context, parameters)
   }
 }

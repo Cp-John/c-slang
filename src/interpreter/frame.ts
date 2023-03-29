@@ -211,9 +211,9 @@ export class Frame {
     return new Frame(prev, prev.stackTop, prev.memory, prev.depth + 1)
   }
 
-  printEnv(context: any) {
+  private recurPrintEnv(context: any) {
     if (this.prev != null) {
-      this.prev.printEnv(context)
+      this.prev.recurPrintEnv(context)
     }
     context['stdout'] += '='.repeat(20) + 'depth: ' + String(this.depth) + '='.repeat(20) + '\n'
     for (const name in this.boundings) {
@@ -224,5 +224,10 @@ export class Frame {
         context['stdout'] += name + ': ' + type.toString() + '\n'
       }
     }
+  }
+
+  printEnv(context: any) {
+    this.recurPrintEnv(context)
+    context['stdout'] += '\n'
   }
 }

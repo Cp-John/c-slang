@@ -34,10 +34,10 @@ export class DoWhile extends Statement {
     return [new DoWhile(body, condition)]
   }
 
-  execute(env: Frame, rts: any[], context: any): void {
+  execute(env: Frame, context: any): void {
     do {
       try {
-        this.body.execute(env, rts, context)
+        this.body.execute(env, context)
       } catch (err: any) {
         if (err == 'BREAK') {
           break
@@ -47,6 +47,6 @@ export class DoWhile extends Statement {
           throw err
         }
       }
-    } while ((this.condition.evaluate(env, rts, context) as NumericLiteral).toBoolean())
+    } while ((this.condition.evaluate(env, context) as NumericLiteral).toBoolean())
   }
 }

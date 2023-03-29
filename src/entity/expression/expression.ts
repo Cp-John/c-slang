@@ -72,7 +72,7 @@ export class Expression {
     }
   }
 
-  evaluate(env: Frame, rts: any[], context: any): NumericLiteral | undefined {
+  evaluate(env: Frame, context: any): NumericLiteral | undefined {
     const result: NumericLiteral[] = []
     let i = 0
     while (i < this.elements.length) {
@@ -92,9 +92,9 @@ export class Expression {
           continue
         }
       } else if (ele instanceof FunctionCall) {
-        ele.execute(env, rts, context)
+        const returnVal = ele.execute(env, context)
         if (ele.getReturnType(env) != PrimitiveType.VOID) {
-          result.push(rts.pop())
+          result.push(returnVal as NumericLiteral)
         }
       } else if (ele instanceof NumericLiteral) {
         result.push(ele)

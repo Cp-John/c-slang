@@ -64,15 +64,15 @@ export class For extends Statement {
     return [forStatement]
   }
 
-  execute(env: Frame, rts: any[], context: any): void {
+  execute(env: Frame, context: any): void {
     const newEnv = Frame.extend(env)
-    this.init.forEach(statement => statement.execute(newEnv, rts, context))
+    this.init.forEach(statement => statement.execute(newEnv, context))
     while (
       this.condition == undefined ||
-      (this.condition.evaluate(newEnv, rts, context) as NumericLiteral).toBoolean()
+      (this.condition.evaluate(newEnv, context) as NumericLiteral).toBoolean()
     ) {
       try {
-        this.body.execute(newEnv, rts, context)
+        this.body.execute(newEnv, context)
       } catch (err: any) {
         if (err == 'BREAK') {
           break
@@ -82,7 +82,7 @@ export class For extends Statement {
           throw err
         }
       }
-      this.updation?.execute(newEnv, rts, context)
+      this.updation?.execute(newEnv, context)
     }
   }
 }

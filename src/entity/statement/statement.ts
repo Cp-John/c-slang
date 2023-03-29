@@ -37,7 +37,7 @@ export abstract class Statement {
     }
   }
 
-  abstract execute(env: Frame, rts: any[], context: any): void
+  abstract execute(env: Frame, context: any): void
 }
 
 import { DataType } from '../../interpreter/builtins'

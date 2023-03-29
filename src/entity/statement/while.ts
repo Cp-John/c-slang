@@ -32,10 +32,10 @@ export class While extends Statement {
     return [new While(expression, body)]
   }
 
-  execute(env: Frame, rts: any[], context: any): void {
-    while ((this.expression.evaluate(env, rts, context) as NumericLiteral).toBoolean()) {
+  execute(env: Frame, context: any): void {
+    while ((this.expression.evaluate(env, context) as NumericLiteral).toBoolean()) {
       try {
-        this.body.execute(env, rts, context)
+        this.body.execute(env, context)
       } catch (err: any) {
         if (err == 'BREAK') {
           break

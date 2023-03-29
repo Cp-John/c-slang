@@ -139,10 +139,10 @@ class VariableDeclaration extends Declaration {
     this.expression = expression
   }
 
-  execute(env: Frame, rts: any[], context: any): void {
+  execute(env: Frame, context: any): void {
     env.declare(this.variableName, this.variableType)
     if (this.expression != null) {
-      const val = this.expression.evaluate(env, rts, context)
+      const val = this.expression.evaluate(env, context)
       if (val == undefined) {
         throw new Error('impossible execution path')
       }
@@ -170,7 +170,7 @@ export class FunctionDeclaration extends Declaration {
     this.body = body
   }
 
-  execute(env: Frame, rts: any[], context: any): void {
+  execute(env: Frame, context: any): void {
     env.declare(this.functionName, PrimitiveType.FUNCTION)
     env.assignValue(
       this.functionName,

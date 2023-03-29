@@ -54,8 +54,8 @@ export class Block {
     return new Block(content, isFunctionBody)
   }
 
-  execute(env: Frame, rts: any[], context: any): void {
+  execute(env: Frame, context: any): void {
     const newEnv = this.isFunctionBody ? env : Frame.extend(env)
-    this.content.forEach(executable => executable.execute(newEnv, rts, context))
+    this.content.forEach(executable => executable.execute(newEnv, context))
   }
 }

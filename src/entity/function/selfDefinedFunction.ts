@@ -5,6 +5,7 @@ import { Block } from '../block'
 import { Expression } from '../expression/expression'
 import { ExpressionParser } from '../expression/expressionParser'
 import { NumericLiteral } from '../expression/numericLiteral'
+import { Return } from '../statement/return'
 import { Function } from './function'
 
 export class SelfDefinedFunction extends Function {
@@ -26,7 +27,7 @@ export class SelfDefinedFunction extends Function {
     return this.body != null
   }
 
-  call(env: Frame, rts: any[], context: any, actualParameterList: Expression[]) {
+  call(env: Frame, context: any, actualParameterList: NumericLiteral[]): void | NumericLiteral {
     if (this.body == null) {
       throw new Error("function '" + this.functionName + "' has no definition yet")
     }
@@ -38,21 +39,22 @@ export class SelfDefinedFunction extends Function {
           String(actualParameterList.length)
       )
     }
-    const newEnv = Frame.extend(env)
+    const newEnv = Frame.extend(context['base-frame'])
     this.parameterList.forEach(pair => newEnv.declare(pair[1], pair[0]))
-    actualParameterList.forEach((expr, index) =>
-      newEnv.assignValue(
-        this.parameterList[index][1],
-        expr.evaluate(env, rts, context) as NumericLiteral
-      )
+    actualParameterList.forEach((val, index) =>
+      newEnv.assignValue(this.parameterList[index][1], val)
     )
     try {
-      this.body.execute(newEnv, rts, context)
+      this.body.execute(newEnv, context)
       if (this.returnType != PrimitiveType.VOID) {
-        rts.push(NumericLiteral.new(0).castToType(this.returnType))
+        return NumericLiteral.new(0).castToType(this.returnType)
       }
     } catch (err) {
-      if (err != 'RETURN') {
+      if (err instanceof Return) {
+        if (this.returnType != PrimitiveType.VOID) {
+          return err.getEvaluated()
+        }
+      } else {
         throw err
       }
     }
