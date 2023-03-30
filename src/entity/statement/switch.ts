@@ -92,7 +92,7 @@ export class Switch extends Statement {
     return [new Switch(expression, body, defaultExecutables)]
   }
 
-  execute(env: Frame, context: CProgramContext): void {
+  doExecute(env: Frame, context: CProgramContext): void {
     const result = (this.expression.evaluate(env, context) as NumericLiteral).getValue()
     let matched = false
     for (let i = 0; i < this.body.length; i++) {

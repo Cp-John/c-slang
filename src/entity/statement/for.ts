@@ -66,7 +66,7 @@ export class For extends Statement {
     return [forStatement]
   }
 
-  execute(env: Frame, context: CProgramContext): void {
+  doExecute(env: Frame, context: CProgramContext): void {
     const newEnv = Frame.extend(env)
     this.init.forEach(statement => statement.execute(newEnv, context))
     while (

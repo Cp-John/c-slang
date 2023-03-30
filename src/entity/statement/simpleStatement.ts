@@ -20,7 +20,7 @@ export class Break extends Statement {
     return [new Break()]
   }
 
-  execute(env: Frame, context: CProgramContext): void {
+  doExecute(env: Frame, context: CProgramContext): void {
     throw this
   }
 }
@@ -41,7 +41,7 @@ export class Continue extends Statement {
     return [new Continue()]
   }
 
-  execute(env: Frame, context: CProgramContext): void {
+  doExecute(env: Frame, context: CProgramContext): void {
     throw this
   }
 }

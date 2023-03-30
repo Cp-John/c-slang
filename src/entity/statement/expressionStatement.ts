@@ -13,7 +13,7 @@ export class ExpressionStatement extends Statement {
     this.expression = expression
   }
 
-  execute(env: Frame, context: CProgramContext): void {
+  doExecute(env: Frame, context: CProgramContext): void {
     this.expression.evaluate(env, context)
   }
 

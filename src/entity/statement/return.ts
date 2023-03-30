@@ -46,7 +46,7 @@ export class Return extends Statement {
     return this.evaluated
   }
 
-  execute(env: Frame, context: CProgramContext): void {
+  doExecute(env: Frame, context: CProgramContext): void {
     this.evaluated = this.expression?.evaluate(env, context)?.castToType(this.returnType)
     throw this
   }

@@ -34,7 +34,7 @@ export class While extends Statement {
     return [new While(expression, body)]
   }
 
-  execute(env: Frame, context: CProgramContext): void {
+  doExecute(env: Frame, context: CProgramContext): void {
     while ((this.expression.evaluate(env, context) as NumericLiteral).toBoolean()) {
       try {
         this.body.execute(env, context)

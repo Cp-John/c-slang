@@ -36,7 +36,8 @@ export class Program {
     console.log('='.repeat(20) + 'start executing' + '='.repeat(20))
     const context: CProgramContext = {
       stdout: '',
-      baseFrame: Frame.extend(Frame.getBuiltinFrame())
+      baseFrame: Frame.extend(Frame.getBuiltinFrame()),
+      currentLine: 0
     }
     try {
       this.declarations.forEach(declaration => declaration.execute(context.baseFrame, context))
@@ -44,7 +45,12 @@ export class Program {
       return context.stdout
     } catch (err: any) {
       console.log('stdout:', context.stdout)
-      throw new Error('execution failed, ' + (err instanceof Error ? err.message : String(err)))
+      throw new Error(
+        'Line ' +
+          String(context.currentLine) +
+          ': execution failed, ' +
+          (err instanceof Error ? err.message : String(err))
+      )
     } finally {
       console.log('='.repeat(20) + 'executing finished' + '='.repeat(20))
     }

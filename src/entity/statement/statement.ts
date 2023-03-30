@@ -7,6 +7,27 @@ export abstract class Statement {
     returnType: DataType | null,
     allowFunctionDeclaration: boolean = false
   ): Statement[] {
+    const row = lexer.tell()[0]
+    const statements = Statement.parseStatement(
+      env,
+      lexer,
+      allowBreak,
+      allowContinue,
+      returnType,
+      allowFunctionDeclaration
+    )
+    statements.forEach(s => (s.row = row))
+    return statements
+  }
+
+  private static parseStatement(
+    env: Frame,
+    lexer: Lexer,
+    allowBreak: boolean,
+    allowContinue: boolean,
+    returnType: DataType | null,
+    allowFunctionDeclaration: boolean = false
+  ): Statement[] {
     if (lexer.matchKeyword('if')) {
       return ConditionalStatement.parse(env, lexer, allowBreak, allowContinue, returnType)
     } else if (lexer.matchKeyword('do')) {
@@ -37,7 +58,14 @@ export abstract class Statement {
     }
   }
 
-  abstract execute(env: Frame, context: CProgramContext): void
+  private row: number
+
+  protected abstract doExecute(env: Frame, context: CProgramContext): void
+
+  execute(env: Frame, context: CProgramContext): void {
+    context.currentLine = this.row
+    this.doExecute(env, context)
+  }
 }
 
 import { DataType } from '../../interpreter/builtins'

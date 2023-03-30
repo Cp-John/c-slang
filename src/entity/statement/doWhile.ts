@@ -36,7 +36,7 @@ export class DoWhile extends Statement {
     return [new DoWhile(body, condition)]
   }
 
-  execute(env: Frame, context: CProgramContext): void {
+  doExecute(env: Frame, context: CProgramContext): void {
     do {
       try {
         this.body.execute(env, context)

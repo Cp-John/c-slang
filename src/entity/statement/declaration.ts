@@ -139,7 +139,7 @@ class VariableDeclaration extends Declaration {
     this.expression = expression
   }
 
-  execute(env: Frame, context: CProgramContext): void {
+  doExecute(env: Frame, context: CProgramContext): void {
     env.declareVariable(this.variableName, this.variableType)
     if (this.expression != null) {
       const val = this.expression.evaluate(env, context)
@@ -170,7 +170,7 @@ export class FunctionDeclaration extends Declaration {
     this.body = body
   }
 
-  execute(env: Frame, context: CProgramContext): void {
+  doExecute(env: Frame, context: CProgramContext): void {
     env.declareFunction(
       this.functionName,
       new SelfDefinedFunction(this.returnType, this.functionName, this.parameterList, this.body)
