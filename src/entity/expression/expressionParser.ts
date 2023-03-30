@@ -162,15 +162,16 @@ export class ExpressionParser {
         const functionCall = new FunctionCall(
           env,
           functionName,
-          env.lookupFunction(functionName).parseActualParameters(env, lexer)
+          env.lookupFunction(functionName).parseActualParameters(env, lexer),
+          row
         )
-        if (!allowVoid && functionCall.getReturnType(env) == 'void') {
+        if (!allowVoid && functionCall.getReturnType() == 'void') {
           throw new Error(
             lexer.formatError("expected expression of scalar type ('void' invalid)", row, col)
           )
         }
         result.push(functionCall)
-        dataType = functionCall.getReturnType(env)
+        dataType = functionCall.getReturnType()
       }
     } else if (lexer.matchKeyword('sizeof')) {
       lexer.eatKeyword('sizeof')

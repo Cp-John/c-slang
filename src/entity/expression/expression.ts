@@ -94,7 +94,7 @@ export class Expression {
         }
       } else if (ele instanceof FunctionCall) {
         const returnVal = ele.execute(env, context)
-        if (ele.getReturnType(env) != PrimitiveType.VOID) {
+        if (ele.getReturnType() != PrimitiveType.VOID) {
           result.push(returnVal as NumericLiteral)
         }
       } else if (ele instanceof NumericLiteral) {

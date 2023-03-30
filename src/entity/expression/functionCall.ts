@@ -1,3 +1,4 @@
+import { MaximumStackLimitExceeded } from '../../errors/errors'
 import { DataType } from '../../interpreter/builtins'
 import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
@@ -9,6 +10,7 @@ export class FunctionCall {
   private functionObj: Function
   private actualParameterList: Expression[]
   private static calledFunctions: Set<string> = new Set<string>()
+  private row: number
 
   static clearCalledFunctions(): void {
     FunctionCall.calledFunctions.clear()
@@ -22,21 +24,31 @@ export class FunctionCall {
     })
   }
 
-  constructor(env: Frame, functionName: string, actualParameterList: Expression[]) {
+  constructor(env: Frame, functionName: string, actualParameterList: Expression[], row: number) {
     this.functionObj = env.lookupFunction(functionName)
     FunctionCall.calledFunctions.add(functionName)
     this.actualParameterList = actualParameterList
+    this.row = row
   }
 
-  getReturnType(env: Frame): DataType {
+  getReturnType(): DataType {
     return this.functionObj.returnType
   }
 
   execute(env: Frame, context: CProgramContext): void | NumericLiteral {
-    const parameters: NumericLiteral[] = []
-    this.actualParameterList.forEach(expr =>
-      parameters.push(expr.evaluate(env, context) as NumericLiteral)
-    )
-    return env.lookupFunction(this.functionObj.functionName).call(env, context, parameters)
+    try {
+      const parameters: NumericLiteral[] = []
+      this.actualParameterList.forEach(expr =>
+        parameters.push(expr.evaluate(env, context) as NumericLiteral)
+      )
+      return env.lookupFunction(this.functionObj.functionName).call(env, context, parameters)
+    } catch (err) {
+      if (err instanceof MaximumStackLimitExceeded) {
+        context.currentLine = this.row
+        throw new Error(err.explain())
+      } else {
+        throw err
+      }
+    }
   }
 }
