@@ -6,10 +6,10 @@ import { Block } from '../block'
 import { Expression } from '../expression/expression'
 import { ExpressionParser } from '../expression/expressionParser'
 import { NumericLiteral } from '../expression/numericLiteral'
+import { LoopStatement } from './loopStatement'
 import { Break, Continue } from './simpleStatement'
-import { Statement } from './statement'
 
-export class DoWhile extends Statement {
+export class DoWhile extends LoopStatement {
   private body: Block
   private condition: Expression
 
@@ -37,7 +37,9 @@ export class DoWhile extends Statement {
   }
 
   doExecute(env: Frame, context: CProgramContext): void {
+    this.resetLoopCounter()
     do {
+      this.incrementLoopCounter(context)
       try {
         this.body.execute(env, context)
       } catch (err: any) {

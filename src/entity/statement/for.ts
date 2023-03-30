@@ -8,10 +8,10 @@ import { ExpressionParser } from '../expression/expressionParser'
 import { NumericLiteral } from '../expression/numericLiteral'
 import { Declaration } from './declaration'
 import { ExpressionStatement } from './expressionStatement'
+import { LoopStatement } from './loopStatement'
 import { Break, Continue } from './simpleStatement'
-import { Statement } from './statement'
 
-export class For extends Statement {
+export class For extends LoopStatement {
   private init: (Declaration | ExpressionStatement)[]
   private condition: Expression | null
   private updation: ExpressionStatement | null
@@ -69,10 +69,12 @@ export class For extends Statement {
   doExecute(env: Frame, context: CProgramContext): void {
     const newEnv = Frame.extend(env)
     this.init.forEach(statement => statement.execute(newEnv, context))
+    this.resetLoopCounter()
     while (
       this.condition == undefined ||
       (this.condition.evaluate(newEnv, context) as NumericLiteral).toBoolean()
     ) {
+      this.incrementLoopCounter(context)
       try {
         this.body.execute(newEnv, context)
       } catch (err: any) {

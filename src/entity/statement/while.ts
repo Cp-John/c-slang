@@ -6,10 +6,10 @@ import { Block } from '../block'
 import { Expression } from '../expression/expression'
 import { ExpressionParser } from '../expression/expressionParser'
 import { NumericLiteral } from '../expression/numericLiteral'
+import { LoopStatement } from './loopStatement'
 import { Break, Continue } from './simpleStatement'
-import { Statement } from './statement'
 
-export class While extends Statement {
+export class While extends LoopStatement {
   private expression: Expression
   private body: Block
 
@@ -35,7 +35,9 @@ export class While extends Statement {
   }
 
   doExecute(env: Frame, context: CProgramContext): void {
+    this.resetLoopCounter()
     while ((this.expression.evaluate(env, context) as NumericLiteral).toBoolean()) {
+      this.incrementLoopCounter(context)
       try {
         this.body.execute(env, context)
       } catch (err: any) {

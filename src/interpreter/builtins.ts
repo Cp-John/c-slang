@@ -4,7 +4,7 @@ import { CProgramContext } from './cProgramContext'
 import { Frame } from './frame'
 
 const RAND_MAX = 2147483647
-const MAX_INT = 2147483647
+export const MAX_INT = 2147483647
 
 export enum PrimitiveType {
   INT = 'int',

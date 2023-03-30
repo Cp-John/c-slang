@@ -58,7 +58,7 @@ export abstract class Statement {
     }
   }
 
-  private row: number
+  protected row: number
 
   protected abstract doExecute(env: Frame, context: CProgramContext): void
 
