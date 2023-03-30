@@ -292,12 +292,13 @@ export class Lexer {
 
   eatCharacterLiteral(): NumericLiteral {
     if (!this.hasNext()) {
-      throw new Error(this.formatError('expected a character literal'))
+      throw new Error(this.formatError('expected an ascii character literal'))
     }
     const match = CHARACTER_LITERAL_REGEX.exec(this.currentLine)
     if (!match) {
-      throw new Error(this.formatError('expected a character literal'))
+      throw new Error(this.formatError('expected an ascii character literal'))
     }
+    this.checkNonAsciiCharacter(match[0])
     this.currentLine = this.currentLine.substring(match[0].length)
     this.col += match[0].length
     return NumericLiteral.new(Lexer.restoreEscapeChars(match[0]).charCodeAt(1)).castToType(
@@ -330,6 +331,15 @@ export class Lexer {
     return result
   }
 
+  private checkNonAsciiCharacter(stringLiteral: string): void {
+    for (let i = 1; i < stringLiteral.length - 1; i++) {
+      const charCode = stringLiteral.charCodeAt(i)
+      if (charCode > 127 || charCode < 0) {
+        throw new Error(this.formatError('expected an ascii character', this.row, this.col + i))
+      }
+    }
+  }
+
   eatStringLiteral(): string {
     if (!this.hasNext()) {
       throw new Error(this.formatError('expected a string literal'))
@@ -339,6 +349,7 @@ export class Lexer {
       throw new Error(this.formatError('expected a string literal'))
     }
     this.currentLine = this.currentLine.substring(match[0].length)
+    this.checkNonAsciiCharacter(match[0])
     this.col += match[0].length
     return Lexer.restoreEscapeChars(match[0])
   }
