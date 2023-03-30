@@ -1,4 +1,3 @@
-import { MaximumStackLimitExceeded } from '../../errors/errors'
 import { DataType } from '../../interpreter/builtins'
 import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
@@ -36,19 +35,10 @@ export class FunctionCall {
   }
 
   execute(env: Frame, context: CProgramContext): void | NumericLiteral {
-    try {
-      const parameters: NumericLiteral[] = []
-      this.actualParameterList.forEach(expr =>
-        parameters.push(expr.evaluate(env, context) as NumericLiteral)
-      )
-      return env.lookupFunction(this.functionObj.functionName).call(env, context, parameters)
-    } catch (err) {
-      if (err instanceof MaximumStackLimitExceeded) {
-        context.currentLine = this.row
-        throw new Error(err.explain())
-      } else {
-        throw err
-      }
-    }
+    const parameters: NumericLiteral[] = []
+    this.actualParameterList.forEach(expr =>
+      parameters.push(expr.evaluate(env, context) as NumericLiteral)
+    )
+    return env.lookupFunction(this.functionObj.functionName).call(env, context, parameters)
   }
 }

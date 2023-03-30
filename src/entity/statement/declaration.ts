@@ -16,24 +16,21 @@ export abstract class Declaration extends Statement {
   ): [DataType, string][] {
     const result: [DataType, string][] = []
     lexer.eatDelimiter('(')
-    if (lexer.matchKeyword('void')) {
-      lexer.eatKeyword('void')
+    if (!lexer.matchDataType()) {
       lexer.eatDelimiter(')')
       return result
     }
-    if (!lexer.matchDelimiter(')')) {
-      if (functionName == 'main') {
-        throw new Error(lexer.formatError("expected no parameters on 'main' function declaration"))
-      }
-      const [typeRow, typeCol] = lexer.tell()
-      const type = lexer.eatDataType()
-      if (type == PrimitiveType.VOID) {
-        throw new Error(lexer.formatError("argument may not have 'void' type", typeRow, typeCol))
-      }
-      const [row, col] = lexer.tell()
-      const name = lexer.eatIdentifier()
-      result.push([type, env.declareVariable(name, type, row, col, lexer)])
+    const type = lexer.eatDataType()
+    if (type == PrimitiveType.VOID) {
+      lexer.eatDelimiter(')')
+      return result
     }
+    if (functionName == 'main') {
+      throw new Error(lexer.formatError("expected no parameters on 'main' function declaration"))
+    }
+    let [row, col] = lexer.tell()
+    let name = lexer.eatIdentifier()
+    result.push([type, env.declareVariable(name, type, row, col, lexer)])
     while (!lexer.matchDelimiter(')')) {
       lexer.eatDelimiter(',')
       const [typeRow, typeCol] = lexer.tell()
@@ -41,8 +38,8 @@ export abstract class Declaration extends Statement {
       if (type == PrimitiveType.VOID) {
         throw new Error(lexer.formatError("argument may not have 'void' type", typeRow, typeCol))
       }
-      const [row, col] = lexer.tell()
-      const name = lexer.eatIdentifier()
+      ;[row, col] = lexer.tell()
+      name = lexer.eatIdentifier()
       result.push([type, env.declareVariable(name, type, row, col, lexer)])
     }
     lexer.eatDelimiter(')')

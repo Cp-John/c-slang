@@ -106,7 +106,17 @@ export class ExpressionParser {
           )
         }
         lexer.eatDelimiter(')')
-        this.recurParseNumericTerm(env, lexer, result, false, isConstantExpression)
+        const [oldTypeRow, oldTypeCol] = lexer.tell()
+        const oldType = this.recurParseNumericTerm(env, lexer, result, false, isConstantExpression)
+        if (oldType == PrimitiveType.VOID) {
+          throw new Error(
+            lexer.formatError(
+              "cannot cast type '" + oldType.toString() + "' to '" + typeToCast.toString() + "'",
+              oldTypeRow,
+              oldTypeCol
+            )
+          )
+        }
         result.push(typeToCast)
         dataType = typeToCast
       } else {
