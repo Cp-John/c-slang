@@ -1,5 +1,4 @@
 import { NumericLiteral } from '../entity/expression/numericLiteral'
-import { BuiltinFunction } from '../entity/function/builtinFunction'
 import { Function } from '../entity/function/function'
 import { SelfDefinedFunction } from '../entity/function/selfDefinedFunction'
 import { Memory } from '../memory/memory'
