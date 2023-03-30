@@ -1,4 +1,5 @@
 import { NumericLiteral } from '../entity/expression/numericLiteral'
+import { BuiltinFunction } from '../entity/function/builtinFunction'
 import { Function } from '../entity/function/function'
 import { SelfDefinedFunction } from '../entity/function/selfDefinedFunction'
 import { Memory } from '../memory/memory'
@@ -264,16 +265,22 @@ export class Frame {
       this.prev.recurPrintEnv(context)
     }
     context.stdout += '='.repeat(20) + 'depth: ' + String(this.depth) + '='.repeat(20) + '\n'
-    Object.keys(this.boundings)
-      .sort()
-      .forEach(name => {
-        const type = this.boundings[name]['type']
-        if (type == PrimitiveType.FUNCTION) {
-          context.stdout += name + ': ' + this.boundings[name]['val'].toString() + '\n'
-        } else {
-          context.stdout += name + ': ' + type.toString() + '\n'
-        }
-      })
+    const names = Object.keys(this.boundings)
+    if (this.depth == 0) {
+      names.push('sizeof')
+    }
+    names.sort().forEach(name => {
+      if (name == 'sizeof') {
+        context.stdout += name + ': int sizeof(any)\n'
+        return
+      }
+      const type = this.boundings[name]['type']
+      if (type == PrimitiveType.FUNCTION) {
+        context.stdout += name + ': ' + this.boundings[name]['val'].toString() + '\n'
+      } else {
+        context.stdout += name + ': ' + type.toString() + '\n'
+      }
+    })
   }
 
   printEnv(context: CProgramContext) {
