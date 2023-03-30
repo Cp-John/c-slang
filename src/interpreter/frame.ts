@@ -3,7 +3,7 @@ import { Function } from '../entity/function/function'
 import { SelfDefinedFunction } from '../entity/function/selfDefinedFunction'
 import { Memory } from '../memory/memory'
 import { Lexer } from '../parser/lexer'
-import { BUILTINS, DataType, PointerType, PrimitiveType } from './builtins'
+import { BUILTINS, DataType, PointerType, PrimitiveType, sizeof } from './builtins'
 import { CProgramContext } from './cProgramContext'
 
 export class Frame {
@@ -184,7 +184,11 @@ export class Frame {
   ): string {
     this.checkRedefinition(name, row, col, lexer)
     const value = this.stackTop
-    this.stackTop += 4
+    const size = sizeof(type)
+    if (size >= 4) {
+      this.stackTop = Math.ceil(this.stackTop / 4) * 4
+    }
+    this.stackTop += sizeof(type)
     this.boundings[name] = { type: type, val: value }
     console.log('declared variable: ' + name + ':' + type + ' [' + this.stackTop + ']')
     return name
