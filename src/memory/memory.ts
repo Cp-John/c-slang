@@ -40,8 +40,29 @@ export class Memory {
   private assertValidAddress(address: number, isRead: boolean) {
     if (address < 0 || address >= this.view.byteLength) {
       throw new Error((isRead ? 'read from' : 'write to') + ' invalid address: ' + String(address))
-    } else if (!isRead && address < this.heapBottom) {
+    } else if (isRead) {
+      return
+    }
+
+    if (address < this.heapBottom) {
       throw new Error('attempt to write to readonly memory')
+    } else if (address < this.stackBottom) {
+      const aligned = (address >> 2) << 2
+      if (aligned == this.heapBottom || aligned == this.heapBottom + 4) {
+        throw new Error('attemt to write to illegal address')
+      }
+      this.allocatedAddresses.forEach(addr => {
+        const tagAddr = addr - Memory.TAG_LENGTH
+        const nextAddr = tagAddr + this.getLength(tagAddr)
+        if (
+          tagAddr == aligned ||
+          tagAddr + 4 == aligned ||
+          nextAddr == aligned ||
+          nextAddr + 4 == aligned
+        ) {
+          throw new Error('attemt to write to illegal address')
+        }
+      })
     }
   }
 
