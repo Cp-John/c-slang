@@ -171,7 +171,7 @@ export class Frame {
       this.conflictingFunctionSignatures(name, row, col, lexer)
     }
     this.boundings[name] = { type: PrimitiveType.FUNCTION, val: functionObj }
-    console.log('declared function: ' + functionObj.toString() + ' [' + this.stackTop + ']')
+    // console.log('declared function: ' + functionObj.toString() + ' [' + this.stackTop + ']')
     return name
   }
 
@@ -190,7 +190,7 @@ export class Frame {
     }
     this.stackTop += sizeof(type)
     this.boundings[name] = { type: type, val: value }
-    console.log('declared variable: ' + name + ':' + type + ' [' + this.stackTop + ']')
+    // console.log('declared variable: ' + name + ':' + type + ' [' + this.stackTop + ']')
     return name
   }
 

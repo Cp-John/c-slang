@@ -33,7 +33,7 @@ export class Program {
   }
 
   execute(): string {
-    console.log('='.repeat(20) + 'start executing' + '='.repeat(20))
+    // console.log('='.repeat(20) + 'start executing' + '='.repeat(20))
     const context: CProgramContext = {
       stdout: '',
       baseFrame: Frame.extend(Frame.getBuiltinFrame()),
@@ -44,7 +44,7 @@ export class Program {
       context.baseFrame.lookupFunction('main').call(context.baseFrame, context, [])
       return context.stdout
     } catch (err: any) {
-      console.log('stdout:', context.stdout)
+      // console.log('stdout:', context.stdout)
       throw new Error(
         'Line ' +
           String(context.currentLine) +
@@ -52,7 +52,7 @@ export class Program {
           (err instanceof Error ? err.message : String(err))
       )
     } finally {
-      console.log('='.repeat(20) + 'executing finished' + '='.repeat(20))
+      // console.log('='.repeat(20) + 'executing finished' + '='.repeat(20))
     }
   }
 }
