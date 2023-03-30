@@ -406,6 +406,7 @@ export class ExpressionParser {
     allowVoid: boolean,
     isConstantExpression: boolean
   ): DataType {
+    const [row, col] = lexer.tell()
     const conditionType = this.recurParseLogicalExpression(
       env,
       lexer,
@@ -416,7 +417,6 @@ export class ExpressionParser {
     if (!lexer.matchDelimiter('?')) {
       return conditionType
     }
-    const [row, col] = lexer.tell()
     checkConditionOperandType(row, col, lexer, conditionType)
     lexer.eatDelimiter('?')
     const jumpToElse = new Jump(false)
