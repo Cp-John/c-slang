@@ -15,8 +15,12 @@ export class Frame {
 
   private static addBuiltins(frame: Frame): Frame {
     for (const name in BUILTINS) {
-      frame.declareVariable(name, BUILTINS[name][1])
-      frame.assignValue(name, BUILTINS[name][0])
+      if (BUILTINS[name][1] == PrimitiveType.FUNCTION) {
+        frame.declareFunction(name, BUILTINS[name][0])
+      } else {
+        frame.declareVariable(name, BUILTINS[name][1])
+        frame.assignValue(name, BUILTINS[name][0])
+      }
     }
     return frame
   }
@@ -107,10 +111,6 @@ export class Frame {
     }
   }
 
-  markType(name: string, type: DataType) {
-    this.findFrameWith(name).boundings[name]['type'] = type
-  }
-
   lookupType(name: string): DataType {
     return this.findFrameWith(name).boundings[name]['type']
   }
@@ -171,7 +171,7 @@ export class Frame {
       this.conflictingFunctionSignatures(name, row, col, lexer)
     }
     this.boundings[name] = { type: PrimitiveType.FUNCTION, val: functionObj }
-    console.log('declared function: , ')
+    console.log('declared function: ' + functionObj.toString() + ' [' + this.stackTop + ']')
     return name
   }
 
@@ -194,12 +194,10 @@ export class Frame {
     this.memory.writeNumeric(address, value)
   }
 
-  assignValue<Type extends NumericLiteral | Function>(name: string, val: Type): Type {
+  assignValue(name: string, val: NumericLiteral): NumericLiteral {
     const variableType = this.lookupType(name)
     const address = this.findFrameWith(name).boundings[name]['val']
-    if (variableType == PrimitiveType.FUNCTION) {
-      this.findFrameWith(name).boundings[name]['val'] = val
-    } else if (
+    if (
       variableType instanceof PointerType ||
       variableType == PrimitiveType.INT ||
       variableType == PrimitiveType.FLOAT ||
@@ -266,14 +264,16 @@ export class Frame {
       this.prev.recurPrintEnv(context)
     }
     context.stdout += '='.repeat(20) + 'depth: ' + String(this.depth) + '='.repeat(20) + '\n'
-    for (const name in this.boundings) {
-      const type = this.boundings[name]['type']
-      if (type == PrimitiveType.FUNCTION) {
-        context.stdout += name + ': ' + this.boundings[name]['val'].toString() + '\n'
-      } else {
-        context.stdout += name + ': ' + type.toString() + '\n'
-      }
-    }
+    Object.keys(this.boundings)
+      .sort()
+      .forEach(name => {
+        const type = this.boundings[name]['type']
+        if (type == PrimitiveType.FUNCTION) {
+          context.stdout += name + ': ' + this.boundings[name]['val'].toString() + '\n'
+        } else {
+          context.stdout += name + ': ' + type.toString() + '\n'
+        }
+      })
   }
 
   printEnv(context: CProgramContext) {

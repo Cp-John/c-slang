@@ -171,8 +171,7 @@ export class FunctionDeclaration extends Declaration {
   }
 
   execute(env: Frame, context: CProgramContext): void {
-    env.declareVariable(this.functionName, PrimitiveType.FUNCTION)
-    env.assignValue(
+    env.declareFunction(
       this.functionName,
       new SelfDefinedFunction(this.returnType, this.functionName, this.parameterList, this.body)
     )
