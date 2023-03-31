@@ -185,13 +185,20 @@ export class Frame {
     this.checkRedefinition(name, row, col, lexer)
     const value = this.stackTop
     const size = sizeof(type)
-    if (size >= 4) {
+    if (this.stackTop % 4 + size > 4) {
       this.stackTop = Math.ceil(this.stackTop / 4) * 4
     }
     this.stackTop += sizeof(type)
     this.boundings[name] = { type: type, val: value }
-    // console.log('declared variable: ' + name + ':' + type + ' [' + this.stackTop + ']')
+    console.log('declared variable: ' + name + ':' + type + ' [' + this.stackTop + ']')
     return name
+  }
+
+  initializeArray(
+    name: string,
+    
+  ): void {
+
   }
 
   assignValueByAddress(address: number, value: NumericLiteral) {

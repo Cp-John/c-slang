@@ -36,7 +36,44 @@ export class PointerType {
   }
 }
 
-export type DataType = PrimitiveType | PointerType
+export class ArrayType  {
+  private eleType: PointerType | PrimitiveType
+  private size: number[]
+
+  constructor(eleType: PointerType | PrimitiveType, size: number[]) {
+    if (size.length == 0) {
+      throw Error('impossible execution path')
+    }
+    this.eleType = eleType
+    this.size = size
+  }
+
+  dereference(): DataType {
+    if (this.size.length == 1) {
+      return this.eleType
+    } else {
+      return new ArrayType(this.eleType, this.size.slice(1))
+    }
+  }
+
+  toString(): string {
+    var result = this.eleType.toString()
+    for (var i = 0; i < this.size.length; i++) {
+      result += '[' + String(this.size[i]) + ']'
+    }
+    return result
+  }
+
+  getSize(): number {
+    var result = 1
+    for (var i = 0; i < this.size.length; i++) {
+      result *= this.size[i]
+    }
+    return result * sizeof(this.eleType)
+  }
+}
+
+export type DataType = PrimitiveType | PointerType | ArrayType
 
 export const ARITH_PRIMITIVE_TYPES = new Set<string>([
   PrimitiveType.CHAR,
@@ -47,7 +84,9 @@ export const ARITH_PRIMITIVE_TYPES = new Set<string>([
 export const WHOLE_PRIMITIVE_TYPES = new Set<string>([PrimitiveType.CHAR, PrimitiveType.INT])
 
 export function sizeof(type: DataType): number {
-  if (type instanceof PointerType) {
+  if (type instanceof ArrayType) {
+    return type.getSize()
+  } else if (type instanceof PointerType) {
     return 4
   } else if (type == PrimitiveType.VOID) {
     return 1

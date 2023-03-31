@@ -487,7 +487,8 @@ export class ExpressionParser {
   ): Expression {
     const result: (
       | string
-      | DataType
+      | PrimitiveType
+      | PointerType
       | NumericLiteral
       | IncrementDecrement
       | FunctionCall

@@ -1,5 +1,5 @@
 import { NumericLiteral } from '../entity/expression/numericLiteral'
-import { DataType, PointerType, PrimitiveType } from '../interpreter/builtins'
+import { DataType, PointerType, PrimitiveType, WHOLE_PRIMITIVE_TYPES } from '../interpreter/builtins'
 
 const PREPROCESSOR_DIRECTIVEG =
   /^\s*#\s*include\b|^\s*#\s*define\b|^\s*#\s*ifdef\b|^\s*#\s*ifndef\b|^\s*#\s*if\b|^\s*#\s*elif\b|^\s*#\s*else\b|^\s*#\s*pragma\b/
@@ -196,7 +196,7 @@ export class Lexer {
     return this.hasNext() && DATA_TYPE_REGEX.test(this.currentLine)
   }
 
-  eatDataType(): DataType {
+  eatDataType(): PrimitiveType | PointerType {
     if (!this.hasNext()) {
       throw new Error(this.formatError('expected a datatype'))
     }
@@ -212,6 +212,23 @@ export class Lexer {
       type = new PointerType(type)
     }
     return type
+  }
+
+  eatArrayDimension(): number[] {
+    const result = []
+    do {
+      this.eatDelimiter('[')
+      if (this.matchDelimiter(']')) {
+        throw new Error(this.formatError('definition of variable with array type needs an explicit size'))
+      }
+      const size = this.eatNumber()
+      if (!WHOLE_PRIMITIVE_TYPES.has(size.getDataType().toString())) {
+        throw new Error(this.formatError("size of array has non-integer type '" + size.getDataType().toString() + "'"))
+      }
+      result.push(size.getValue())
+      this.eatDelimiter(']')
+    } while (this.matchDelimiter('['))
+    return result
   }
 
   matchPrioritizedArithmeticOperator(): boolean {
