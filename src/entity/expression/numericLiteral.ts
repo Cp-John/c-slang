@@ -1,4 +1,15 @@
-import { DataType, MAX_CHAR, MAX_INT, MAX_UNSGINED_INT, MIN_CHAR, MIN_INT, PointerType, PrimitiveType, PRIMITIVE_TYPES, sizeof } from '../../interpreter/builtins'
+import {
+  DataType,
+  MAX_CHAR,
+  MAX_INT,
+  MAX_UNSGINED_INT,
+  MIN_CHAR,
+  MIN_INT,
+  PointerType,
+  PRIMITIVE_TYPES,
+  PrimitiveType,
+  sizeof
+} from '../../interpreter/builtins'
 import { Frame } from '../../interpreter/frame'
 import { UNARY_MINUS_TAG } from './expressionParser'
 import { getHigherPrecisionType } from './typeCheck'
@@ -51,14 +62,14 @@ export class NumericLiteral {
 
   private cap(): NumericLiteral {
     if (this.type == PrimitiveType.INT) {
-      this.val = (this.val - MIN_INT) % (MAX_INT - MIN_INT + 1) + MIN_INT
+      this.val = ((this.val - MIN_INT) % (MAX_INT - MIN_INT + 1)) + MIN_INT
       if (this.val < MIN_INT) {
-        this.val += (MAX_INT - MIN_INT + 1)
+        this.val += MAX_INT - MIN_INT + 1
       }
     } else if (this.type == PrimitiveType.CHAR) {
-      this.val = (this.val - MIN_CHAR) % (MAX_CHAR - MIN_CHAR + 1) + MIN_CHAR
+      this.val = ((this.val - MIN_CHAR) % (MAX_CHAR - MIN_CHAR + 1)) + MIN_CHAR
       if (this.val < MIN_CHAR) {
-        this.val += (MAX_CHAR - MIN_CHAR + 1)
+        this.val += MAX_CHAR - MIN_CHAR + 1
       }
     } else if (this.type instanceof PointerType) {
       this.val = this.val % (MAX_UNSGINED_INT + 1)
