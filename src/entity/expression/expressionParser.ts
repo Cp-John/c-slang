@@ -503,6 +503,7 @@ export class ExpressionParser {
     )
     if (expectedDataType != null) {
       checkAssignmentOperandType(row, col, lexer, expectedDataType, '=', actualType)
+      return new Expression(result, expectedDataType)
     }
     return new Expression(result, actualType)
   }

@@ -5,6 +5,12 @@ import { Frame } from './frame'
 
 const RAND_MAX = 2147483647
 export const MAX_INT = 2147483647
+export const MIN_INT = -2147483648
+
+export const MAX_CHAR = 127
+export const MIN_CHAR = -128
+
+export const MAX_UNSGINED_INT = 4294967295
 
 export enum PrimitiveType {
   INT = 'int',

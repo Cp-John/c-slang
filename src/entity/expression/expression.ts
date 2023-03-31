@@ -140,6 +140,6 @@ export class Expression {
       }
       i++
     }
-    return result.pop()
+    return result.pop()?.castToType(this.type)
   }
 }

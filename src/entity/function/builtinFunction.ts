@@ -55,7 +55,6 @@ export class BuiltinFunction extends Function {
       this.checkTooFewArguments(lexer)
       lexer.eatDelimiter(',')
       let expectedType: DataType | null
-      const isPointer = false
       if (match[0] == '%d' || match[0] == '%ld') {
         expectedType = PrimitiveType.INT
       } else if (match[0] == '%f' || match[0] == '%lf') {
