@@ -74,7 +74,7 @@ export abstract class Declaration extends Statement {
       lexer.eatDelimiter(',')
       const [row, col] = lexer.tell()
       declaredVariable = lexer.eatIdentifier()
-      var actualType: DataType = variableType
+      let actualType: DataType = variableType
       if (lexer.matchDelimiter('[')) {
         actualType = new ArrayType(variableType, lexer.eatArrayDimension())
       }
@@ -119,7 +119,7 @@ export abstract class Declaration extends Statement {
       if (type == PrimitiveType.VOID) {
         throw new Error(lexer.formatError("variable has incomplete type 'void'"))
       }
-      var actualType: DataType = type
+      let actualType: DataType = type
       if (lexer.matchDelimiter('[')) {
         actualType = new ArrayType(type, lexer.eatArrayDimension())
       }
@@ -144,7 +144,7 @@ class ArrayDeclaration extends Declaration {
   protected doExecute(env: Frame, context: CProgramContext): void {
     env.declareVariable(this.variableName, this.variableType)
     const initialValues = []
-    for (var i = 0; i < this.expressions.length; i++) {
+    for (let i = 0; i < this.expressions.length; i++) {
       initialValues.push(this.expressions[i].evaluate(env, context))
     }
     env.initializeArray(this.variableName, initialValues)
@@ -156,7 +156,11 @@ class VariableDeclaration extends Declaration {
   private variableName: string
   expression: Expression | null
 
-  constructor(variableType: PrimitiveType | PointerType, variableName: string, expression: Expression | null) {
+  constructor(
+    variableType: PrimitiveType | PointerType,
+    variableName: string,
+    expression: Expression | null
+  ) {
     super()
     this.variableType = variableType
     this.variableName = variableName

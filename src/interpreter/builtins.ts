@@ -36,7 +36,7 @@ export class PointerType {
   }
 }
 
-export class ArrayType  {
+export class ArrayType {
   private eleType: PointerType | PrimitiveType
   private size: number[]
 
@@ -57,16 +57,16 @@ export class ArrayType  {
   }
 
   toString(): string {
-    var result = this.eleType.toString()
-    for (var i = 0; i < this.size.length; i++) {
+    let result = this.eleType.toString()
+    for (let i = 0; i < this.size.length; i++) {
       result += '[' + String(this.size[i]) + ']'
     }
     return result
   }
 
   getSize(): number {
-    var result = 1
-    for (var i = 0; i < this.size.length; i++) {
+    let result = 1
+    for (let i = 0; i < this.size.length; i++) {
       result *= this.size[i]
     }
     return result * sizeof(this.eleType)

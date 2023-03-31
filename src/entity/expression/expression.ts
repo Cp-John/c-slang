@@ -44,7 +44,15 @@ export class Expression {
   private type: DataType
 
   constructor(
-    elements: (string | PrimitiveType | PointerType | NumericLiteral | IncrementDecrement | FunctionCall | Jump)[],
+    elements: (
+      | string
+      | PrimitiveType
+      | PointerType
+      | NumericLiteral
+      | IncrementDecrement
+      | FunctionCall
+      | Jump
+    )[],
     type: DataType
   ) {
     this.elements = elements
