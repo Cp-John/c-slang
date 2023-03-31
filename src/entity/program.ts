@@ -32,7 +32,7 @@ export class Program {
     return new Program(declarations)
   }
 
-  execute(): string {
+  execute(frontendContext: any): string {
     // console.log('='.repeat(20) + 'start executing' + '='.repeat(20))
     const context: CProgramContext = {
       stdout: '',
@@ -45,6 +45,7 @@ export class Program {
       return context.stdout
     } catch (err: any) {
       // console.log('stdout:', context.stdout)
+      frontendContext['stdout'] = context.stdout
       throw new Error(
         'Line ' +
           String(context.currentLine) +

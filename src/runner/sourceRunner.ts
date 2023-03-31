@@ -51,7 +51,7 @@ export async function sourceRunner(
   try {
     return Promise.resolve({
       status: 'finished',
-      value: program.execute(),
+      value: program.execute(context),
       context
     })
   } catch (err) {
