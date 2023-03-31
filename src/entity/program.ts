@@ -32,12 +32,14 @@ export class Program {
     return new Program(declarations)
   }
 
-  execute(frontendContext: any): string {
+  execute(frontendContext: any, maxExecTimMs: number): string {
     // console.log('='.repeat(20) + 'start executing' + '='.repeat(20))
     const context: CProgramContext = {
       stdout: '',
       baseFrame: Frame.extend(Frame.getBuiltinFrame()),
-      currentLine: 0
+      currentLine: 0,
+      startTimeMs: new Date().getTime(),
+      maxExecutionTimeMs: maxExecTimMs
     }
     try {
       this.declarations.forEach(declaration => declaration.execute(context.baseFrame, context))

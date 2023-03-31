@@ -47,11 +47,12 @@ export async function sourceRunner(
   if (!program) {
     return resolvedErrorPromise
   }
+  var maxExecTimMs = options.originalMaxExecTime? options.originalMaxExecTime : DEFAULT_SOURCE_OPTIONS.originalMaxExecTime
 
   try {
     return Promise.resolve({
       status: 'finished',
-      value: program.execute(context),
+      value: program.execute(context, maxExecTimMs),
       context
     })
   } catch (err) {
