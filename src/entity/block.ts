@@ -33,7 +33,7 @@ export class Block {
       return new Block(content)
     }
     lexer.eatDelimiter('{')
-    while (!lexer.matchDelimiter('}')) {
+    while (lexer.hasNext() && !lexer.matchDelimiter('}')) {
       if (!reachable) {
         throw new Error(lexer.formatError('unreachable statements'))
       }
