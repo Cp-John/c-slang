@@ -82,13 +82,8 @@ export class Expression {
         const jump = ele as Jump
         if (
           jump.condition == undefined ||
-          jump.condition == Expression.toNumberLiteral(result[result.length - 1], env).toBoolean()
+          jump.condition == Expression.toNumberLiteral(result.pop(), env).toBoolean()
         ) {
-          if (jump.condition != undefined) {
-            result[result.length - 1] = NumericLiteral.booleanToNumericLiteral(
-              Expression.toNumberLiteral(result[result.length - 1], env).toBoolean()
-            )
-          }
           i = jump.toPosition
           continue
         }
@@ -140,6 +135,6 @@ export class Expression {
       }
       i++
     }
-    return result.pop()?.castToType(this.type)
+    return result.pop()?.castToType(this.type, true)
   }
 }
