@@ -47,7 +47,9 @@ export async function sourceRunner(
   if (!program) {
     return resolvedErrorPromise
   }
-  var maxExecTimMs = options.originalMaxExecTime? options.originalMaxExecTime : DEFAULT_SOURCE_OPTIONS.originalMaxExecTime
+  const maxExecTimMs = options.originalMaxExecTime
+    ? options.originalMaxExecTime
+    : DEFAULT_SOURCE_OPTIONS.originalMaxExecTime
 
   try {
     return Promise.resolve({
