@@ -30,13 +30,15 @@ export class Return extends Statement {
     }
     lexer.eatKeyword('return')
     let expression = null
-    if (lexer.matchDelimiter(';') && returnType != PrimitiveType.VOID) {
-      throw new Error(lexer.formatError('non-void function should return a value'))
-    } else if (!lexer.matchDelimiter(';') && returnType == PrimitiveType.VOID) {
-      throw new Error(lexer.formatError('void function should not return a value'))
-    }
-    if (!lexer.matchDelimiter(';')) {
+    if (returnType != PrimitiveType.VOID) {
+      if (lexer.matchDelimiter(';')) {
+        throw new Error(lexer.formatError('non-void function should return a value'))
+      }
       expression = ExpressionParser.parse(env, lexer, false, false, returnType)
+    } else {
+      if (!lexer.matchDelimiter('}') && !lexer.matchDelimiter(';')) {
+        throw new Error(lexer.formatError('void function should not return a value'))
+      }
     }
     lexer.eatDelimiter(';')
     return [new Return(returnType, expression)]
