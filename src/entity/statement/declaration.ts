@@ -1,4 +1,4 @@
-import { DataType, PrimitiveType } from '../../interpreter/builtins'
+import { ArrayType, DataType, PointerType, PrimitiveType } from '../../interpreter/builtins'
 import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
@@ -48,7 +48,7 @@ export abstract class Declaration extends Statement {
 
   private static parseDeclaredVariables(
     env: Frame,
-    variableType: DataType,
+    variableType: PrimitiveType | PointerType,
     firstVariable: string,
     lexer: Lexer
   ): Statement[] {
@@ -74,11 +74,12 @@ export abstract class Declaration extends Statement {
       lexer.eatDelimiter(',')
       const [row, col] = lexer.tell()
       declaredVariable = lexer.eatIdentifier()
-      env.declareVariable(declaredVariable, variableType, row, col, lexer)
+      let actualType: DataType = variableType
+      if (lexer.matchDelimiter('[')) {
+        actualType = new ArrayType(variableType, lexer.eatArrayDimension())
+      }
+      env.declareVariable(declaredVariable, actualType, row, col, lexer)
       statements.push(new VariableDeclaration(variableType, declaredVariable, null))
-    }
-    if (lexer.matchDelimiter('[')) {
-      throw new Error(lexer.formatError('array declaration is not supported, use malloc instead'))
     }
     lexer.eatDelimiter(';')
     return statements
@@ -118,18 +119,48 @@ export abstract class Declaration extends Statement {
       if (type == PrimitiveType.VOID) {
         throw new Error(lexer.formatError("variable has incomplete type 'void'"))
       }
-      env.declareVariable(identifier, type, row, col, lexer)
+      let actualType: DataType = type
+      if (lexer.matchDelimiter('[')) {
+        actualType = new ArrayType(type, lexer.eatArrayDimension())
+      }
+      env.declareVariable(identifier, actualType, row, col, lexer)
       return this.parseDeclaredVariables(env, type, identifier, lexer)
     }
   }
 }
 
+class ArrayDeclaration extends Declaration {
+  private variableType: ArrayType
+  private variableName: string
+  private expressions: Expression[]
+
+  constructor(variableType: ArrayType, variableName: string, expressions: Expression[]) {
+    super()
+    this.variableType = variableType
+    this.variableName = variableName
+    this.expressions = expressions
+  }
+
+  protected doExecute(env: Frame, context: CProgramContext): void {
+    env.declareVariable(this.variableName, this.variableType)
+    const initialValues = []
+    for (let i = 0; i < this.expressions.length; i++) {
+      initialValues.push(this.expressions[i].evaluate(env, context))
+    }
+    env.initializeArray(this.variableName, initialValues)
+  }
+}
+
 class VariableDeclaration extends Declaration {
-  private variableType: DataType
+  private variableType: PrimitiveType | PointerType
   private variableName: string
   expression: Expression | null
 
-  constructor(variableType: DataType, variableName: string, expression: Expression | null) {
+  constructor(
+    variableType: PrimitiveType | PointerType,
+    variableName: string,
+    expression: Expression | null
+  ) {
     super()
     this.variableType = variableType
     this.variableName = variableName

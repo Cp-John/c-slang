@@ -34,7 +34,8 @@ export class Expression {
 
   private elements: (
     | string
-    | DataType
+    | PrimitiveType
+    | PointerType
     | NumericLiteral
     | IncrementDecrement
     | FunctionCall
@@ -43,7 +44,15 @@ export class Expression {
   private type: DataType
 
   constructor(
-    elements: (string | DataType | NumericLiteral | IncrementDecrement | FunctionCall | Jump)[],
+    elements: (
+      | string
+      | PrimitiveType
+      | PointerType
+      | NumericLiteral
+      | IncrementDecrement
+      | FunctionCall
+      | Jump
+    )[],
     type: DataType
   ) {
     this.elements = elements
