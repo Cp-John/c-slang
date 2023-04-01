@@ -1,4 +1,4 @@
-import { CProgramContext } from '../interpreter/cProgramContext'
+import { CProgramContext, initCProgramContext } from '../interpreter/cProgramContext'
 import { Frame } from '../interpreter/frame'
 import { Lexer } from '../parser/lexer'
 import { FunctionCall } from './expression/functionCall'
@@ -34,13 +34,7 @@ export class Program {
 
   execute(frontendContext: any, maxExecTimMs: number): string {
     // console.log('='.repeat(20) + 'start executing' + '='.repeat(20))
-    const context: CProgramContext = {
-      stdout: '',
-      baseFrame: Frame.extend(Frame.getBuiltinFrame()),
-      currentLine: 0,
-      startTimeMs: new Date().getTime(),
-      maxExecutionTimeMs: maxExecTimMs
-    }
+    const context: CProgramContext = initCProgramContext(maxExecTimMs)
     try {
       this.declarations.forEach(declaration => declaration.execute(context.baseFrame, context))
       context.baseFrame.lookupFunction('main').call(context.baseFrame, context, [])

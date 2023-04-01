@@ -63,6 +63,7 @@ export abstract class Statement {
   protected abstract doExecute(env: Frame, context: CProgramContext): void
 
   execute(env: Frame, context: CProgramContext): void {
+    context.executedStatementCount += 1
     context.currentLine = this.row
     this.doExecute(env, context)
   }
