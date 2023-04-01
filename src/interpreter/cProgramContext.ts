@@ -5,7 +5,7 @@ export interface CProgramContext {
   baseFrame: Frame
   currentLine: number
   startTimeMs: number
-  maxExecutionTimeMs: number,
+  maxExecutionTimeMs: number
   executedStatementCount: number
 }
 
@@ -21,7 +21,10 @@ export function initCProgramContext(maxExecTimMs: number): CProgramContext {
 }
 
 export function checkTimeout(context: CProgramContext) {
-  if (context.executedStatementCount > 50 && new Date().getTime() > context.startTimeMs + context.maxExecutionTimeMs) {
+  if (
+    context.executedStatementCount > 50 &&
+    new Date().getTime() > context.startTimeMs + context.maxExecutionTimeMs
+  ) {
     throw new Error('execution timeout')
   }
 }
