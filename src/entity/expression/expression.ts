@@ -7,10 +7,16 @@ import { NumericLiteral } from './numericLiteral'
 
 export class Jump {
   condition: boolean | undefined
+  consume: boolean
   toPosition: number
 
-  constructor(condition: boolean | undefined = undefined, toPosition: number = 0) {
+  constructor(
+    condition: boolean | undefined = undefined,
+    consume: boolean = false,
+    toPosition: number = 0
+  ) {
     this.condition = condition
+    this.consume = consume
     this.toPosition = toPosition
   }
 }
@@ -42,6 +48,10 @@ export class Expression {
     | Jump
   )[]
   private type: DataType
+
+  static of(numeric: NumericLiteral): Expression {
+    return new Expression([numeric], numeric.getDataType())
+  }
 
   constructor(
     elements: (
@@ -91,7 +101,11 @@ export class Expression {
         const jump = ele as Jump
         if (
           jump.condition == undefined ||
-          jump.condition == Expression.toNumberLiteral(result.pop(), env).toBoolean()
+          jump.condition ==
+            Expression.toNumberLiteral(
+              jump.consume ? result.pop() : result[result.length - 1],
+              env
+            ).toBoolean()
         ) {
           i = jump.toPosition
           continue

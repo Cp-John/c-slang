@@ -1,4 +1,5 @@
 import {
+  ArrayType,
   DataType,
   MAX_CHAR,
   MAX_INT,
@@ -32,7 +33,7 @@ export class NumericLiteral {
   }
 
   private getStep(): number {
-    if (this.type instanceof PointerType) {
+    if (this.type instanceof PointerType || this.type instanceof ArrayType) {
       return sizeof(this.type.dereference())
     }
     return 1
@@ -71,7 +72,7 @@ export class NumericLiteral {
       if (this.val < MIN_CHAR) {
         this.val += MAX_CHAR - MIN_CHAR + 1
       }
-    } else if (this.type instanceof PointerType) {
+    } else if (this.type instanceof PointerType || this.type instanceof ArrayType) {
       this.val = this.val % (MAX_UNSGINED_INT + 1)
       if (this.val < 0) {
         this.val += MAX_UNSGINED_INT + 1
@@ -82,7 +83,7 @@ export class NumericLiteral {
 
   castToType(newType: DataType, isInPlace: boolean = false): NumericLiteral {
     if (newType == PrimitiveType.FUNCTION || newType == PrimitiveType.VOID) {
-      throw new Error("attempt to cast '" + this.type + "' to '" + newType + "'")
+      throw new Error('impossible execution path')
     }
     if (
       newType.toString() == this.type.toString() ||
@@ -94,6 +95,8 @@ export class NumericLiteral {
       return this.castToType(newType, isInPlace).cap()
     } else if (newType == PrimitiveType.CHAR) {
       return new NumericLiteral(this.val % 256, newType, isInPlace ? this.address : null).cap()
+    } else if (newType instanceof PointerType || newType instanceof ArrayType) {
+      return new NumericLiteral(this.val, newType, isInPlace ? this.address : null).cap()
     } else {
       return new NumericLiteral(this.val, newType, isInPlace ? this.address : null).cap()
     }
@@ -191,25 +194,28 @@ export class NumericLiteral {
   }
 
   plus(right: NumericLiteral): NumericLiteral {
-    if (this.type instanceof PointerType && right.type instanceof PointerType) {
-      throw new Error('impossible execution path')
-    } else if (right.type instanceof PointerType) {
+    if (right.type instanceof PointerType || right.type instanceof ArrayType) {
       return right.plus(this)
     } else {
+      const resultType = getHigherPrecisionType(this.type, right.type)
       return NumericLiteral.new(this.val + right.val * this.getStep()).castToType(
-        getHigherPrecisionType(this.type, right.type)
+        resultType instanceof ArrayType ? resultType.toPointerType() : resultType
       )
     }
   }
 
   minus(right: NumericLiteral) {
-    if (this.type instanceof PointerType && right.type instanceof PointerType) {
+    if (
+      (this.type instanceof PointerType && right.type instanceof PointerType) ||
+      (this.type instanceof ArrayType && right.type instanceof ArrayType)
+    ) {
       return NumericLiteral.new((this.val - right.val) / this.getStep()).castToType(
         PrimitiveType.INT
       )
     } else {
+      const resultType = getHigherPrecisionType(this.type, right.type)
       return NumericLiteral.new(this.val - right.val * this.getStep()).castToType(
-        getHigherPrecisionType(this.type, right.type)
+        resultType instanceof ArrayType ? resultType.toPointerType() : resultType
       )
     }
   }

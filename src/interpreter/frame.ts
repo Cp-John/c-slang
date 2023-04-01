@@ -3,7 +3,7 @@ import { Function } from '../entity/function/function'
 import { SelfDefinedFunction } from '../entity/function/selfDefinedFunction'
 import { Memory } from '../memory/memory'
 import { Lexer } from '../parser/lexer'
-import { BUILTINS, DataType, PointerType, PrimitiveType, sizeof } from './builtins'
+import { ArrayType, BUILTINS, DataType, PointerType, PrimitiveType, sizeof } from './builtins'
 import { CProgramContext } from './cProgramContext'
 
 export class Frame {
@@ -106,6 +106,9 @@ export class Frame {
       return this.memory.readFloat(val)
     } else if (type == PrimitiveType.CHAR) {
       return this.memory.readChar(val)
+    } else if (type instanceof ArrayType) {
+      console.log('lookup array ' + name + ': ' + String(val))
+      return NumericLiteral.new(val, val).castToType(type, true)
     } else {
       throw new Error('lookup unknown datatype: ' + type)
     }
@@ -194,7 +197,20 @@ export class Frame {
     return name
   }
 
-  initializeArray(name: string): void {}
+  initializeArray(name: string, initialValues: NumericLiteral[]): void {
+    const startAddr = this.boundings[name]['val']
+    const eleType = (this.boundings[name]['type'] as ArrayType).getEleType()
+    for (let i = 0; i < initialValues.length; i++) {
+      console.log(
+        'assign: ' +
+          JSON.stringify(initialValues[i]) +
+          ' to address ' +
+          startAddr +
+          i * sizeof(eleType)
+      )
+      this.memory.writeNumeric(startAddr + i * sizeof(eleType), initialValues[i])
+    }
+  }
 
   assignValueByAddress(address: number, value: NumericLiteral) {
     this.memory.writeNumeric(address, value)
@@ -218,7 +234,7 @@ export class Frame {
 
   dereferenceAsString(numeric: NumericLiteral): string {
     const type = numeric.getDataType()
-    if (!(type instanceof PointerType)) {
+    if (!(type instanceof PointerType || type instanceof ArrayType)) {
       throw new Error("attempt to dereference non-pointer type '" + type + "' to 'char*'")
     } else if (type.dereference() != PrimitiveType.CHAR) {
       throw new Error("attempt to dereference type '" + type + "' to 'char*'")
@@ -227,18 +243,22 @@ export class Frame {
   }
 
   dereference(numeric: NumericLiteral): NumericLiteral {
+    console.log('dereference: ' + JSON.stringify(numeric))
     const type = numeric.getDataType()
-    if (!(type instanceof PointerType)) {
+    if (!(type instanceof PointerType || type instanceof ArrayType)) {
       throw new Error("attempt to dereference non-pointer type '" + type + "'")
     }
     const val = numeric.getValue()
-    if (type.dereference() instanceof PointerType) {
-      return this.memory.readPointer(val, type.dereference() as PointerType)
-    } else if (type.dereference() == PrimitiveType.CHAR) {
+    const resultType = type.dereference()
+    if (resultType instanceof ArrayType) {
+      return NumericLiteral.new(val).castToType(resultType)
+    } else if (resultType instanceof PointerType) {
+      return this.memory.readPointer(val, resultType)
+    } else if (resultType == PrimitiveType.CHAR) {
       return this.memory.readChar(val)
-    } else if (type.dereference() == PrimitiveType.INT) {
+    } else if (resultType == PrimitiveType.INT) {
       return this.memory.readInt(val)
-    } else if (type.dereference() == PrimitiveType.FLOAT) {
+    } else if (resultType == PrimitiveType.FLOAT) {
       return this.memory.readFloat(val)
     } else {
       throw new Error("attempt to dereference unknown pointer type '" + type + "'")
@@ -273,10 +293,14 @@ export class Frame {
     const names = Object.keys(this.boundings)
     if (this.depth == 0) {
       names.push('sizeof')
+      names.push('typeof')
     }
     names.sort().forEach(name => {
       if (name == 'sizeof') {
         context.stdout += name + ': int sizeof(any)\n'
+        return
+      } else if (name == 'typeof') {
+        context.stdout += name + ': char* typeof(any)\n'
         return
       }
       const type = this.boundings[name]['type']

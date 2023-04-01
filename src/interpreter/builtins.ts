@@ -1,5 +1,8 @@
+import { Expression } from '../entity/expression/expression'
+import { ExpressionParser } from '../entity/expression/expressionParser'
 import { NumericLiteral } from '../entity/expression/numericLiteral'
 import { BuiltinFunction, RealBuiltinFunction } from '../entity/function/builtinFunction'
+import { Lexer } from '../parser/lexer'
 import { CProgramContext } from './cProgramContext'
 import { Frame } from './frame'
 
@@ -48,12 +51,96 @@ export class ArrayType {
     this.size = size
   }
 
+  toPointerType(): PointerType {
+    return new PointerType(this.dereference())
+  }
+
+  canCastTo(type: DataType): boolean {
+    if (type.toString() == new PointerType(PrimitiveType.VOID).toString()) {
+      return true
+    }
+    return (
+      type instanceof PointerType &&
+      this.size.length == 1 &&
+      this.eleType.toString() == type.dereference().toString()
+    )
+  }
+
+  getEleType(): PointerType | PrimitiveType {
+    return this.eleType
+  }
+
+  getEleCount(): number {
+    let result = 1
+    for (let i = 0; i < this.size.length; i++) {
+      result *= this.size[i]
+    }
+    return result
+  }
+
   dereference(): DataType {
     if (this.size.length == 1) {
       return this.eleType
     } else {
       return new ArrayType(this.eleType, this.size.slice(1))
     }
+  }
+
+  private parseInitialStringExpressions(lexer: Lexer, expressions: Expression[]): void {
+    const stringLiteral = lexer.eatStringLiteral()
+    for (let i = 1; i < stringLiteral.length - 1; i++) {
+      expressions.push(
+        Expression.of(NumericLiteral.new(stringLiteral.charCodeAt(i)).castToType(this.eleType))
+      )
+    }
+    expressions.push(Expression.of(NumericLiteral.new(0).castToType(this.eleType)))
+  }
+
+  private padInitialArrayExpressions(
+    currentExpressions: Expression[],
+    expressions: Expression[],
+    row: number,
+    col: number,
+    lexer: Lexer
+  ) {
+    if (currentExpressions.length > this.getEleCount()) {
+      throw new Error(
+        lexer.formatError('more elements in array initializer than expected', row, col)
+      )
+    }
+    for (let i = currentExpressions.length; i < this.getEleCount(); i++) {
+      currentExpressions.push(Expression.of(NumericLiteral.new(0).castToType(this.eleType)))
+    }
+    currentExpressions.forEach(expr => expressions.push(expr))
+  }
+
+  parseInitialArrayExpressions(env: Frame, lexer: Lexer, expressions: Expression[]): void {
+    const [row, col] = lexer.tell()
+    const currentExpressions: Expression[] = []
+    if (lexer.matchDelimiter('"') && this.eleType == PrimitiveType.CHAR && this.size.length == 1) {
+      this.parseInitialStringExpressions(lexer, currentExpressions)
+      this.padInitialArrayExpressions(currentExpressions, expressions, row, col, lexer)
+      return
+    }
+
+    lexer.eatDelimiter('{')
+    if (lexer.matchDelimiter('}')) {
+      // pass
+    } else if (this.size.length == 1 || !(lexer.matchDelimiter('"') || lexer.matchDelimiter('{'))) {
+      currentExpressions.push(ExpressionParser.parse(env, lexer, false, false, this.eleType))
+      while (!lexer.matchDelimiter('}')) {
+        lexer.eatDelimiter(',')
+        currentExpressions.push(ExpressionParser.parse(env, lexer, false, false, this.eleType))
+      }
+    } else {
+      ;(this.dereference() as ArrayType).parseInitialArrayExpressions(
+        env,
+        lexer,
+        currentExpressions
+      )
+    }
+    lexer.eatDelimiter('}')
+    this.padInitialArrayExpressions(currentExpressions, expressions, row, col, lexer)
   }
 
   toString(): string {
@@ -65,11 +152,7 @@ export class ArrayType {
   }
 
   getSize(): number {
-    let result = 1
-    for (let i = 0; i < this.size.length; i++) {
-      result *= this.size[i]
-    }
-    return result * sizeof(this.eleType)
+    return this.getEleCount() * sizeof(this.eleType)
   }
 }
 

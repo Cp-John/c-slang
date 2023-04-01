@@ -1,5 +1,6 @@
 import {
   ARITH_PRIMITIVE_TYPES,
+  ArrayType,
   DataType,
   PointerType,
   PrimitiveType,
@@ -8,7 +9,7 @@ import {
 import { Lexer, RELATIONAL_OPERATOR_RETEX } from '../../parser/lexer'
 
 export function assertSubscritable(type: DataType, lexer: Lexer) {
-  if (type instanceof PointerType) {
+  if (type instanceof PointerType || type instanceof ArrayType) {
     return
   }
   throw new Error(lexer.formatError('subscripted value is not an array, pointer'))
@@ -53,6 +54,10 @@ export function getHigherPrecisionType(leftType: DataType, rightType: DataType):
     return leftType
   } else if (rightType instanceof PointerType) {
     return rightType
+  } else if (leftType instanceof ArrayType) {
+    return leftType
+  } else if (rightType instanceof ArrayType) {
+    return rightType
   } else if (leftType == PrimitiveType.FLOAT || rightType == PrimitiveType.FLOAT) {
     return PrimitiveType.FLOAT
   } else if (leftType == PrimitiveType.INT || rightType == PrimitiveType.INT) {
@@ -84,6 +89,9 @@ function checkImplicitConversion(
   ) {
     return
   }
+  if (rightType instanceof ArrayType && rightType.canCastTo(leftType)) {
+    return
+  }
   const error = new Error(
     lexer.formatError(
       "implicit conversion from '" + rightType + "' to '" + leftType + "'",
@@ -96,6 +104,34 @@ function checkImplicitConversion(
   }
   if (getHigherPrecisionType(leftType, rightType).toString() != leftType.toString()) {
     throw error
+  }
+}
+
+export function checkTypeCastType(
+  oldType: DataType,
+  typeToCast: PrimitiveType | PointerType,
+  oldTypeRow: number,
+  oldTypeCol: number,
+  lexer: Lexer
+): void {
+  if (oldType.toString() == typeToCast.toString()) {
+    return
+  }
+  if (
+    oldType instanceof ArrayType &&
+    typeToCast instanceof PointerType &&
+    oldType.toPointerType().toString() == typeToCast.toString()
+  ) {
+    return
+  }
+  if (oldType == PrimitiveType.VOID || oldType instanceof ArrayType) {
+    throw new Error(
+      lexer.formatError(
+        "cannot cast type '" + oldType.toString() + "' to '" + typeToCast.toString() + "'",
+        oldTypeRow,
+        oldTypeCol
+      )
+    )
   }
 }
 
@@ -131,13 +167,13 @@ export function checkBinaryExprssionOperandType(
   rightType: DataType
 ): DataType {
   if (opr == '+' || opr == '-') {
-    if (leftType instanceof PointerType) {
+    if (leftType instanceof PointerType || leftType instanceof ArrayType) {
       if (opr == '-' && leftType.toString() == rightType.toString()) {
         return PrimitiveType.INT
       } else if (!WHOLE_PRIMITIVE_TYPES.has(rightType.toString())) {
         invalidBinaryExprssionOperandType(row, col, lexer, leftType, rightType)
       }
-    } else if (opr == '+' && rightType instanceof PointerType) {
+    } else if (opr == '+' && (rightType instanceof PointerType || rightType instanceof ArrayType)) {
       if (!WHOLE_PRIMITIVE_TYPES.has(leftType.toString())) {
         invalidBinaryExprssionOperandType(row, col, lexer, leftType, rightType)
       }
@@ -147,7 +183,8 @@ export function checkBinaryExprssionOperandType(
     ) {
       invalidBinaryExprssionOperandType(row, col, lexer, leftType, rightType)
     }
-    return getHigherPrecisionType(leftType, rightType)
+    const resultType = getHigherPrecisionType(leftType, rightType)
+    return resultType instanceof ArrayType ? resultType.toPointerType() : resultType
   } else if (opr == '*' || opr == '/') {
     if (
       !ARITH_PRIMITIVE_TYPES.has(leftType.toString()) ||

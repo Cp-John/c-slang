@@ -1,12 +1,36 @@
 import { ArrayType, DataType, PointerType, PrimitiveType } from '../../interpreter/builtins'
-import { CProgramContext } from '../../interpreter/cProgramContext'
+import { CProgramContext, initCProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
 import { Expression } from '../expression/expression'
 import { ExpressionParser } from '../expression/expressionParser'
+import { NumericLiteral } from '../expression/numericLiteral'
 import { SelfDefinedFunction } from '../function/selfDefinedFunction'
 import { Statement } from './statement'
+
+function eatArrayDimension(env: Frame, lexer: Lexer): number[] {
+  const result = []
+  do {
+    lexer.eatDelimiter('[')
+    if (lexer.matchDelimiter(']')) {
+      throw new Error(
+        lexer.formatError('definition of variable with array type needs an explicit size')
+      )
+    }
+    const [row, col] = lexer.tell()
+    const size = ExpressionParser.parse(env, lexer, false, true, PrimitiveType.INT).evaluate(
+      env,
+      initCProgramContext(1000)
+    ) as NumericLiteral
+    if (size.getValue() <= 0) {
+      throw new Error(lexer.formatError('declared as an array with a non-positive size', row, col))
+    }
+    result.push(size.getValue())
+    lexer.eatDelimiter(']')
+  } while (lexer.matchDelimiter('['))
+  return result
+}
 
 export abstract class Declaration extends Statement {
   private static parseFormalParameterList(
@@ -50,23 +74,25 @@ export abstract class Declaration extends Statement {
     env: Frame,
     variableType: PrimitiveType | PointerType,
     firstVariable: string,
+    firstRow: number,
+    firstCol: number,
     lexer: Lexer
   ): Statement[] {
-    const statements: VariableDeclaration[] = [
-      new VariableDeclaration(variableType, firstVariable, null)
-    ]
+    const statements: (VariableDeclaration | ArrayDeclaration)[] = []
+    if (lexer.matchDelimiter('[')) {
+      const actualType = new ArrayType(variableType, eatArrayDimension(env, lexer))
+      env.declareVariable(firstVariable, actualType, firstRow, firstCol, lexer)
+      statements.push(new ArrayDeclaration(actualType, firstVariable))
+    } else {
+      env.declareVariable(firstVariable, variableType, firstRow, firstCol, lexer)
+      statements.push(new VariableDeclaration(variableType, firstVariable))
+    }
 
     let declaredVariable = firstVariable
     while (true) {
       if (lexer.matchDelimiter('=')) {
         lexer.eatDelimiter('=')
-        statements[statements.length - 1].expression = ExpressionParser.parse(
-          env,
-          lexer,
-          false,
-          false,
-          variableType
-        )
+        statements[statements.length - 1].parseExpression(env, lexer)
       }
       if (!lexer.matchDelimiter(',')) {
         break
@@ -74,12 +100,14 @@ export abstract class Declaration extends Statement {
       lexer.eatDelimiter(',')
       const [row, col] = lexer.tell()
       declaredVariable = lexer.eatIdentifier()
-      let actualType: DataType = variableType
       if (lexer.matchDelimiter('[')) {
-        actualType = new ArrayType(variableType, lexer.eatArrayDimension())
+        const actualType = new ArrayType(variableType, eatArrayDimension(env, lexer))
+        env.declareVariable(declaredVariable, actualType, row, col, lexer)
+        statements.push(new ArrayDeclaration(actualType, declaredVariable))
+      } else {
+        env.declareVariable(declaredVariable, variableType, row, col, lexer)
+        statements.push(new VariableDeclaration(variableType, declaredVariable))
       }
-      env.declareVariable(declaredVariable, actualType, row, col, lexer)
-      statements.push(new VariableDeclaration(variableType, declaredVariable, null))
     }
     lexer.eatDelimiter(';')
     return statements
@@ -119,12 +147,7 @@ export abstract class Declaration extends Statement {
       if (type == PrimitiveType.VOID) {
         throw new Error(lexer.formatError("variable has incomplete type 'void'"))
       }
-      let actualType: DataType = type
-      if (lexer.matchDelimiter('[')) {
-        actualType = new ArrayType(type, lexer.eatArrayDimension())
-      }
-      env.declareVariable(identifier, actualType, row, col, lexer)
-      return this.parseDeclaredVariables(env, type, identifier, lexer)
+      return this.parseDeclaredVariables(env, type, identifier, row, col, lexer)
     }
   }
 }
@@ -134,18 +157,25 @@ class ArrayDeclaration extends Declaration {
   private variableName: string
   private expressions: Expression[]
 
-  constructor(variableType: ArrayType, variableName: string, expressions: Expression[]) {
+  constructor(variableType: ArrayType, variableName: string) {
     super()
     this.variableType = variableType
     this.variableName = variableName
-    this.expressions = expressions
+    this.expressions = []
+  }
+
+  parseExpression(env: Frame, lexer: Lexer): void {
+    this.variableType.parseInitialArrayExpressions(env, lexer, this.expressions)
   }
 
   protected doExecute(env: Frame, context: CProgramContext): void {
     env.declareVariable(this.variableName, this.variableType)
-    const initialValues = []
+    const initialValues: NumericLiteral[] = []
     for (let i = 0; i < this.expressions.length; i++) {
-      initialValues.push(this.expressions[i].evaluate(env, context))
+      initialValues.push(this.expressions[i].evaluate(env, context) as NumericLiteral)
+    }
+    for (let i = initialValues.length; i < this.variableType.getEleCount(); i++) {
+      initialValues.push(NumericLiteral.new(0).castToType(this.variableType.getEleType()))
     }
     env.initializeArray(this.variableName, initialValues)
   }
@@ -156,26 +186,26 @@ class VariableDeclaration extends Declaration {
   private variableName: string
   expression: Expression | null
 
-  constructor(
-    variableType: PrimitiveType | PointerType,
-    variableName: string,
-    expression: Expression | null
-  ) {
+  constructor(variableType: PrimitiveType | PointerType, variableName: string) {
     super()
     this.variableType = variableType
     this.variableName = variableName
-    this.expression = expression
+    this.expression = null
+  }
+
+  parseExpression(env: Frame, lexer: Lexer): void {
+    this.expression = ExpressionParser.parse(env, lexer, false, false, this.variableType)
   }
 
   doExecute(env: Frame, context: CProgramContext): void {
     env.declareVariable(this.variableName, this.variableType)
+    let val: NumericLiteral
     if (this.expression != null) {
-      const val = this.expression.evaluate(env, context)
-      if (val == undefined) {
-        throw new Error('impossible execution path')
-      }
-      env.assignValue(this.variableName, val)
+      val = this.expression.evaluate(env, context) as NumericLiteral
+    } else {
+      val = NumericLiteral.new(0).castToType(this.variableType)
     }
+    env.assignValue(this.variableName, val)
   }
 }
 

@@ -11,7 +11,7 @@ const PREPROCESSOR_DIRECTIVEG =
 const NUMBER_REGEX = /^[+-]?([0-9]*[.])?[0-9]+/
 const IDENTIFIER_REGEX = /^[_a-zA-Z][_a-zA-Z0-9]*/
 const STRING_LITERAL_REGEX = /^".*?(?<!\\)"/
-const CHARACTER_LITERAL_REGEX = /^'.(?<!\\)'|^'\\[abfnrtv'"?]'|^'\\\\'/
+const CHARACTER_LITERAL_REGEX = /^'.(?<!\\)'|^'\\[abfnrtv'"?]'|^'\\\\'|^'\\0'/
 const DATA_TYPE_REGEX = /^int\b|^char\b|^float\b|^double\b|^void\b/
 const SPACE_REGEX = /^\s+/
 const PRIORITIZED_ARITHMETIC_OPERATOR_REGEX = /^[*\/%](?!=)/
@@ -39,7 +39,8 @@ const RESERVED_KEYWORDS = new Set([
   'switch',
   'case',
   'default',
-  'sizeof'
+  'sizeof',
+  'typeof'
 ])
 
 const ESCAPE_CHARACTERS = {
@@ -53,7 +54,8 @@ const ESCAPE_CHARACTERS = {
   "\\'": "'",
   '\\"': '"',
   '\\?': '?',
-  '\\\\': '\\'
+  '\\\\': '\\',
+  '\\0': '\0'
 }
 
 export class Lexer {
@@ -217,29 +219,6 @@ export class Lexer {
       type = new PointerType(type)
     }
     return type
-  }
-
-  eatArrayDimension(): number[] {
-    const result = []
-    do {
-      this.eatDelimiter('[')
-      if (this.matchDelimiter(']')) {
-        throw new Error(
-          this.formatError('definition of variable with array type needs an explicit size')
-        )
-      }
-      const size = this.eatNumber()
-      if (!WHOLE_PRIMITIVE_TYPES.has(size.getDataType().toString())) {
-        throw new Error(
-          this.formatError(
-            "size of array has non-integer type '" + size.getDataType().toString() + "'"
-          )
-        )
-      }
-      result.push(size.getValue())
-      this.eatDelimiter(']')
-    } while (this.matchDelimiter('['))
-    return result
   }
 
   matchPrioritizedArithmeticOperator(): boolean {

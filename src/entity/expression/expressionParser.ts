@@ -1,4 +1,4 @@
-import { DataType, PointerType, PrimitiveType, sizeof } from '../../interpreter/builtins'
+import { ArrayType, DataType, PointerType, PrimitiveType, sizeof } from '../../interpreter/builtins'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Expression, IncrementDecrement, Jump } from './expression'
@@ -10,6 +10,7 @@ import {
   checkBinaryExprssionOperandType,
   checkConditionOperandType,
   checkSubscriptType,
+  checkTypeCastType,
   checkUnaryMinusOperandType,
   getHigherPrecisionType
 } from './typeCheck'
@@ -47,7 +48,8 @@ function assertAssignable(
     ele != DEREFERENCE_TAG &&
     (typeof ele != 'string' ||
       !new Lexer(ele).matchIdentifier() ||
-      env.lookupType(ele) == PrimitiveType.FUNCTION)
+      env.lookupType(ele) == PrimitiveType.FUNCTION ||
+      env.lookupType(ele) instanceof ArrayType)
   ) {
     throw new Error(lexer.formatError('expression is not assignable', row, col))
   }
@@ -84,7 +86,7 @@ export class ExpressionParser {
       const [row, col] = lexer.tell()
       lexer.eatDelimiter('*')
       const type = this.recurParseNumericTerm(env, lexer, result, false, isConstantExpression)
-      if (!(type instanceof PointerType)) {
+      if (!(type instanceof PointerType || type instanceof ArrayType)) {
         throw new Error(
           lexer.formatError(
             "indirection requires pointer operand, ('" + type + "' invalid)",
@@ -108,15 +110,7 @@ export class ExpressionParser {
         lexer.eatDelimiter(')')
         const [oldTypeRow, oldTypeCol] = lexer.tell()
         const oldType = this.recurParseNumericTerm(env, lexer, result, false, isConstantExpression)
-        if (oldType == PrimitiveType.VOID) {
-          throw new Error(
-            lexer.formatError(
-              "cannot cast type '" + oldType.toString() + "' to '" + typeToCast.toString() + "'",
-              oldTypeRow,
-              oldTypeCol
-            )
-          )
-        }
+        checkTypeCastType(oldType, typeToCast, oldTypeRow, oldTypeCol, lexer)
         result.push(typeToCast)
         dataType = typeToCast
       } else {
@@ -203,6 +197,21 @@ export class ExpressionParser {
       lexer.eatDelimiter(')')
       result.push(NumericLiteral.new(sizeof(type)).castToType(PrimitiveType.INT))
       dataType = PrimitiveType.INT
+    } else if (lexer.matchKeyword('typeof')) {
+      lexer.eatKeyword('typeof')
+      lexer.eatDelimiter('(')
+      const tempResult: (
+        | string
+        | DataType
+        | NumericLiteral
+        | IncrementDecrement
+        | FunctionCall
+        | Jump
+      )[] = []
+      const type = this.recurParseExpression(env, lexer, tempResult, true, false)
+      lexer.eatDelimiter(')')
+      result.push('"' + type.toString() + '"')
+      dataType = new PointerType(PrimitiveType.CHAR)
     } else {
       throw new Error(lexer.formatError('expression expected'))
     }
@@ -216,7 +225,7 @@ export class ExpressionParser {
           : IncrementDecrement.POST_DECREMENT
       )
     }
-    if (lexer.matchDelimiter('[')) {
+    while (lexer.matchDelimiter('[')) {
       assertSubscritable(dataType, lexer)
       lexer.eatDelimiter('[')
       const [row, col] = lexer.tell()
@@ -228,7 +237,7 @@ export class ExpressionParser {
       )
       lexer.eatDelimiter(']')
       result.push('+', DEREFERENCE_TAG)
-      dataType = (dataType as PointerType).dereference()
+      dataType = (dataType as PointerType | ArrayType).dereference()
     }
     return dataType
   }
@@ -358,7 +367,7 @@ export class ExpressionParser {
     const jumps: Jump[] = []
     while (lexer.matchDelimiter('&&')) {
       const [row, col] = lexer.tell()
-      jumps.push(new Jump(false))
+      jumps.push(new Jump(false, false))
       result.push(jumps[jumps.length - 1])
       lexer.eatDelimiter('&&')
       const rightType = this.recurParseRelationalExpression(
@@ -392,7 +401,7 @@ export class ExpressionParser {
     const jumps: Jump[] = []
     while (lexer.matchDelimiter('||')) {
       const [row, col] = lexer.tell()
-      jumps.push(new Jump(true))
+      jumps.push(new Jump(true, false))
       result.push(jumps[jumps.length - 1])
       lexer.eatDelimiter('||')
       const rightType = this.recurParsePrioritizedLogicalTerm(
@@ -429,7 +438,7 @@ export class ExpressionParser {
     }
     checkConditionOperandType(row, col, lexer, conditionType)
     lexer.eatDelimiter('?')
-    const jumpToElse = new Jump(false)
+    const jumpToElse = new Jump(false, true)
     result.push(jumpToElse)
     const firstType = this.recurParseLogicalExpression(
       env,
