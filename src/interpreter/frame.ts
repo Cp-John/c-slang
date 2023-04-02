@@ -193,7 +193,7 @@ export class Frame {
     }
     this.stackTop += sizeof(type)
     this.boundings[name] = { type: type, val: value }
-    console.log('declared variable: ' + name + ':' + type + ' [' + this.stackTop + ']')
+    // console.log('declared variable: ' + name + ':' + type + ' [' + this.stackTop + ']')
     return name
   }
 
