@@ -28,6 +28,9 @@ export class Program {
           (err instanceof Error ? err.message : String(err))
       )
     }
+    if (!frame.isFunctionDefined('main')) {
+      throw new Error("entry of execution 'main' function has no definition yet")
+    }
     FunctionCall.checkCalledFunctionDefinition(frame)
     return new Program(declarations)
   }

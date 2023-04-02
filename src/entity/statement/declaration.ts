@@ -123,6 +123,7 @@ export abstract class Declaration extends Statement {
     returnType: DataType | null,
     allowFunctionDeclaration: boolean
   ): Statement[] {
+    const [typeRow, typeCol] = lexer.tell()
     let primitiveType: PrimitiveType = PrimitiveType.VOID
     let type: DataType = PrimitiveType.VOID
     if (lexer.matchDataType()) {
@@ -135,7 +136,16 @@ export abstract class Declaration extends Statement {
     const identifier = lexer.eatIdentifier()
     if (lexer.matchDelimiter('(')) {
       if (!allowFunctionDeclaration) {
-        throw new Error(lexer.formatError('function definition is not allowed here'))
+        throw new Error(lexer.formatError('function definition is not allowed here', row, col))
+      }
+      if (identifier == 'main' && type != PrimitiveType.VOID && type != PrimitiveType.INT) {
+        throw new Error(
+          lexer.formatError(
+            "return type of 'main' function is not 'int' or 'void'",
+            typeRow,
+            typeCol
+          )
+        )
       }
       const newEnv = Frame.extend(env)
       const formalParameterList = Declaration.parseFormalParameterList(newEnv, lexer, identifier)
