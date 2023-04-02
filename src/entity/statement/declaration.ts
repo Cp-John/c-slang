@@ -44,7 +44,7 @@ export abstract class Declaration extends Statement {
       lexer.eatDelimiter(')')
       return result
     }
-    const type = lexer.eatDataType()
+    const type = lexer.wrapType(lexer.eatPrimitiveDataType())
     if (type == PrimitiveType.VOID) {
       lexer.eatDelimiter(')')
       return result
@@ -58,7 +58,7 @@ export abstract class Declaration extends Statement {
     while (!lexer.matchDelimiter(')')) {
       lexer.eatDelimiter(',')
       const [typeRow, typeCol] = lexer.tell()
-      const type = lexer.eatDataType()
+      const type = lexer.wrapType(lexer.eatPrimitiveDataType())
       if (type == PrimitiveType.VOID) {
         throw new Error(lexer.formatError("argument may not have 'void' type", typeRow, typeCol))
       }
@@ -72,7 +72,8 @@ export abstract class Declaration extends Statement {
 
   private static parseDeclaredVariables(
     env: Frame,
-    variableType: PrimitiveType | PointerType,
+    primitiveType: PrimitiveType,
+    firstVariableType: PrimitiveType | PointerType,
     firstVariable: string,
     firstRow: number,
     firstCol: number,
@@ -80,12 +81,12 @@ export abstract class Declaration extends Statement {
   ): Statement[] {
     const statements: (VariableDeclaration | ArrayDeclaration)[] = []
     if (lexer.matchDelimiter('[')) {
-      const actualType = new ArrayType(variableType, eatArrayDimension(env, lexer))
+      const actualType = new ArrayType(firstVariableType, eatArrayDimension(env, lexer))
       env.declareVariable(firstVariable, actualType, firstRow, firstCol, lexer)
       statements.push(new ArrayDeclaration(actualType, firstVariable))
     } else {
-      env.declareVariable(firstVariable, variableType, firstRow, firstCol, lexer)
-      statements.push(new VariableDeclaration(variableType, firstVariable))
+      env.declareVariable(firstVariable, firstVariableType, firstRow, firstCol, lexer)
+      statements.push(new VariableDeclaration(firstVariableType, firstVariable))
     }
 
     let declaredVariable = firstVariable
@@ -98,15 +99,16 @@ export abstract class Declaration extends Statement {
         break
       }
       lexer.eatDelimiter(',')
+      let actualType: DataType = lexer.wrapType(primitiveType)
       const [row, col] = lexer.tell()
       declaredVariable = lexer.eatIdentifier()
       if (lexer.matchDelimiter('[')) {
-        const actualType = new ArrayType(variableType, eatArrayDimension(env, lexer))
+        actualType = new ArrayType(actualType, eatArrayDimension(env, lexer))
         env.declareVariable(declaredVariable, actualType, row, col, lexer)
         statements.push(new ArrayDeclaration(actualType, declaredVariable))
       } else {
-        env.declareVariable(declaredVariable, variableType, row, col, lexer)
-        statements.push(new VariableDeclaration(variableType, declaredVariable))
+        env.declareVariable(declaredVariable, actualType, row, col, lexer)
+        statements.push(new VariableDeclaration(actualType, declaredVariable))
       }
     }
     lexer.eatDelimiter(';')
@@ -121,9 +123,11 @@ export abstract class Declaration extends Statement {
     returnType: DataType | null,
     allowFunctionDeclaration: boolean
   ): Statement[] {
+    let primitiveType: PrimitiveType = PrimitiveType.VOID
     let type: DataType = PrimitiveType.VOID
     if (lexer.matchDataType()) {
-      type = lexer.eatDataType()
+      primitiveType = lexer.eatPrimitiveDataType()
+      type = lexer.wrapType(primitiveType)
     } else {
       throw new Error(lexer.formatError('declaration statement expected'))
     }
@@ -147,7 +151,7 @@ export abstract class Declaration extends Statement {
       if (type == PrimitiveType.VOID) {
         throw new Error(lexer.formatError("variable has incomplete type 'void'"))
       }
-      return this.parseDeclaredVariables(env, type, identifier, row, col, lexer)
+      return this.parseDeclaredVariables(env, primitiveType, type, identifier, row, col, lexer)
     }
   }
 }

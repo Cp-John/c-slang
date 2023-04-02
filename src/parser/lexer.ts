@@ -203,7 +203,7 @@ export class Lexer {
     return this.hasNext() && DATA_TYPE_REGEX.test(this.currentLine)
   }
 
-  eatDataType(): PrimitiveType | PointerType {
+  eatPrimitiveDataType(): PrimitiveType {
     if (!this.hasNext()) {
       throw new Error(this.formatError('expected a datatype'))
     }
@@ -213,12 +213,20 @@ export class Lexer {
     }
     this.currentLine = this.currentLine.substring(match[0].length)
     this.col += match[0].length
-    let type: DataType = match[0] == 'double' ? PrimitiveType.FLOAT : (match[0] as PrimitiveType)
+    return match[0] == 'double' ? PrimitiveType.FLOAT : (match[0] as PrimitiveType)
+  }
+
+  eatDataType(): PrimitiveType | PointerType {
+    return this.wrapType(this.eatPrimitiveDataType())
+  }
+
+  wrapType(primitiveType: PrimitiveType): PrimitiveType | PointerType {
+    let finalType: PrimitiveType | PointerType = primitiveType
     while (this.matchDelimiter('*')) {
       this.eatDelimiter('*')
-      type = new PointerType(type)
+      finalType = new PointerType(finalType)
     }
-    return type
+    return finalType
   }
 
   matchPrioritizedArithmeticOperator(): boolean {
