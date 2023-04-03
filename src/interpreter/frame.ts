@@ -107,7 +107,7 @@ export class Frame {
     } else if (type == PrimitiveType.CHAR) {
       return this.memory.readChar(val)
     } else if (type instanceof ArrayType) {
-      console.log('lookup array ' + name + ': ' + String(val))
+      // console.log('lookup array ' + name + ': ' + String(val))
       return NumericLiteral.new(val, val).castToType(type, true)
     } else {
       throw new Error('lookup unknown datatype: ' + type)
@@ -186,13 +186,12 @@ export class Frame {
     lexer: Lexer | null = null
   ): string {
     this.checkRedefinition(name, row, col, lexer)
-    const value = this.stackTop
-    const size = sizeof(type)
-    if ((this.stackTop % 4) + size > 4) {
+    const eleSize = sizeof(type instanceof ArrayType ? type.getEleType() : type)
+    if ((this.stackTop % 4) + eleSize > 4) {
       this.stackTop = Math.ceil(this.stackTop / 4) * 4
     }
+    this.boundings[name] = { type: type, val: this.stackTop }
     this.stackTop += sizeof(type)
-    this.boundings[name] = { type: type, val: value }
     // console.log('declared variable: ' + name + ':' + type + ' [' + this.stackTop + ']')
     return name
   }
@@ -201,13 +200,13 @@ export class Frame {
     const startAddr = this.boundings[name]['val']
     const eleType = (this.boundings[name]['type'] as ArrayType).getEleType()
     for (let i = 0; i < initialValues.length; i++) {
-      console.log(
-        'assign: ' +
-          JSON.stringify(initialValues[i]) +
-          ' to address ' +
-          startAddr +
-          i * sizeof(eleType)
-      )
+      // console.log(
+      //   'assign: ' +
+      //     JSON.stringify(initialValues[i]) +
+      //     ' to address ' +
+      //     startAddr +
+      //     i * sizeof(eleType)
+      // )
       this.memory.writeNumeric(startAddr + i * sizeof(eleType), initialValues[i])
     }
   }
@@ -243,7 +242,7 @@ export class Frame {
   }
 
   dereference(numeric: NumericLiteral): NumericLiteral {
-    console.log('dereference: ' + JSON.stringify(numeric))
+    // console.log('dereference: ' + JSON.stringify(numeric))
     const type = numeric.getDataType()
     if (!(type instanceof PointerType || type instanceof ArrayType)) {
       throw new Error("attempt to dereference non-pointer type '" + type + "'")
