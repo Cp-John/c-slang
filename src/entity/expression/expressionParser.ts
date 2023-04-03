@@ -167,7 +167,8 @@ export class ExpressionParser {
           env,
           functionName,
           env.lookupFunction(functionName).parseActualParameters(env, lexer),
-          row
+          row,
+          col
         )
         if (!allowVoid && functionCall.getReturnType() == 'void') {
           throw new Error(

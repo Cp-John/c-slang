@@ -31,7 +31,7 @@ export class Program {
     if (!frame.isFunctionDefined('main')) {
       throw new Error("entry of execution 'main' function has no definition yet")
     }
-    FunctionCall.checkCalledFunctionDefinition(frame)
+    FunctionCall.checkCalledFunctionDefinition(frame, lexer)
     return new Program(declarations)
   }
 

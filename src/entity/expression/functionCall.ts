@@ -1,6 +1,7 @@
 import { DataType } from '../../interpreter/builtins'
 import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
+import { Lexer } from '../../parser/lexer'
 import { Function } from '../function/function'
 import { Expression } from './expression'
 import { NumericLiteral } from './numericLiteral'
@@ -8,26 +9,26 @@ import { NumericLiteral } from './numericLiteral'
 export class FunctionCall {
   private functionObj: Function
   private actualParameterList: Expression[]
-  private static calledFunctions: Set<string> = new Set<string>()
-  private row: number
+  private static calledFunctions: Map<string, [number, number]> = new Map<string, [number, number]>()
 
   static clearCalledFunctions(): void {
     FunctionCall.calledFunctions.clear()
   }
 
-  static checkCalledFunctionDefinition(env: Frame): void {
-    FunctionCall.calledFunctions.forEach(functionName => {
+  static checkCalledFunctionDefinition(env: Frame, lexer: Lexer): void {
+    FunctionCall.calledFunctions.forEach(([row, col], functionName) => {
       if (!env.isFunctionDefined(functionName)) {
-        throw new Error("called function '" + functionName + "' has no definition yet")
+        throw new Error(lexer.formatError("called function '" + functionName + "' has no definition yet", row, col))
       }
     })
   }
 
-  constructor(env: Frame, functionName: string, actualParameterList: Expression[], row: number) {
+  constructor(env: Frame, functionName: string, actualParameterList: Expression[], row: number, col: number) {
     this.functionObj = env.lookupFunction(functionName)
-    FunctionCall.calledFunctions.add(functionName)
+    if (!FunctionCall.calledFunctions.has(functionName)) {
+      FunctionCall.calledFunctions.set(functionName, [row, col])
+    }
     this.actualParameterList = actualParameterList
-    this.row = row
   }
 
   getReturnType(): DataType {
