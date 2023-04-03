@@ -9,7 +9,10 @@ import { NumericLiteral } from './numericLiteral'
 export class FunctionCall {
   private functionObj: Function
   private actualParameterList: Expression[]
-  private static calledFunctions: Map<string, [number, number]> = new Map<string, [number, number]>()
+  private static calledFunctions: Map<string, [number, number]> = new Map<
+    string,
+    [number, number]
+  >()
 
   static clearCalledFunctions(): void {
     FunctionCall.calledFunctions.clear()
@@ -18,12 +21,24 @@ export class FunctionCall {
   static checkCalledFunctionDefinition(env: Frame, lexer: Lexer): void {
     FunctionCall.calledFunctions.forEach(([row, col], functionName) => {
       if (!env.isFunctionDefined(functionName)) {
-        throw new Error(lexer.formatError("called function '" + functionName + "' has no definition yet", row, col))
+        throw new Error(
+          lexer.formatError(
+            "called function '" + functionName + "' has no definition yet",
+            row,
+            col
+          )
+        )
       }
     })
   }
 
-  constructor(env: Frame, functionName: string, actualParameterList: Expression[], row: number, col: number) {
+  constructor(
+    env: Frame,
+    functionName: string,
+    actualParameterList: Expression[],
+    row: number,
+    col: number
+  ) {
     this.functionObj = env.lookupFunction(functionName)
     if (!FunctionCall.calledFunctions.has(functionName)) {
       FunctionCall.calledFunctions.set(functionName, [row, col])
