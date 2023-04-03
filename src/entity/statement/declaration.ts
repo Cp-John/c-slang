@@ -159,7 +159,7 @@ export abstract class Declaration extends Statement {
       return [new FunctionDeclaration(type, identifier, formalParameterList, functionObj.body)]
     } else {
       if (type == PrimitiveType.VOID) {
-        throw new Error(lexer.formatError("variable has incomplete type 'void'"))
+        throw new Error(lexer.formatError("variable has incomplete type 'void'", row, col))
       }
       return this.parseDeclaredVariables(env, primitiveType, type, identifier, row, col, lexer)
     }
