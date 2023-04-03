@@ -118,12 +118,18 @@ export class Frame {
     return this.findFrameWith(name).boundings[name]['type']
   }
 
-  private isRedefinition(name: string): boolean {
-    return (
-      name in this.boundings &&
-      (!(this.boundings[name]['val'] instanceof SelfDefinedFunction) ||
-        this.boundings[name]['val'].isDefined())
-    )
+  private isRedefinition(name: string, type: DataType): boolean {
+    if (!(name in this.boundings)) {
+      return false
+    } else if (type != PrimitiveType.FUNCTION) {
+      return true
+    } else if (
+      this.boundings[name]['val'] instanceof SelfDefinedFunction &&
+      !this.boundings[name]['val'].isDefined()
+    ) {
+      return false
+    }
+    return true
   }
 
   allocateStringLiteral(stringLiteral: string): NumericLiteral {
@@ -133,11 +139,12 @@ export class Frame {
 
   private checkRedefinition(
     name: string,
+    type: DataType,
     row: number = -1,
     col: number = -1,
     lexer: Lexer | null = null
   ) {
-    if (this.isRedefinition(name)) {
+    if (this.isRedefinition(name, type)) {
       let errMsg = "redefinition of '" + name + "'"
       if (lexer != null) {
         errMsg = lexer.formatError(errMsg, row, col)
@@ -166,7 +173,7 @@ export class Frame {
     col: number = -1,
     lexer: Lexer | null = null
   ): string {
-    this.checkRedefinition(name, row, col, lexer)
+    this.checkRedefinition(name, PrimitiveType.FUNCTION, row, col, lexer)
     if (
       name in this.boundings &&
       (this.boundings[name]['val'] as Function).toString() != functionObj.toString()
@@ -185,7 +192,7 @@ export class Frame {
     col: number = -1,
     lexer: Lexer | null = null
   ): string {
-    this.checkRedefinition(name, row, col, lexer)
+    this.checkRedefinition(name, type, row, col, lexer)
     const eleSize = sizeof(type instanceof ArrayType ? type.getEleType() : type)
     if ((this.stackTop % 4) + eleSize > 4) {
       this.stackTop = Math.ceil(this.stackTop / 4) * 4
