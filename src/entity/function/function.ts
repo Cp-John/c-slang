@@ -25,7 +25,7 @@ export abstract class Function {
   protected checkTooFewArguments(lexer: Lexer) {
     if (lexer.matchDelimiter(')')) {
       throw new Error(
-        lexer.formatError("'too few arguments in call to '" + this.functionName + "'")
+        lexer.formatError("too few arguments in call to '" + this.functionName + "'")
       )
     }
   }
