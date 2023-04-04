@@ -1,7 +1,7 @@
-import { DataType } from '../../interpreter/builtins'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { ArrayType } from '../datatype/arrayType'
+import { DataType } from '../datatype/dataType'
 import { PointerType } from '../datatype/pointerType'
 import { PrimitiveType, PrimitiveTypes } from '../datatype/primitiveType'
 import { Expression, IncrementDecrement, Jump } from './expression'

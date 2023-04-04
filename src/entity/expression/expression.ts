@@ -1,6 +1,7 @@
-import { DataType, PRIMITIVE_TYPES } from '../../interpreter/builtins'
+import { PRIMITIVE_TYPES } from '../../interpreter/builtins'
 import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
+import { DataType } from '../datatype/dataType'
 import { PointerType } from '../datatype/pointerType'
 import { PrimitiveType, PrimitiveTypes } from '../datatype/primitiveType'
 import { DEREFERENCE_TAG } from './expressionParser'

@@ -1,6 +1,7 @@
-import { ARITH_PRIMITIVE_TYPES, DataType, WHOLE_PRIMITIVE_TYPES } from '../../interpreter/builtins'
+import { ARITH_PRIMITIVE_TYPES, WHOLE_PRIMITIVE_TYPES } from '../../interpreter/builtins'
 import { Lexer, RELATIONAL_OPERATOR_RETEX } from '../../parser/lexer'
 import { ArrayType } from '../datatype/arrayType'
+import { DataType } from '../datatype/dataType'
 import { PointerType } from '../datatype/pointerType'
 import { PrimitiveType, PrimitiveTypes } from '../datatype/primitiveType'
 

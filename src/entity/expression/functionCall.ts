@@ -1,7 +1,7 @@
-import { DataType } from '../../interpreter/builtins'
 import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
+import { DataType } from '../datatype/dataType'
 import { Function } from '../function/function'
 import { Expression } from './expression'
 import { NumericLiteral } from './numericLiteral'

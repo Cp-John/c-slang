@@ -1,7 +1,7 @@
-import { DataType } from '../interpreter/builtins'
 import { checkTimeout, CProgramContext } from '../interpreter/cProgramContext'
 import { Frame } from '../interpreter/frame'
 import { Lexer } from '../parser/lexer'
+import { DataType } from './datatype/dataType'
 import { Return } from './statement/return'
 import { Break, Continue } from './statement/simpleStatement'
 import { Statement } from './statement/statement'

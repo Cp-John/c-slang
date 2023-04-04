@@ -1,9 +1,9 @@
-import { DataType } from '../../interpreter/builtins'
 import { CProgramContext, initCProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
-import { ArrayType } from '../datatype/arrayType'
+import { ArrayType, ElementType } from '../datatype/arrayType'
+import { DataType } from '../datatype/dataType'
 import { PointerType } from '../datatype/pointerType'
 import { PrimitiveType, PrimitiveTypes } from '../datatype/primitiveType'
 import { Expression } from '../expression/expression'
@@ -76,7 +76,7 @@ export abstract class Declaration extends Statement {
   private static parseDeclaredVariables(
     env: Frame,
     primitiveType: PrimitiveType,
-    firstVariableType: PrimitiveType | PointerType,
+    firstVariableType: ElementType,
     firstVariable: string,
     firstRow: number,
     firstCol: number,
@@ -102,16 +102,16 @@ export abstract class Declaration extends Statement {
         break
       }
       lexer.eatDelimiter(',')
-      let actualType: DataType = lexer.wrapType(primitiveType)
+      const eleType: ElementType = lexer.wrapType(primitiveType)
       const [row, col] = lexer.tell()
       declaredVariable = lexer.eatIdentifier()
       if (lexer.matchDelimiter('[')) {
-        actualType = new ArrayType(actualType, eatArrayDimension(env, lexer))
-        env.declareVariable(declaredVariable, actualType, row, col, lexer)
-        statements.push(new ArrayDeclaration(actualType, declaredVariable))
+        const arrayType = new ArrayType(eleType, eatArrayDimension(env, lexer))
+        env.declareVariable(declaredVariable, arrayType, row, col, lexer)
+        statements.push(new ArrayDeclaration(arrayType, declaredVariable))
       } else {
-        env.declareVariable(declaredVariable, actualType, row, col, lexer)
-        statements.push(new VariableDeclaration(actualType, declaredVariable))
+        env.declareVariable(declaredVariable, eleType, row, col, lexer)
+        statements.push(new VariableDeclaration(eleType, declaredVariable))
       }
     }
     lexer.eatDelimiter(';')
@@ -128,7 +128,7 @@ export abstract class Declaration extends Statement {
   ): Statement[] {
     const [typeRow, typeCol] = lexer.tell()
     let primitiveType: PrimitiveType = PrimitiveTypes.void
-    let type: DataType = PrimitiveTypes.void
+    let type: ElementType = PrimitiveTypes.void
     if (lexer.matchDataType()) {
       primitiveType = lexer.eatPrimitiveDataType()
       type = lexer.wrapType(primitiveType)

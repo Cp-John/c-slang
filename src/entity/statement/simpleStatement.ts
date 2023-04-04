@@ -1,7 +1,7 @@
-import { DataType } from '../../interpreter/builtins'
 import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
+import { DataType } from '../datatype/dataType'
 import { Statement } from './statement'
 
 export class Break extends Statement {

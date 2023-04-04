@@ -1,13 +1,7 @@
-import {
-  DataType,
-  MAX_CHAR,
-  MAX_INT,
-  MAX_UNSGINED_INT,
-  MIN_CHAR,
-  MIN_INT
-} from '../../interpreter/builtins'
+import { MAX_CHAR, MAX_INT, MAX_UNSGINED_INT, MIN_CHAR, MIN_INT } from '../../interpreter/builtins'
 import { Frame } from '../../interpreter/frame'
 import { ArrayType } from '../datatype/arrayType'
+import { DataType } from '../datatype/dataType'
 import { PointerType } from '../datatype/pointerType'
 import { PrimitiveTypes } from '../datatype/primitiveType'
 import { UNARY_MINUS_TAG } from './expressionParser'

@@ -1,11 +1,7 @@
-import { ArrayType } from '../entity/datatype/arrayType'
 import { PointerType } from '../entity/datatype/pointerType'
 import { PrimitiveType, PrimitiveTypes } from '../entity/datatype/primitiveType'
-import { Expression } from '../entity/expression/expression'
-import { ExpressionParser } from '../entity/expression/expressionParser'
 import { NumericLiteral } from '../entity/expression/numericLiteral'
 import { BuiltinFunction, RealBuiltinFunction } from '../entity/function/builtinFunction'
-import { Lexer } from '../parser/lexer'
 import { CProgramContext } from './cProgramContext'
 import { Frame } from './frame'
 
@@ -17,8 +13,6 @@ export const MAX_CHAR = 127
 export const MIN_CHAR = -128
 
 export const MAX_UNSGINED_INT = 4294967295
-
-export type DataType = PrimitiveType | PointerType | ArrayType
 
 export const ARITH_PRIMITIVE_TYPES = new Set<string>([
   PrimitiveTypes.char.toString(),

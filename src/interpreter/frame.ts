@@ -1,4 +1,5 @@
 import { ArrayType } from '../entity/datatype/arrayType'
+import { DataType } from '../entity/datatype/dataType'
 import { PointerType } from '../entity/datatype/pointerType'
 import { PrimitiveTypes } from '../entity/datatype/primitiveType'
 import { NumericLiteral } from '../entity/expression/numericLiteral'
@@ -6,7 +7,7 @@ import { Function } from '../entity/function/function'
 import { SelfDefinedFunction } from '../entity/function/selfDefinedFunction'
 import { Memory } from '../memory/memory'
 import { Lexer } from '../parser/lexer'
-import { BUILTIN_FUNCTIONS, DataType } from './builtins'
+import { BUILTIN_FUNCTIONS } from './builtins'
 import { CProgramContext } from './cProgramContext'
 
 export class Frame {
