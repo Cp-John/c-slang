@@ -161,19 +161,14 @@ export class ArrayType extends SubscriptableType {
         )
       }
       const [row, col] = lexer.tell()
-      const constExpr = ExpressionParser.parse(
-        env,
-        lexer,
-        false,
-        true,
-        PrimitiveTypes.int,
-        false
-      )
-      let size;
+      const constExpr = ExpressionParser.parse(env, lexer, false, true, PrimitiveTypes.int, false)
+      let size
       try {
         size = constExpr.evaluate(env, initCProgramContext()) as NumericLiteral
       } catch (err) {
-        throw new Error('Line ' + String(row) + ': ' + (err instanceof Error ? err.message : String(err)))
+        throw new Error(
+          'Line ' + String(row) + ': ' + (err instanceof Error ? err.message : String(err))
+        )
       }
       if (size.getValue() <= 0) {
         throw new Error(
