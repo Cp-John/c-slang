@@ -209,10 +209,15 @@ export class Lexer {
     }
     this.currentLine = this.currentLine.substring(match[0].length)
     this.col += match[0].length
-    return match[0] == 'double' ? PrimitiveTypes.float :
-    match[0] == 'float' ? PrimitiveTypes.float :
-    match[0] == 'int' ? PrimitiveTypes.int :
-    match[0] == 'char' ? PrimitiveTypes.char : PrimitiveTypes.void
+    return match[0] == 'double'
+      ? PrimitiveTypes.float
+      : match[0] == 'float'
+      ? PrimitiveTypes.float
+      : match[0] == 'int'
+      ? PrimitiveTypes.int
+      : match[0] == 'char'
+      ? PrimitiveTypes.char
+      : PrimitiveTypes.void
   }
 
   eatDataType(): PrimitiveType | PointerType {

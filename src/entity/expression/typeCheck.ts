@@ -85,7 +85,8 @@ function checkImplicitConversion(
   if (
     leftType instanceof PointerType &&
     rightType instanceof PointerType &&
-    (leftType.dereference() == PrimitiveTypes.void || rightType.dereference() == PrimitiveTypes.void)
+    (leftType.dereference() == PrimitiveTypes.void ||
+      rightType.dereference() == PrimitiveTypes.void)
   ) {
     return
   }

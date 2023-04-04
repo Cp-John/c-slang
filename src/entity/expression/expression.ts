@@ -98,7 +98,7 @@ export class Expression {
     const result: NumericLiteral[] = []
     let i = 0
     while (i < this.elements.length) {
-      var ele = this.elements[i]
+      let ele = this.elements[i]
       if (ele instanceof Jump) {
         const jump = ele as Jump
         if (

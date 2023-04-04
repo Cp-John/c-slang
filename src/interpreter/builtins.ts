@@ -142,7 +142,10 @@ export const ARITH_PRIMITIVE_TYPES = new Set<string>([
   PrimitiveTypes.int.toString()
 ])
 
-export const WHOLE_PRIMITIVE_TYPES = new Set<string>([PrimitiveTypes.char.toString(), PrimitiveTypes.int.toString()])
+export const WHOLE_PRIMITIVE_TYPES = new Set<string>([
+  PrimitiveTypes.char.toString(),
+  PrimitiveTypes.int.toString()
+])
 
 export function sizeof(type: DataType): number {
   if (type instanceof ArrayType) {
