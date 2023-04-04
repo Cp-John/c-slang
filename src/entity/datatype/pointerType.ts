@@ -22,7 +22,7 @@ export class PointerType extends SubscriptableType {
     }
   }
 
-  override isPointer(): boolean {
+  override isPointerType(): boolean {
     return true
   }
 

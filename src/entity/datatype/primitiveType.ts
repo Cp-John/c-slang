@@ -53,7 +53,7 @@ class IntType extends WholePrimitiveType {
   }
 
   override canExplicitCastTo(targetType: DataType): boolean {
-    return this.canImplicitCastTo(targetType) || targetType.isPointer()
+    return this.canImplicitCastTo(targetType) || targetType.isPointerType()
   }
 }
 
@@ -90,7 +90,7 @@ class CharType extends WholePrimitiveType {
   }
 
   override canExplicitCastTo(targetType: DataType): boolean {
-    return this.canImplicitCastTo(targetType) || targetType.isPointer()
+    return this.canImplicitCastTo(targetType) || targetType.isPointerType()
   }
 }
 

@@ -14,7 +14,7 @@ export function checkSubscriptType(type: DataType, row: number, col: number, lex
 }
 
 export function checkUnaryMinusOperandType(type: DataType, row: number, col: number, lexer: Lexer) {
-  if (type.isPointer()) {
+  if (type.isPointerType()) {
     throw new Error(
       lexer.formatError(
         "invalid argument type '" + type.toString() + "' to unary expression",
