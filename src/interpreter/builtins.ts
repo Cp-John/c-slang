@@ -309,61 +309,47 @@ const printEnv: RealBuiltinFunction = (
   env.printEnv(context)
 }
 
-export const BUILTINS = {}
-
-// export const BUILTINS = {
-//   printf: [
-//     new BuiltinFunction(
-//       PrimitiveTypes.int,
-//       'printf',
-//       [new PointerType(PrimitiveTypes.char)],
-//       printf,
-//       false,
-//       true
-//     ),
-//     PrimitiveTypes.function
-//   ],
-//   scanf: [
-//     new BuiltinFunction(
-//       PrimitiveTypes.int,
-//       'scanf',
-//       [new PointerType(PrimitiveTypes.char)],
-//       scanf,
-//       true,
-//       true
-//     ),
-//     PrimitiveTypes.function
-//   ],
-//   rand: [new BuiltinFunction(PrimitiveTypes.int, 'rand', [], rand), PrimitiveTypes.function],
-//   time: [new BuiltinFunction(PrimitiveTypes.int, 'time', [], time), PrimitiveTypes.function],
-//   sqrt: [
-//     new BuiltinFunction(PrimitiveTypes.float, 'sqrt', [PrimitiveTypes.float], sqrt),
-//     PrimitiveTypes.function
-//   ],
-//   abs: [
-//     new BuiltinFunction(PrimitiveTypes.int, 'abs', [PrimitiveTypes.int], abs),
-//     PrimitiveTypes.function
-//   ],
-//   strlen: [
-//     new BuiltinFunction(PrimitiveTypes.int, 'strlen', [new PointerType(PrimitiveTypes.char)], strlen),
-//     PrimitiveTypes.function
-//   ],
-//   malloc: [
-//     new BuiltinFunction(new PointerType(PrimitiveTypes.void), 'malloc', [PrimitiveTypes.int], malloc),
-//     PrimitiveTypes.function
-//   ],
-//   free: [
-//     new BuiltinFunction(PrimitiveTypes.void, 'free', [new PointerType(PrimitiveTypes.void)], free),
-//     PrimitiveTypes.function
-//   ],
-//   printHeap: [
-//     new BuiltinFunction(PrimitiveTypes.void, 'printHeap', [], printHeap),
-//     PrimitiveTypes.function
-//   ],
-//   printEnv: [
-//     new BuiltinFunction(PrimitiveTypes.void, 'printEnv', [], printEnv),
-//     PrimitiveTypes.function
-//   ]
-//   //   RAND_MAX: [new NumericLiteral(RAND_MAX, PrimitiveTypes.int), PrimitiveTypes.int],
-//   //   MAX_INT: [new NumericLiteral(MAX_INT, PrimitiveTypes.int), PrimitiveTypes.int]
-// }
+export const BUILTIN_FUNCTIONS = {
+  printf: 
+    new BuiltinFunction(
+      PrimitiveTypes.int,
+      'printf',
+      [new PointerType(PrimitiveTypes.char)],
+      printf,
+      false,
+      true
+    ),
+  scanf: 
+    new BuiltinFunction(
+      PrimitiveTypes.int,
+      'scanf',
+      [new PointerType(PrimitiveTypes.char)],
+      scanf,
+      true,
+      true
+    ),
+  rand: new BuiltinFunction(PrimitiveTypes.int, 'rand', [], rand),
+  time: new BuiltinFunction(PrimitiveTypes.int, 'time', [], time),
+  sqrt: 
+    new BuiltinFunction(PrimitiveTypes.float, 'sqrt', [PrimitiveTypes.float], sqrt),
+    
+  abs: 
+    new BuiltinFunction(PrimitiveTypes.int, 'abs', [PrimitiveTypes.int], abs),
+    
+  strlen:
+    new BuiltinFunction(PrimitiveTypes.int, 'strlen', [new PointerType(PrimitiveTypes.char)], strlen),
+    
+  malloc:
+    new BuiltinFunction(new PointerType(PrimitiveTypes.void), 'malloc', [PrimitiveTypes.int], malloc),
+    
+  free:
+    new BuiltinFunction(PrimitiveTypes.void, 'free', [new PointerType(PrimitiveTypes.void)], free),
+    
+  printHeap:
+    new BuiltinFunction(PrimitiveTypes.void, 'printHeap', [], printHeap),
+    
+  printEnv:
+    new BuiltinFunction(PrimitiveTypes.void, 'printEnv', [], printEnv),
+  //   RAND_MAX: [new NumericLiteral(RAND_MAX, PrimitiveTypes.int), PrimitiveTypes.int],
+  //   MAX_INT: [new NumericLiteral(MAX_INT, PrimitiveTypes.int), PrimitiveTypes.int]
+}

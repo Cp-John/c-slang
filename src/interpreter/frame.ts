@@ -5,7 +5,7 @@ import { Function } from '../entity/function/function'
 import { SelfDefinedFunction } from '../entity/function/selfDefinedFunction'
 import { Memory } from '../memory/memory'
 import { Lexer } from '../parser/lexer'
-import { ArrayType, BUILTINS, DataType, sizeof } from './builtins'
+import { ArrayType, BUILTIN_FUNCTIONS, DataType, sizeof } from './builtins'
 import { CProgramContext } from './cProgramContext'
 
 export class Frame {
@@ -16,13 +16,8 @@ export class Frame {
   private memory: Memory
 
   private static addBuiltins(frame: Frame): Frame {
-    for (const name in BUILTINS) {
-      if (BUILTINS[name][1] == PrimitiveTypes.function) {
-        frame.declareFunction(name, BUILTINS[name][0])
-      } else {
-        frame.declareVariable(name, BUILTINS[name][1])
-        frame.assignValue(name, BUILTINS[name][0])
-      }
+    for (const name in BUILTIN_FUNCTIONS) {
+      frame.declareFunction(name, BUILTIN_FUNCTIONS[name])
     }
     return frame
   }
