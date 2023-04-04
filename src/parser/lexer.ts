@@ -1,7 +1,9 @@
-import { ElementType } from '../entity/datatype/arrayType'
+import { ElementType, NonPointerLikeType } from '../entity/datatype/arrayType'
 import { PointerType } from '../entity/datatype/pointerType'
 import { PrimitiveType, PrimitiveTypes } from '../entity/datatype/primitiveType'
+import { StructType } from '../entity/datatype/structType'
 import { NumericLiteral } from '../entity/expression/numericLiteral'
+import { Frame } from '../interpreter/frame'
 
 const PREPROCESSOR_DIRECTIVEG =
   /^\s*#\s*include\b|^\s*#\s*define\b|^\s*#\s*ifdef\b|^\s*#\s*ifndef\b|^\s*#\s*if\b|^\s*#\s*elif\b|^\s*#\s*else\b|^\s*#\s*pragma\b/
@@ -12,7 +14,7 @@ const CHARACTER_LITERAL_REGEX = /^'.(?<!\\)'|^'\\[abfnrtv'"?]'|^'\\\\'|^'\\0'/
 const DATA_TYPE_REGEX = /^int\b|^char\b|^float\b|^double\b|^void\b/
 const SPACE_REGEX = /^\s+/
 const PRIORITIZED_ARITHMETIC_OPERATOR_REGEX = /^[*\/%](?!=)/
-const ARITHMETIC_OPERATOR_REGEX = /^[*\/%\+-](?!=)/
+const ARITHMETIC_OPERATOR_REGEX = /^[*\/%\+](?!=)|^-(?![=|>])/
 const INCREMENT_DECREMENT_REGEX = /^\+\+|^--/
 const UNARY_PLUS_MINUS = /^\+(?!\+)|^-(?!-)/
 export const RELATIONAL_OPERATOR_RETEX = /^>=|^<=|^>|^<|^==|^!=/
@@ -197,7 +199,7 @@ export class Lexer {
   }
 
   matchDataType(): boolean {
-    return this.hasNext() && DATA_TYPE_REGEX.test(this.currentLine)
+    return this.hasNext() && (DATA_TYPE_REGEX.test(this.currentLine) || this.matchKeyword('struct'))
   }
 
   eatPrimitiveDataType(): PrimitiveType {
@@ -221,12 +223,26 @@ export class Lexer {
       : PrimitiveTypes.void
   }
 
-  eatElementType(): ElementType {
-    return this.wrapType(this.eatPrimitiveDataType())
+  eatStructType(env: Frame): StructType {
+    const keyword = this.eatKeyword('struct')
+    const [row, col] = this.tell()
+    return env.lookupStructType(keyword + ' ' + this.eatIdentifier(), row, col, this)
   }
 
-  wrapType(primitiveType: PrimitiveType): ElementType {
-    let finalType: ElementType = primitiveType
+  eatNonPointerLikeType(env: Frame): NonPointerLikeType {
+    if (this.matchKeyword('struct')) {
+      return this.eatStructType(env)
+    } else {
+      return this.eatPrimitiveDataType()
+    }
+  }
+
+  eatElementType(env: Frame): ElementType {
+    return this.wrapType(this.eatNonPointerLikeType(env))
+  }
+
+  wrapType(nonPointerLikeType: NonPointerLikeType): ElementType {
+    let finalType: ElementType = nonPointerLikeType
     while (this.matchDelimiter('*')) {
       this.eatDelimiter('*')
       finalType = new PointerType(finalType)

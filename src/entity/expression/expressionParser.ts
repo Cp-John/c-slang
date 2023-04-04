@@ -4,11 +4,14 @@ import { ArrayType } from '../datatype/arrayType'
 import { DataType } from '../datatype/dataType'
 import { PointerType } from '../datatype/pointerType'
 import { PrimitiveType, PrimitiveTypes } from '../datatype/primitiveType'
+import { StructType } from '../datatype/structType'
 import { SubscriptableType } from '../datatype/subscriptableType'
 import { Expression, IncrementDecrement, Jump } from './expression'
 import { FunctionCall } from './functionCall'
 import { NumericLiteral } from './numericLiteral'
 import {
+  assertIsStruct,
+  assertStructFieldExists,
   assertSubscriptable,
   checkAssignmentOperandType,
   checkBinaryExprssionOperandType,
@@ -29,6 +32,7 @@ function assertAddressable(
   if (typeof ele != 'string') {
     throw new Error(lexer.formatError('expression is not addressable', row, col))
   } else if (
+    ele == STRUCT_MEMBER_ACCESS_TAG ||
     ele == DEREFERENCE_TAG ||
     (new Lexer(ele).matchIdentifier() && env.lookupType(ele) != PrimitiveTypes.function)
   ) {
@@ -40,6 +44,7 @@ function assertAddressable(
 
 export const DEREFERENCE_TAG = '$DEREFERENCE'
 export const UNARY_MINUS_TAG = '$UNARY_MINUS'
+export const STRUCT_MEMBER_ACCESS_TAG = '$STRUCT_MEMBER_ACCESS_TAG'
 
 function assertAssignable(
   ele: string | DataType | NumericLiteral | IncrementDecrement | FunctionCall | Jump,
@@ -49,6 +54,7 @@ function assertAssignable(
   lexer: Lexer
 ) {
   if (
+    ele != STRUCT_MEMBER_ACCESS_TAG &&
     ele != DEREFERENCE_TAG &&
     (typeof ele != 'string' ||
       !new Lexer(ele).matchIdentifier() ||
@@ -104,7 +110,7 @@ export class ExpressionParser {
     } else if (lexer.matchDelimiter('(')) {
       lexer.eatDelimiter('(')
       if (lexer.matchDataType()) {
-        const typeToCast = lexer.eatElementType()
+        const typeToCast = lexer.eatElementType(env)
         lexer.eatDelimiter(')')
         const [row, col] = lexer.tell()
         const oldType = this.recurParseNumericTerm(env, lexer, result, false, isConstantExpression)
@@ -181,7 +187,7 @@ export class ExpressionParser {
       lexer.eatDelimiter('(')
       let type
       if (lexer.matchDataType()) {
-        type = lexer.eatElementType()
+        type = lexer.eatElementType(env)
       } else {
         const tempResult: (
           | string
@@ -215,28 +221,53 @@ export class ExpressionParser {
       throw new Error(lexer.formatError('expression expected'))
     }
 
-    if (lexer.matchIncrementDecrementOperator()) {
-      const [row, col] = lexer.tell()
-      assertAssignable(result[result.length - 1], env, row, col, lexer)
-      result.push(
-        lexer.eatIncrementDecrementOperator() == '++'
-          ? IncrementDecrement.POST_INCREMENT
-          : IncrementDecrement.POST_DECREMENT
-      )
-    }
-    while (lexer.matchDelimiter('[')) {
-      assertSubscriptable(dataType, lexer)
-      lexer.eatDelimiter('[')
-      const [row, col] = lexer.tell()
-      checkSubscriptType(
-        this.recurParseExpression(env, lexer, result, false, false),
-        row,
-        col,
-        lexer
-      )
-      lexer.eatDelimiter(']')
-      result.push('+', DEREFERENCE_TAG)
-      dataType = (dataType as PointerType | ArrayType).dereference()
+    console.log('parsed:', result)
+
+    while (true) {
+      if (lexer.matchIncrementDecrementOperator()) {
+        const [row, col] = lexer.tell()
+        assertAssignable(result[result.length - 1], env, row, col, lexer)
+        result.push(
+          lexer.eatIncrementDecrementOperator() == '++'
+            ? IncrementDecrement.POST_INCREMENT
+            : IncrementDecrement.POST_DECREMENT
+        )
+      } else if (lexer.matchDelimiter('[')) {
+        assertSubscriptable(dataType, lexer)
+        lexer.eatDelimiter('[')
+        const [row, col] = lexer.tell()
+        checkSubscriptType(
+          this.recurParseExpression(env, lexer, result, false, false),
+          row,
+          col,
+          lexer
+        )
+        lexer.eatDelimiter(']')
+        result.push('+', DEREFERENCE_TAG)
+        dataType = (dataType as PointerType | ArrayType).dereference()
+      } else if (lexer.matchDelimiter('.')) {
+        assertIsStruct(dataType, lexer)
+        lexer.eatDelimiter('.')
+        const [row, col] = lexer.tell()
+        const fieldName = lexer.eatIdentifier()
+        dataType = assertStructFieldExists(fieldName, dataType as StructType, lexer, row, col)
+        result.push(fieldName, STRUCT_MEMBER_ACCESS_TAG)
+      } else if (lexer.matchDelimiter('->')) {
+        if (!dataType.isSubscriptable()) {
+          throw new Error(
+            lexer.formatError("indirection requires pointer operand, ('" + dataType + "' invalid)")
+          )
+        }
+        assertIsStruct((dataType as SubscriptableType).dereference(), lexer)
+        lexer.eatDelimiter('->')
+        const [row, col] = lexer.tell()
+        const fieldName = lexer.eatIdentifier()
+        const structType = (dataType as SubscriptableType).dereference() as StructType
+        dataType = assertStructFieldExists(fieldName, structType, lexer, row, col)
+        result.push(DEREFERENCE_TAG, fieldName, STRUCT_MEMBER_ACCESS_TAG)
+      } else {
+        break
+      }
     }
     return dataType
   }

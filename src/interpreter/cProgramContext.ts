@@ -9,7 +9,7 @@ export interface CProgramContext {
   executedStatementCount: number
 }
 
-export function initCProgramContext(maxExecTimMs: number): CProgramContext {
+export function initCProgramContext(maxExecTimMs: number = 1000): CProgramContext {
   return {
     stdout: '',
     baseFrame: Frame.extend(Frame.getBuiltinFrame()),

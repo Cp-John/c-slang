@@ -2,6 +2,7 @@ import { ArrayType } from '../entity/datatype/arrayType'
 import { DataType } from '../entity/datatype/dataType'
 import { PointerType } from '../entity/datatype/pointerType'
 import { PrimitiveTypes } from '../entity/datatype/primitiveType'
+import { StructType } from '../entity/datatype/structType'
 import { NumericLiteral } from '../entity/expression/numericLiteral'
 import { Function } from '../entity/function/function'
 import { SelfDefinedFunction } from '../entity/function/selfDefinedFunction'
@@ -89,32 +90,61 @@ export class Frame {
     return result
   }
 
+  lookupStructMember(name: string, fieldName: string): NumericLiteral {
+    const type = this.lookupType(name)
+    if (!(type instanceof StructType)) {
+      throw new Error("unmatched variable type, expected 'struct', got '" + type + "'")
+    }
+    const result = this.lookup(name)
+    if (!(result instanceof NumericLiteral)) {
+      throw new Error('unmatched variable type, expected number, got function object')
+    }
+    return NumericLiteral.new(result.getAddress() + type.getFieldMemOffset(fieldName)).castToType(
+      type.getFieldType(fieldName) as DataType
+    )
+  }
+
+  readAddress(addr: number, type: DataType) {
+    if (type instanceof PointerType) {
+      return this.memory.readPointer(addr, type)
+    } else if (type == PrimitiveTypes.int) {
+      return this.memory.readInt(addr)
+    } else if (type == PrimitiveTypes.float) {
+      return this.memory.readFloat(addr)
+    } else if (type == PrimitiveTypes.char) {
+      return this.memory.readChar(addr)
+    } else if (type instanceof ArrayType) {
+      return NumericLiteral.new(addr, addr).castToType(type, true)
+    } else if (type instanceof StructType) {
+      return NumericLiteral.new(addr, addr).castToType(type, true)
+    } else {
+      throw new Error('read unknown datatype: ' + type)
+    }
+  }
+
   private lookup(name: string): Function | NumericLiteral | string {
     const frame = this.findFrameWith(name)
     const val = frame.boundings[name]['val']
     const type = frame.boundings[name]['type']
     if (val == undefined) {
       throw new Error('unbounded identifier: ' + name)
-    } else if (type instanceof PointerType) {
-      return this.memory.readPointer(val, type)
     } else if (type == PrimitiveTypes.function) {
       return val
-    } else if (type == PrimitiveTypes.int) {
-      return this.memory.readInt(val)
-    } else if (type == PrimitiveTypes.float) {
-      return this.memory.readFloat(val)
-    } else if (type == PrimitiveTypes.char) {
-      return this.memory.readChar(val)
-    } else if (type instanceof ArrayType) {
-      // console.log('lookup array ' + name + ': ' + String(val))
-      return NumericLiteral.new(val, val).castToType(type, true)
     } else {
-      throw new Error('lookup unknown datatype: ' + type)
+      return this.readAddress(val, type)
     }
   }
 
   lookupType(name: string): DataType {
     return this.findFrameWith(name).boundings[name]['type']
+  }
+
+  lookupStructType(name: string, row: number, col: number, lexer: Lexer): StructType {
+    const frame = this.getFrameWithName(name)
+    if (frame == null) {
+      throw new Error(lexer.formatError("variable has incomplete type '" + name + "'", row, col))
+    }
+    return frame.boundings[name]['val']
   }
 
   private isRedefinition(name: string, type: DataType): boolean {
@@ -184,6 +214,17 @@ export class Frame {
     return name
   }
 
+  declareStructType(
+    structType: StructType,
+    row: number = -1,
+    col: number = -1,
+    lexer: Lexer | null = null
+  ): StructType {
+    this.checkRedefinition(structType.toString(), structType, row, col, lexer)
+    this.boundings[structType.toString()] = { type: 'struct type', val: structType }
+    return structType
+  }
+
   declareVariable(
     name: string,
     type: DataType,
@@ -200,6 +241,14 @@ export class Frame {
     this.stackTop += type.getSize()
     // console.log('declared variable: ' + name + ':' + type + ' [' + this.stackTop + ']')
     return name
+  }
+
+  initializeStruct(name: string, initialValues: NumericLiteral[]): void {
+    let addr = this.boundings[name]['val']
+    initialValues.forEach(value => {
+      this.assignValueByAddress(addr, value)
+      addr += value.getDataType().getSize()
+    })
   }
 
   initializeArray(name: string, initialValues: NumericLiteral[]): void {

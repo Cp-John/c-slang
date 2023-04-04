@@ -1,42 +1,16 @@
-import { CProgramContext, initCProgramContext } from '../../interpreter/cProgramContext'
+import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
-import { ArrayType, ElementType } from '../datatype/arrayType'
+import { ArrayType, ElementType, NonPointerLikeType } from '../datatype/arrayType'
 import { DataType } from '../datatype/dataType'
-import { PrimitiveType, PrimitiveTypes } from '../datatype/primitiveType'
+import { PrimitiveTypes } from '../datatype/primitiveType'
+import { StructType } from '../datatype/structType'
 import { Expression } from '../expression/expression'
 import { ExpressionParser } from '../expression/expressionParser'
 import { NumericLiteral } from '../expression/numericLiteral'
 import { SelfDefinedFunction } from '../function/selfDefinedFunction'
 import { Statement } from './statement'
-
-function eatArrayDimension(env: Frame, lexer: Lexer): number[] {
-  const result = []
-  do {
-    lexer.eatDelimiter('[')
-    if (lexer.matchDelimiter(']')) {
-      throw new Error(
-        lexer.formatError('definition of variable with array type needs an explicit size')
-      )
-    }
-    const [row, col] = lexer.tell()
-    const size = ExpressionParser.parse(
-      env,
-      lexer,
-      false,
-      true,
-      PrimitiveTypes.int,
-      false
-    ).evaluate(env, initCProgramContext(1000)) as NumericLiteral
-    if (size.getValue() <= 0) {
-      throw new Error(lexer.formatError('declared as an array with a non-positive size', row, col))
-    }
-    result.push(size.getValue())
-    lexer.eatDelimiter(']')
-  } while (lexer.matchDelimiter('['))
-  return result
-}
 
 export abstract class Declaration extends Statement {
   private static parseFormalParameterList(
@@ -78,18 +52,21 @@ export abstract class Declaration extends Statement {
 
   private static parseDeclaredVariables(
     env: Frame,
-    primitiveType: PrimitiveType,
+    nonPointerLikeType: NonPointerLikeType,
     firstVariableType: ElementType,
     firstVariable: string,
     firstRow: number,
     firstCol: number,
     lexer: Lexer
   ): Statement[] {
-    const statements: (VariableDeclaration | ArrayDeclaration)[] = []
+    const statements: (VariableDeclaration | ArrayDeclaration | StructDeclaration)[] = []
     if (lexer.matchDelimiter('[')) {
-      const actualType = new ArrayType(firstVariableType, eatArrayDimension(env, lexer))
+      const actualType = ArrayType.wrap(env, lexer, firstVariableType)
       env.declareVariable(firstVariable, actualType, firstRow, firstCol, lexer)
       statements.push(new ArrayDeclaration(actualType, firstVariable))
+    } else if (firstVariableType instanceof StructType) {
+      env.declareVariable(firstVariable, firstVariableType, firstRow, firstCol, lexer)
+      statements.push(new StructDeclaration(firstVariableType, firstVariable))
     } else {
       env.declareVariable(firstVariable, firstVariableType, firstRow, firstCol, lexer)
       statements.push(new VariableDeclaration(firstVariableType, firstVariable))
@@ -105,13 +82,16 @@ export abstract class Declaration extends Statement {
         break
       }
       lexer.eatDelimiter(',')
-      const eleType: ElementType = lexer.wrapType(primitiveType)
+      const eleType: ElementType = lexer.wrapType(nonPointerLikeType)
       const [row, col] = lexer.tell()
       declaredVariable = lexer.eatIdentifier()
       if (lexer.matchDelimiter('[')) {
-        const arrayType = new ArrayType(eleType, eatArrayDimension(env, lexer))
+        const arrayType = ArrayType.wrap(env, lexer, eleType)
         env.declareVariable(declaredVariable, arrayType, row, col, lexer)
         statements.push(new ArrayDeclaration(arrayType, declaredVariable))
+      } else if (eleType instanceof StructType) {
+        env.declareVariable(declaredVariable, eleType, row, col, lexer)
+        statements.push(new StructDeclaration(eleType, declaredVariable))
       } else {
         env.declareVariable(declaredVariable, eleType, row, col, lexer)
         statements.push(new VariableDeclaration(eleType, declaredVariable))
@@ -130,11 +110,25 @@ export abstract class Declaration extends Statement {
     allowFunctionDeclaration: boolean
   ): Statement[] {
     const [typeRow, typeCol] = lexer.tell()
-    let primitiveType: PrimitiveType = PrimitiveTypes.void
+    let nonPointerLikeType: NonPointerLikeType = PrimitiveTypes.void
     let type: ElementType = PrimitiveTypes.void
     if (lexer.matchDataType()) {
-      primitiveType = lexer.eatPrimitiveDataType()
-      type = lexer.wrapType(primitiveType)
+      if (lexer.matchKeyword('struct')) {
+        lexer.eatKeyword('struct')
+        const tag = lexer.eatIdentifier()
+        if (lexer.matchDelimiter('{')) {
+          const structType = StructType.getIncomplete(tag)
+          env.declareStructType(structType)
+          structType.parseDefinitionBody(env, lexer)
+          lexer.eatDelimiter(';')
+          return [new StructTypeDeclaration(structType)]
+        } else {
+          nonPointerLikeType = env.lookupStructType('struct ' + tag, typeRow, typeCol, lexer)
+        }
+      } else {
+        nonPointerLikeType = lexer.eatNonPointerLikeType(env)
+      }
+      type = lexer.wrapType(nonPointerLikeType)
     } else {
       throw new Error(lexer.formatError('declaration statement expected'))
     }
@@ -167,7 +161,7 @@ export abstract class Declaration extends Statement {
       if (type == PrimitiveTypes.void) {
         throw new Error(lexer.formatError("variable has incomplete type 'void'", row, col))
       }
-      return this.parseDeclaredVariables(env, primitiveType, type, identifier, row, col, lexer)
+      return this.parseDeclaredVariables(env, nonPointerLikeType, type, identifier, row, col, lexer)
     }
   }
 }
@@ -201,6 +195,34 @@ class ArrayDeclaration extends Declaration {
   }
 }
 
+class StructDeclaration extends Declaration {
+  private variableType: StructType
+  private variableName: string
+  private expressions: Expression[] | null
+
+  constructor(variableType: StructType, variableName: string) {
+    super()
+    this.variableType = variableType
+    this.variableName = variableName
+    this.expressions = null
+  }
+
+  parseExpression(env: Frame, lexer: Lexer): void {
+    this.expressions = this.variableType.parseInitialExpressions(env, lexer)
+  }
+
+  doExecute(env: Frame, context: CProgramContext): void {
+    env.declareVariable(this.variableName, this.variableType)
+    const initialValues: NumericLiteral[] = []
+    this.expressions =
+      this.expressions == null ? this.variableType.defaultInitialExpressions() : this.expressions
+    this.expressions.forEach(expr =>
+      initialValues.push(expr.evaluate(env, context) as NumericLiteral)
+    )
+    env.initializeStruct(this.variableName, initialValues)
+  }
+}
+
 class VariableDeclaration extends Declaration {
   private variableType: ElementType
   private variableName: string
@@ -229,7 +251,20 @@ class VariableDeclaration extends Declaration {
   }
 }
 
-export class FunctionDeclaration extends Declaration {
+class StructTypeDeclaration extends Declaration {
+  private structType: StructType
+
+  constructor(structType: StructType) {
+    super()
+    this.structType = structType
+  }
+
+  protected doExecute(env: Frame, context: CProgramContext): void {
+    env.declareStructType(this.structType)
+  }
+}
+
+class FunctionDeclaration extends Declaration {
   private returnType: DataType
   private functionName: string
   private parameterList: [DataType, string][]

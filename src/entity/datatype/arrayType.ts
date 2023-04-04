@@ -2,6 +2,8 @@ import { DataType } from './dataType'
 import { PrimitiveType, PrimitiveTypes } from './primitiveType'
 import { SubscriptableType } from './subscriptableType'
 
+export type NonPointerLikeType = PrimitiveType | StructType
+
 export type ElementType = PointerType | PrimitiveType | StructType
 
 export class ArrayType extends SubscriptableType {
@@ -93,6 +95,24 @@ export class ArrayType extends SubscriptableType {
     currentExpressions.forEach(expr => expressions.push(expr))
   }
 
+  parseInitialExpressions(env: Frame, lexer: Lexer) {
+    const result: Expression[] = []
+    this.parseInitialArrayExpressions(env, lexer, result)
+    return result
+  }
+
+  defaultInitialExpressions(): Expression[] {
+    const result: Expression[] = []
+    for (let i = 0; i < this.getEleCount(); i++) {
+      if (this.eleType instanceof StructType) {
+        this.eleType.defaultInitialExpressions().forEach(expr => result.push(expr))
+      } else {
+        result.push(Expression.of(NumericLiteral.new(0).castToType(this.eleType)))
+      }
+    }
+    return result
+  }
+
   parseInitialArrayExpressions(env: Frame, lexer: Lexer, expressions: Expression[]): void {
     const [row, col] = lexer.tell()
     const currentExpressions: Expression[] = []
@@ -130,8 +150,38 @@ export class ArrayType extends SubscriptableType {
     lexer.eatDelimiter('}')
     this.padInitialArrayExpressions(currentExpressions, expressions, row, col, lexer)
   }
+
+  static wrap(env: Frame, lexer: Lexer, eleType: ElementType): ArrayType {
+    const sizes: number[] = []
+    do {
+      lexer.eatDelimiter('[')
+      if (lexer.matchDelimiter(']')) {
+        throw new Error(
+          lexer.formatError('definition of variable with array type needs an explicit size')
+        )
+      }
+      const [row, col] = lexer.tell()
+      const size = ExpressionParser.parse(
+        env,
+        lexer,
+        false,
+        true,
+        PrimitiveTypes.int,
+        false
+      ).evaluate(env, initCProgramContext()) as NumericLiteral
+      if (size.getValue() <= 0) {
+        throw new Error(
+          lexer.formatError('declared as an array with a non-positive size', row, col)
+        )
+      }
+      sizes.push(size.getValue())
+      lexer.eatDelimiter(']')
+    } while (lexer.matchDelimiter('['))
+    return new ArrayType(eleType, sizes)
+  }
 }
 
+import { initCProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Expression } from '../expression/expression'

@@ -3,7 +3,8 @@ import { Frame } from '../../interpreter/frame'
 import { DataType } from '../datatype/dataType'
 import { PointerType } from '../datatype/pointerType'
 import { PrimitiveType, PrimitiveTypes } from '../datatype/primitiveType'
-import { DEREFERENCE_TAG } from './expressionParser'
+import { StructType } from '../datatype/structType'
+import { DEREFERENCE_TAG, STRUCT_MEMBER_ACCESS_TAG } from './expressionParser'
 import { FunctionCall } from './functionCall'
 import { NumericLiteral } from './numericLiteral'
 
@@ -155,6 +156,17 @@ export class Expression {
             ele
           )
         )
+      } else if (this.elements[i + 1] == STRUCT_MEMBER_ACCESS_TAG) {
+        const fieldName = ele
+        const struct = result.pop()
+        if (struct == undefined) {
+          throw new Error('impossible execution path')
+        }
+        const structType = struct.getDataType() as StructType
+        const fieldMemOffset = structType.getFieldMemOffset(fieldName)
+        const fieldType = structType.getFieldType(fieldName) as DataType
+        result.push(env.readAddress(struct.getAddress() + fieldMemOffset, fieldType))
+        i += 1
       } else {
         result.push(env.lookupNumber(ele))
       }

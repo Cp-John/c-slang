@@ -1,10 +1,34 @@
 import { Lexer } from '../../parser/lexer'
 import { DataType } from '../datatype/dataType'
+import { StructType } from '../datatype/structType'
 
 export function assertSubscriptable(type: DataType, lexer: Lexer) {
   if (!type.isSubscriptable()) {
     throw new Error(lexer.formatError('subscripted value is not an array, pointer'))
   }
+}
+
+export function assertIsStruct(type: DataType, lexer: Lexer) {
+  if (type instanceof StructType) {
+    return
+  }
+  throw new Error(lexer.formatError("member reference base type '" + type + "' is not a structure"))
+}
+
+export function assertStructFieldExists(
+  fieldName: string,
+  type: StructType,
+  lexer: Lexer,
+  row: number,
+  col: number
+): DataType {
+  const fieldType = type.getFieldType(fieldName)
+  if (fieldType == undefined) {
+    throw new Error(
+      lexer.formatError("no member named '" + fieldName + "' in '" + type + "'", row, col)
+    )
+  }
+  return fieldType
 }
 
 export function checkSubscriptType(type: DataType, row: number, col: number, lexer: Lexer) {

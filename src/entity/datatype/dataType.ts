@@ -1,5 +1,5 @@
 export abstract class DataType {
-  private size: number
+  protected size: number
 
   constructor(size: number) {
     this.size = size
@@ -23,6 +23,10 @@ export abstract class DataType {
 
   isArrayType(): boolean {
     return false
+  }
+
+  isComplete(): boolean {
+    return true
   }
 
   abstract toString(): string
