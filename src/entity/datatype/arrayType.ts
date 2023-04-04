@@ -61,12 +61,9 @@ export class ArrayType extends SubscriptableType {
   private parseInitialStringExpressions(lexer: Lexer, expressions: Expression[]): void {
     const stringLiteral = lexer.eatStringLiteral()
     for (let i = 1; i < stringLiteral.length - 1; i++) {
-      expressions
-        .push
-        // Expression.of(NumericLiteral.new(stringLiteral.charCodeAt(i)).castToType(this.eleType))
-        ()
+      expressions.push(Expression.of(NumericLiteral.new(stringLiteral.charCodeAt(i)).castToType(this.eleType)))
     }
-    // expressions.push(Expression.of(NumericLiteral.new(0).castToType(this.eleType)))
+    expressions.push(Expression.of(NumericLiteral.new(0).castToType(this.eleType)))
   }
 
   private padInitialArrayExpressions(
@@ -82,7 +79,7 @@ export class ArrayType extends SubscriptableType {
       )
     }
     for (let i = currentExpressions.length; i < this.getEleCount(); i++) {
-      // currentExpressions.push(Expression.of(NumericLiteral.new(0).castToType(this.eleType)))
+      currentExpressions.push(Expression.of(NumericLiteral.new(0).castToType(this.eleType)))
     }
     currentExpressions.forEach(expr => expressions.push(expr))
   }
@@ -107,10 +104,10 @@ export class ArrayType extends SubscriptableType {
       this.sizes.length == 1 ||
       !(lexer.matchDelimiter('"') || lexer.matchDelimiter('{'))
     ) {
-      // currentExpressions.push(ExpressionParser.parse(env, lexer, false, false, this.eleType))
+      currentExpressions.push(ExpressionParser.parse(env, lexer, false, false, this.eleType))
       while (!lexer.matchDelimiter('}')) {
         lexer.eatDelimiter(',')
-        // currentExpressions.push(ExpressionParser.parse(env, lexer, false, false, this.eleType))
+        currentExpressions.push(ExpressionParser.parse(env, lexer, false, false, this.eleType))
       }
     } else {
       ;(this.dereference() as ArrayType).parseInitialArrayExpressions(
