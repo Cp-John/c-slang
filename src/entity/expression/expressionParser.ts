@@ -1,6 +1,7 @@
-import { ArrayType, DataType, sizeof } from '../../interpreter/builtins'
+import { DataType } from '../../interpreter/builtins'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
+import { ArrayType } from '../datatype/arrayType'
 import { PointerType } from '../datatype/pointerType'
 import { PrimitiveType, PrimitiveTypes } from '../datatype/primitiveType'
 import { Expression, IncrementDecrement, Jump } from './expression'
@@ -198,7 +199,7 @@ export class ExpressionParser {
         type = this.recurParseExpression(env, lexer, tempResult, true, false)
       }
       lexer.eatDelimiter(')')
-      result.push(NumericLiteral.new(sizeof(type)).castToType(PrimitiveTypes.int))
+      result.push(NumericLiteral.new(type.getSize()).castToType(PrimitiveTypes.int))
       dataType = PrimitiveTypes.int
     } else if (lexer.matchKeyword('typeof')) {
       lexer.eatKeyword('typeof')

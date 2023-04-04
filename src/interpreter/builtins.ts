@@ -1,3 +1,4 @@
+import { ArrayType } from '../entity/datatype/arrayType'
 import { PointerType } from '../entity/datatype/pointerType'
 import { PrimitiveType, PrimitiveTypes } from '../entity/datatype/primitiveType'
 import { Expression } from '../entity/expression/expression'
@@ -17,123 +18,6 @@ export const MIN_CHAR = -128
 
 export const MAX_UNSGINED_INT = 4294967295
 
-export class ArrayType {
-  private eleType: PointerType | PrimitiveType
-  private size: number[]
-
-  constructor(eleType: PointerType | PrimitiveType, size: number[]) {
-    if (size.length == 0) {
-      throw Error('impossible execution path')
-    }
-    this.eleType = eleType
-    this.size = size
-  }
-
-  toPointerType(): PointerType {
-    return new PointerType(this.dereference())
-  }
-
-  canCastTo(type: DataType): boolean {
-    if (type.toString() == new PointerType(PrimitiveTypes.void).toString()) {
-      return true
-    }
-    return (
-      type instanceof PointerType &&
-      this.size.length == 1 &&
-      this.eleType.toString() == type.dereference().toString()
-    )
-  }
-
-  getEleType(): PointerType | PrimitiveType {
-    return this.eleType
-  }
-
-  getEleCount(): number {
-    let result = 1
-    for (let i = 0; i < this.size.length; i++) {
-      result *= this.size[i]
-    }
-    return result
-  }
-
-  dereference(): DataType {
-    if (this.size.length == 1) {
-      return this.eleType
-    } else {
-      return new ArrayType(this.eleType, this.size.slice(1))
-    }
-  }
-
-  private parseInitialStringExpressions(lexer: Lexer, expressions: Expression[]): void {
-    const stringLiteral = lexer.eatStringLiteral()
-    for (let i = 1; i < stringLiteral.length - 1; i++) {
-      expressions.push(
-        Expression.of(NumericLiteral.new(stringLiteral.charCodeAt(i)).castToType(this.eleType))
-      )
-    }
-    expressions.push(Expression.of(NumericLiteral.new(0).castToType(this.eleType)))
-  }
-
-  private padInitialArrayExpressions(
-    currentExpressions: Expression[],
-    expressions: Expression[],
-    row: number,
-    col: number,
-    lexer: Lexer
-  ) {
-    if (currentExpressions.length > this.getEleCount()) {
-      throw new Error(
-        lexer.formatError('more elements in array initializer than expected', row, col)
-      )
-    }
-    for (let i = currentExpressions.length; i < this.getEleCount(); i++) {
-      currentExpressions.push(Expression.of(NumericLiteral.new(0).castToType(this.eleType)))
-    }
-    currentExpressions.forEach(expr => expressions.push(expr))
-  }
-
-  parseInitialArrayExpressions(env: Frame, lexer: Lexer, expressions: Expression[]): void {
-    const [row, col] = lexer.tell()
-    const currentExpressions: Expression[] = []
-    if (lexer.matchDelimiter('"') && this.eleType == PrimitiveTypes.char && this.size.length == 1) {
-      this.parseInitialStringExpressions(lexer, currentExpressions)
-      this.padInitialArrayExpressions(currentExpressions, expressions, row, col, lexer)
-      return
-    }
-
-    lexer.eatDelimiter('{')
-    if (lexer.matchDelimiter('}')) {
-      // pass
-    } else if (this.size.length == 1 || !(lexer.matchDelimiter('"') || lexer.matchDelimiter('{'))) {
-      currentExpressions.push(ExpressionParser.parse(env, lexer, false, false, this.eleType))
-      while (!lexer.matchDelimiter('}')) {
-        lexer.eatDelimiter(',')
-        currentExpressions.push(ExpressionParser.parse(env, lexer, false, false, this.eleType))
-      }
-    } else {
-      ;(this.dereference() as ArrayType).parseInitialArrayExpressions(
-        env,
-        lexer,
-        currentExpressions
-      )
-    }
-    lexer.eatDelimiter('}')
-    this.padInitialArrayExpressions(currentExpressions, expressions, row, col, lexer)
-  }
-
-  toString(): string {
-    let result = this.eleType.toString()
-    for (let i = 0; i < this.size.length; i++) {
-      result += '[' + String(this.size[i]) + ']'
-    }
-    return result
-  }
-
-  getSize(): number {
-    return this.getEleCount() * sizeof(this.eleType)
-  }
-}
-
 export type DataType = PrimitiveType | PointerType | ArrayType
 
 export const ARITH_PRIMITIVE_TYPES = new Set<string>([
@@ -146,24 +30,6 @@ export const WHOLE_PRIMITIVE_TYPES = new Set<string>([
   PrimitiveTypes.char.toString(),
   PrimitiveTypes.int.toString()
 ])
-
-export function sizeof(type: DataType): number {
-  if (type instanceof ArrayType) {
-    return type.getSize()
-  } else if (type instanceof PointerType) {
-    return 4
-  } else if (type == PrimitiveTypes.void) {
-    return 1
-  } else if (type == PrimitiveTypes.int || type == PrimitiveTypes.float) {
-    return 4
-  } else if (type == PrimitiveTypes.function) {
-    return 0
-  } else if (type == PrimitiveTypes.char) {
-    return 1
-  } else {
-    throw new Error('unsupported sizeof datatype: ' + type)
-  }
-}
 
 export const PRIMITIVE_TYPES = Object.values(PrimitiveType)
 

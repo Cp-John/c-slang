@@ -1,10 +1,10 @@
 import {
   ARITH_PRIMITIVE_TYPES,
-  ArrayType,
   DataType,
   WHOLE_PRIMITIVE_TYPES
 } from '../../interpreter/builtins'
 import { Lexer, RELATIONAL_OPERATOR_RETEX } from '../../parser/lexer'
+import { ArrayType } from '../datatype/arrayType'
 import { PointerType } from '../datatype/pointerType'
 import { PrimitiveType, PrimitiveTypes } from '../datatype/primitiveType'
 
@@ -90,7 +90,7 @@ function checkImplicitConversion(
   ) {
     return
   }
-  if (rightType instanceof ArrayType && rightType.canCastTo(leftType)) {
+  if (rightType instanceof ArrayType && rightType.canImplicitCastTo(leftType)) {
     return
   }
   const error = new Error(

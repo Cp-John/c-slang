@@ -1,9 +1,8 @@
 import { DataType } from './dataType'
 import { PrimitiveType, PrimitiveTypes } from './primitiveType'
-import type { StructType } from './structType'
 import { SubscriptableType } from './subscritableType'
 
-export type ElementType = PointerType | PrimitiveType | StructType
+export type ElementType = PointerType | PrimitiveType
 
 export class ArrayType extends SubscriptableType {
   private eleType: ElementType

@@ -1,14 +1,13 @@
 import {
-  ArrayType,
   DataType,
   MAX_CHAR,
   MAX_INT,
   MAX_UNSGINED_INT,
   MIN_CHAR,
   MIN_INT,
-  sizeof
 } from '../../interpreter/builtins'
 import { Frame } from '../../interpreter/frame'
+import { ArrayType } from '../datatype/arrayType'
 import { PointerType } from '../datatype/pointerType'
 import { PrimitiveTypes } from '../datatype/primitiveType'
 import { UNARY_MINUS_TAG } from './expressionParser'
@@ -33,7 +32,7 @@ export class NumericLiteral {
 
   private getStep(): number {
     if (this.type instanceof PointerType || this.type instanceof ArrayType) {
-      return sizeof(this.type.dereference())
+      return this.type.dereference().getSize()
     }
     return 1
   }

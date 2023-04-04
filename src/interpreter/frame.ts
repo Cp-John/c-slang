@@ -1,3 +1,4 @@
+import { ArrayType } from '../entity/datatype/arrayType'
 import { PointerType } from '../entity/datatype/pointerType'
 import { PrimitiveTypes } from '../entity/datatype/primitiveType'
 import { NumericLiteral } from '../entity/expression/numericLiteral'
@@ -5,7 +6,7 @@ import { Function } from '../entity/function/function'
 import { SelfDefinedFunction } from '../entity/function/selfDefinedFunction'
 import { Memory } from '../memory/memory'
 import { Lexer } from '../parser/lexer'
-import { ArrayType, BUILTIN_FUNCTIONS, DataType, sizeof } from './builtins'
+import { BUILTIN_FUNCTIONS, DataType } from './builtins'
 import { CProgramContext } from './cProgramContext'
 
 export class Frame {
@@ -190,12 +191,12 @@ export class Frame {
     lexer: Lexer | null = null
   ): string {
     this.checkRedefinition(name, type, row, col, lexer)
-    const eleSize = sizeof(type instanceof ArrayType ? type.getEleType() : type)
+    const eleSize = (type instanceof ArrayType ? type.getEleType() : type).getSize()
     if ((this.stackTop % 4) + eleSize > 4) {
       this.stackTop = Math.ceil(this.stackTop / 4) * 4
     }
     this.boundings[name] = { type: type, val: this.stackTop }
-    this.stackTop += sizeof(type)
+    this.stackTop += type.getSize()
     // console.log('declared variable: ' + name + ':' + type + ' [' + this.stackTop + ']')
     return name
   }
@@ -211,7 +212,7 @@ export class Frame {
       //     startAddr +
       //     i * sizeof(eleType)
       // )
-      this.memory.writeNumeric(startAddr + i * sizeof(eleType), initialValues[i])
+      this.memory.writeNumeric(startAddr + i * eleType.getSize(), initialValues[i])
     }
   }
 
