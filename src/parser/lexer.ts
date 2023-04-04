@@ -367,10 +367,13 @@ export class Lexer {
     return result
   }
 
+  static isAsciiChar(ch: string): boolean {
+    return ch.charCodeAt(0) >= 0 && ch.charCodeAt(0) <= 127
+  }
+
   private checkNonAsciiCharacter(stringLiteral: string): void {
     for (let i = 1; i < stringLiteral.length - 1; i++) {
-      const charCode = stringLiteral.charCodeAt(i)
-      if (charCode > 127 || charCode < 0) {
+      if (!Lexer.isAsciiChar(stringLiteral[i])) {
         throw new Error(this.formatError('expected an ascii character', this.row, this.col + i))
       }
     }

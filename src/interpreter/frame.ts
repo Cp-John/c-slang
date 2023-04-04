@@ -306,6 +306,10 @@ export class Frame {
     const resultType = type.dereference()
     if (resultType instanceof ArrayType) {
       return NumericLiteral.new(val).castToType(resultType)
+    } else if (resultType instanceof StructType) {
+      return this.memory
+        .readPointer(val, new PointerType(PrimitiveTypes.void))
+        .castToType(resultType, true)
     } else if (resultType instanceof PointerType) {
       return this.memory.readPointer(val, resultType)
     } else if (resultType == PrimitiveTypes.char) {

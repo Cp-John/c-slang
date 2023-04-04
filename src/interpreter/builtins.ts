@@ -2,6 +2,7 @@ import { PointerType } from '../entity/datatype/pointerType'
 import { PrimitiveType, PrimitiveTypes } from '../entity/datatype/primitiveType'
 import { NumericLiteral } from '../entity/expression/numericLiteral'
 import { BuiltinFunction, RealBuiltinFunction } from '../entity/function/builtinFunction'
+import { Lexer } from '../parser/lexer'
 import { CProgramContext } from './cProgramContext'
 import { Frame } from './frame'
 
@@ -70,34 +71,51 @@ const scanf: RealBuiltinFunction = (
   let formatString = env.dereferenceAsString(args[0])
   while (i < args.length) {
     const input = prompt(context.stdout)
+    context.stdout += input + '\n'
     if (input == null) {
       throw Error('execution interrupted')
     }
     const tokens = input?.split(/\s+/)
-    for (let j = 0; tokens && j < tokens.length; j++) {
+    for (let j = 0; i < args.length && tokens && j < tokens.length; j++) {
       const match = PLACEHOLDER_REGEX.exec(formatString)
       if (match == null) {
         throw new Error('impossible execution path')
       }
       formatString = formatString.replace(PLACEHOLDER_REGEX, '0')
-      const numeric = isNaN(parseFloat(tokens[j]))
-        ? NumericLiteral.new(0)
-        : NumericLiteral.new(parseFloat(tokens[j]))
-      if (isNaN(parseFloat(tokens[j]))) {
-        env.assignValueByAddress(args[i].getValue(), NumericLiteral.new(0))
-      }
-      if (match[0] == '%c') {
-        env.assignValueByAddress(args[i].getValue(), numeric.castToType(PrimitiveTypes.char))
-      } else if (match[0] == '%d' || match[0] == '%ld') {
-        env.assignValueByAddress(args[i].getValue(), numeric.castToType(PrimitiveTypes.int))
-      } else if (match[0] == '%f' || match[0] == '%lf') {
-        env.assignValueByAddress(args[i].getValue(), numeric.castToType(PrimitiveTypes.float))
+      if (match[0] == '%s') {
+        for (let k = 0; k < tokens[j].length; k++) {
+          const ch = tokens[j][k]
+          if (!Lexer.isAsciiChar(ch)) {
+            throw new Error("expected ascii character, but got '" + ch + "'")
+          }
+          env.assignValueByAddress(
+            args[i].getValue() + k,
+            NumericLiteral.new(ch.charCodeAt(0)).castToType(PrimitiveTypes.char)
+          )
+        }
+        env.assignValueByAddress(
+          args[i].getValue() + tokens[j].length,
+          NumericLiteral.new(0).castToType(PrimitiveTypes.char)
+        )
       } else {
-        throw new Error('unsupported datatype for scanf: ' + match[0])
+        const numeric = isNaN(parseFloat(tokens[j]))
+          ? NumericLiteral.new(0)
+          : NumericLiteral.new(parseFloat(tokens[j]))
+        if (isNaN(parseFloat(tokens[j]))) {
+          env.assignValueByAddress(args[i].getValue(), NumericLiteral.new(0))
+        }
+        if (match[0] == '%c') {
+          env.assignValueByAddress(args[i].getValue(), numeric.castToType(PrimitiveTypes.char))
+        } else if (match[0] == '%d' || match[0] == '%ld') {
+          env.assignValueByAddress(args[i].getValue(), numeric.castToType(PrimitiveTypes.int))
+        } else if (match[0] == '%f' || match[0] == '%lf') {
+          env.assignValueByAddress(args[i].getValue(), numeric.castToType(PrimitiveTypes.float))
+        } else {
+          throw new Error('unsupported datatype for scanf: ' + match[0])
+        }
       }
       i++
     }
-    context.stdout += input + '\n'
   }
   return NumericLiteral.new(i - 1).castToType(PrimitiveTypes.int)
 }
