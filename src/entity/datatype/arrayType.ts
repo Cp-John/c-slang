@@ -1,66 +1,71 @@
-import { DataType } from "./dataType";
-import { PrimitiveType, PrimitiveTypes } from "./primitiveType";
-import type { StructType } from "./structType";
-import { SubscriptableType } from "./subscritableType";
+import { DataType } from './dataType'
+import { PrimitiveType, PrimitiveTypes } from './primitiveType'
+import type { StructType } from './structType'
+import { SubscriptableType } from './subscritableType'
 
 export type ElementType = PointerType | PrimitiveType | StructType
 
 export class ArrayType extends SubscriptableType {
-    private eleType: ElementType
-    private sizes: number[]
-  
-    constructor(eleType: ElementType, sizes: number[]) {
-        super(sizes.reduce((a, b) => a * b, 1) * eleType.getSize())
-        this.eleType = eleType
-        this.sizes = sizes
-    }
-  
-    toPointerType(): PointerType {
-      return new PointerType(this.dereference())
-    }
-  
-    getEleType(): ElementType {
+  private eleType: ElementType
+  private sizes: number[]
+
+  constructor(eleType: ElementType, sizes: number[]) {
+    super(sizes.reduce((a, b) => a * b, 1) * eleType.getSize())
+    this.eleType = eleType
+    this.sizes = sizes
+  }
+
+  toPointerType(): PointerType {
+    return new PointerType(this.dereference())
+  }
+
+  getEleType(): ElementType {
+    return this.eleType
+  }
+
+  getEleCount(): number {
+    return this.sizes.reduce((a, b) => a * b, 1)
+  }
+
+  override applyBinaryOperator(operator: string, leftType: DataType): DataType | undefined {
+    return undefined
+  }
+
+  override dereference(): DataType {
+    if (this.sizes.length == 1) {
       return this.eleType
+    } else {
+      return new ArrayType(this.eleType, this.sizes.slice(1))
     }
-  
-    getEleCount(): number {
-      return this.sizes.reduce((a, b) => a * b, 1)
-    }
+  }
 
-    override applyBinaryOperator(operator: string, leftType: DataType): DataType | undefined {
-        return undefined
+  toString(): string {
+    let result = this.eleType.toString()
+    for (let i = 0; i < this.sizes.length; i++) {
+      result += '[' + String(this.sizes[i]) + ']'
     }
-  
-    override dereference(): DataType {
-      if (this.sizes.length == 1) {
-        return this.eleType
-      } else {
-        return new ArrayType(this.eleType, this.sizes.slice(1))
-      }
-    }
-  
-    toString(): string {
-      let result = this.eleType.toString()
-      for (let i = 0; i < this.sizes.length; i++) {
-        result += '[' + String(this.sizes[i]) + ']'
-      }
-      return result
-    }
+    return result
+  }
 
-    canImplicitCastTo(targetType: DataType): boolean {
-        return this.toString() == targetType.toString() || this.toPointerType().canImplicitCastTo(targetType)
-    }
+  canImplicitCastTo(targetType: DataType): boolean {
+    return (
+      this.toString() == targetType.toString() || this.toPointerType().canImplicitCastTo(targetType)
+    )
+  }
 
-    canExplicitCastTo(targetType: DataType): boolean {
-        return this.toString() == targetType.toString() || this.toPointerType().canExplicitCastTo(targetType)
-    }
+  canExplicitCastTo(targetType: DataType): boolean {
+    return (
+      this.toString() == targetType.toString() || this.toPointerType().canExplicitCastTo(targetType)
+    )
+  }
 
   private parseInitialStringExpressions(lexer: Lexer, expressions: Expression[]): void {
     const stringLiteral = lexer.eatStringLiteral()
     for (let i = 1; i < stringLiteral.length - 1; i++) {
-      expressions.push(
+      expressions
+        .push
         // Expression.of(NumericLiteral.new(stringLiteral.charCodeAt(i)).castToType(this.eleType))
-      )
+        ()
     }
     // expressions.push(Expression.of(NumericLiteral.new(0).castToType(this.eleType)))
   }
@@ -86,7 +91,11 @@ export class ArrayType extends SubscriptableType {
   parseInitialArrayExpressions(env: Frame, lexer: Lexer, expressions: Expression[]): void {
     const [row, col] = lexer.tell()
     const currentExpressions: Expression[] = []
-    if (lexer.matchDelimiter('"') && this.eleType == PrimitiveTypes.char && this.sizes.length == 1) {
+    if (
+      lexer.matchDelimiter('"') &&
+      this.eleType == PrimitiveTypes.char &&
+      this.sizes.length == 1
+    ) {
       this.parseInitialStringExpressions(lexer, currentExpressions)
       this.padInitialArrayExpressions(currentExpressions, expressions, row, col, lexer)
       return
@@ -95,7 +104,10 @@ export class ArrayType extends SubscriptableType {
     lexer.eatDelimiter('{')
     if (lexer.matchDelimiter('}')) {
       // pass
-    } else if (this.sizes.length == 1 || !(lexer.matchDelimiter('"') || lexer.matchDelimiter('{'))) {
+    } else if (
+      this.sizes.length == 1 ||
+      !(lexer.matchDelimiter('"') || lexer.matchDelimiter('{'))
+    ) {
       // currentExpressions.push(ExpressionParser.parse(env, lexer, false, false, this.eleType))
       while (!lexer.matchDelimiter('}')) {
         lexer.eatDelimiter(',')
@@ -113,9 +125,9 @@ export class ArrayType extends SubscriptableType {
   }
 }
 
-import { Frame } from "../../interpreter/frame";
-import { Lexer } from "../../parser/lexer";
-import { Expression } from "../expression/expression";
-import { ExpressionParser } from "../expression/expressionParser";
-import { NumericLiteral } from "../expression/numericLiteral";
-import { PointerType } from "./pointerType";
+import { Frame } from '../../interpreter/frame'
+import { Lexer } from '../../parser/lexer'
+import { Expression } from '../expression/expression'
+import { ExpressionParser } from '../expression/expressionParser'
+import { NumericLiteral } from '../expression/numericLiteral'
+import { PointerType } from './pointerType'
