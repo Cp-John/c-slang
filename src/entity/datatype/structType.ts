@@ -117,7 +117,9 @@ export class StructType extends DataType {
       lexer.eatDelimiter(';')
     }
     if (this.fields.length == 0) {
-        throw new Error(lexer.formatError('requires at least one member in structure', bodyRow, bodyCol))
+      throw new Error(
+        lexer.formatError('requires at least one member in structure', bodyRow, bodyCol)
+      )
     }
     lexer.eatDelimiter('}')
     this._isComplete = true
