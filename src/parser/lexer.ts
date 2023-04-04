@@ -1,3 +1,4 @@
+import { ElementType } from '../entity/datatype/arrayType'
 import { PointerType } from '../entity/datatype/pointerType'
 import { PrimitiveType, PrimitiveTypes } from '../entity/datatype/primitiveType'
 import { NumericLiteral } from '../entity/expression/numericLiteral'
@@ -220,11 +221,11 @@ export class Lexer {
       : PrimitiveTypes.void
   }
 
-  eatDataType(): PrimitiveType | PointerType {
+  eatElementType(): ElementType {
     return this.wrapType(this.eatPrimitiveDataType())
   }
 
-  wrapType(primitiveType: PrimitiveType): PrimitiveType | PointerType {
+  wrapType(primitiveType: PrimitiveType): ElementType {
     let finalType: PrimitiveType | PointerType = primitiveType
     while (this.matchDelimiter('*')) {
       this.eatDelimiter('*')

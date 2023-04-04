@@ -6,6 +6,7 @@ import { DataType } from '../datatype/dataType'
 import { Expression } from '../expression/expression'
 import { ExpressionParser } from '../expression/expressionParser'
 import { NumericLiteral } from '../expression/numericLiteral'
+import { checkConditionOperandType } from '../expression/typeCheck'
 import { LoopStatement } from './loopStatement'
 import { Break, Continue } from './simpleStatement'
 

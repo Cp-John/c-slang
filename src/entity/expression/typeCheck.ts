@@ -48,27 +48,9 @@ export function getHigherPrecisionType(leftType: DataType, rightType: DataType):
   }
 }
 
-function checkImplicitConversion(
-  row: number,
-  col: number,
-  lexer: Lexer,
-  leftType: DataType,
-  rightType: DataType
-) {
-  if (!leftType.canImplicitCastTo(rightType)) {
-    throw new Error(
-      lexer.formatError(
-        "implicit conversion from '" + rightType + "' to '" + leftType + "'",
-        row,
-        col
-      )
-    )
-  }
-}
-
 export function checkTypeCastType(
   oldType: DataType,
-  typeToCast: PrimitiveType | PointerType,
+  typeToCast: DataType,
   oldTypeRow: number,
   oldTypeCol: number,
   lexer: Lexer
@@ -103,8 +85,16 @@ export function checkAssignmentOperandType(
       rightType
     )
   }
-  checkImplicitConversion(row, col, lexer, leftType, rightResultType)
-  return leftType
+  if (rightResultType.canImplicitCastTo(leftType)) {
+    return leftType
+  }
+  let errMsg;
+  if (rightResultType.canExplicitCastTo(leftType)) {
+    errMsg = "implicit conversion from '" + rightResultType + "' to '" + leftType + "'"
+  } else {
+    errMsg = "assigning to '" + leftType.toString() + "' from incompatible type '" + rightResultType.toString() + "'"
+  }
+  throw new Error(lexer.formatError(errMsg, row, col))
 }
 
 export function checkBinaryExprssionOperandType(
@@ -135,6 +125,6 @@ export function checkConditionOperandType(
   conditionType: DataType
 ) {
   if (!conditionType.isArithPrimitiveType()) {
-    throw new Error(lexer.formatError("non-'void' type is required", row, col))
+    throw new Error(lexer.formatError("expected a arithmetic primitive type", row, col))
   }
 }

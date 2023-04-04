@@ -103,17 +103,11 @@ export class ExpressionParser {
     } else if (lexer.matchDelimiter('(')) {
       lexer.eatDelimiter('(')
       if (lexer.matchDataType()) {
-        const [row, col] = lexer.tell()
-        const typeToCast = lexer.eatDataType()
-        if (typeToCast == PrimitiveTypes.void && !allowVoid) {
-          throw new Error(
-            lexer.formatError("expected expression of scalar type ('void' invalid)", row, col)
-          )
-        }
+        const typeToCast = lexer.eatElementType()
         lexer.eatDelimiter(')')
-        const [oldTypeRow, oldTypeCol] = lexer.tell()
+        const [row, col] = lexer.tell()
         const oldType = this.recurParseNumericTerm(env, lexer, result, false, isConstantExpression)
-        checkTypeCastType(oldType, typeToCast, oldTypeRow, oldTypeCol, lexer)
+        checkTypeCastType(oldType, typeToCast, row, col, lexer)
         result.push(typeToCast)
         dataType = typeToCast
       } else {
@@ -186,7 +180,7 @@ export class ExpressionParser {
       lexer.eatDelimiter('(')
       let type
       if (lexer.matchDataType()) {
-        type = lexer.eatDataType()
+        type = lexer.eatElementType()
       } else {
         const tempResult: (
           | string

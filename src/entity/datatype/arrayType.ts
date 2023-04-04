@@ -52,7 +52,7 @@ export class ArrayType extends SubscriptableType {
     )
   }
 
-  canExplicitCastTo(targetType: DataType): boolean {
+  override canExplicitCastTo(targetType: DataType): boolean {
     return (
       this.toString() == targetType.toString() || this.toPointerType().canExplicitCastTo(targetType)
     )

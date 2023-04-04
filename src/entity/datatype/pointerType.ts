@@ -40,7 +40,7 @@ export class PointerType extends SubscriptableType {
     )
   }
 
-  canExplicitCastTo(targetType: DataType): boolean {
+  override canExplicitCastTo(targetType: DataType): boolean {
     return targetType instanceof PointerType || targetType == PrimitiveTypes.int
   }
 }

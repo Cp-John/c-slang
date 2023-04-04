@@ -52,7 +52,7 @@ class IntType extends WholePrimitiveType {
     )
   }
 
-  canExplicitCastTo(targetType: DataType): boolean {
+  override canExplicitCastTo(targetType: DataType): boolean {
     return this.canImplicitCastTo(targetType) || targetType.isPointer()
   }
 }
@@ -62,11 +62,12 @@ class FloatType extends ArithPrimitiveType {
     super('float', 4)
   }
 
-  canImplicitCastTo(targetType: DataType): boolean {
+  override canImplicitCastTo(targetType: DataType): boolean {
+    console.log('casting float to ' + targetType.toString())
     return this.toString() == targetType.toString()
   }
 
-  canExplicitCastTo(targetType: DataType): boolean {
+  override canExplicitCastTo(targetType: DataType): boolean {
     return (
       this.canImplicitCastTo(targetType) ||
       targetType == PrimitiveTypes.int ||
@@ -80,7 +81,7 @@ class CharType extends WholePrimitiveType {
     super('char', 1)
   }
 
-  canImplicitCastTo(targetType: DataType): boolean {
+  override canImplicitCastTo(targetType: DataType): boolean {
     return (
       this.toString() == targetType.toString() ||
       targetType == PrimitiveTypes.int ||
@@ -88,7 +89,7 @@ class CharType extends WholePrimitiveType {
     )
   }
 
-  canExplicitCastTo(targetType: DataType): boolean {
+  override canExplicitCastTo(targetType: DataType): boolean {
     return this.canImplicitCastTo(targetType) || targetType.isPointer()
   }
 }
@@ -102,7 +103,7 @@ class VoidType extends PrimitiveType {
     return false
   }
 
-  canExplicitCastTo(targetType: DataType): boolean {
+  override canExplicitCastTo(targetType: DataType): boolean {
     return false
   }
 
@@ -120,7 +121,7 @@ class FunctionType extends PrimitiveType {
     return false
   }
 
-  canExplicitCastTo(targetType: DataType): boolean {
+  override canExplicitCastTo(targetType: DataType): boolean {
     return false
   }
 

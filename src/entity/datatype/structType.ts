@@ -26,7 +26,7 @@ export class StructType extends DataType {
     return this.toString() == targetType.toString()
   }
 
-  canExplicitCastTo(targetType: DataType): boolean {
+  override canExplicitCastTo(targetType: DataType): boolean {
     return this.toString() == targetType.toString()
   }
 }
