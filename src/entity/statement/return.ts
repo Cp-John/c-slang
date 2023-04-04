@@ -35,7 +35,7 @@ export class Return extends Statement {
       if (lexer.matchDelimiter(';')) {
         throw new Error(lexer.formatError('non-void function should return a value'))
       }
-      expression = ExpressionParser.parse(env, lexer, false, false, returnType)
+      expression = ExpressionParser.parse(env, lexer, false, false, returnType, false)
     } else {
       if (!lexer.matchDelimiter('}') && !lexer.matchDelimiter(';')) {
         throw new Error(lexer.formatError('void function should not return a value'))

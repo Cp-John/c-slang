@@ -74,7 +74,7 @@ export class SelfDefinedFunction extends Function {
       if (index != 0) {
         lexer.eatDelimiter(',')
       }
-      actualParameters.push(ExpressionParser.parse(env, lexer, false, false, pair[0]))
+      actualParameters.push(ExpressionParser.parse(env, lexer, false, false, pair[0], false))
     })
     lexer.eatDelimiter(')')
     return actualParameters

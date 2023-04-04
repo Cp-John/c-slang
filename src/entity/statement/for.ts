@@ -53,12 +53,12 @@ export class For extends LoopStatement {
       )
     }
     if (!lexer.matchDelimiter(';')) {
-      forStatement.condition = ExpressionParser.parse(newEnv, lexer, false, false, null)
+      forStatement.condition = ExpressionParser.parse(newEnv, lexer, false, false, null, true)
     }
     lexer.eatDelimiter(';')
     if (!lexer.matchDelimiter(')')) {
       forStatement.updation = new ExpressionStatement(
-        ExpressionParser.parse(newEnv, lexer, true, false, null)
+        ExpressionParser.parse(newEnv, lexer, true, false, null, false)
       )
     }
     lexer.eatDelimiter(')')

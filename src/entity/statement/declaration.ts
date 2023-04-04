@@ -22,10 +22,14 @@ function eatArrayDimension(env: Frame, lexer: Lexer): number[] {
       )
     }
     const [row, col] = lexer.tell()
-    const size = ExpressionParser.parse(env, lexer, false, true, PrimitiveTypes.int).evaluate(
+    const size = ExpressionParser.parse(
       env,
-      initCProgramContext(1000)
-    ) as NumericLiteral
+      lexer,
+      false,
+      true,
+      PrimitiveTypes.int,
+      false
+    ).evaluate(env, initCProgramContext(1000)) as NumericLiteral
     if (size.getValue() <= 0) {
       throw new Error(lexer.formatError('declared as an array with a non-positive size', row, col))
     }
@@ -211,7 +215,7 @@ class VariableDeclaration extends Declaration {
   }
 
   parseExpression(env: Frame, lexer: Lexer): void {
-    this.expression = ExpressionParser.parse(env, lexer, false, false, this.variableType)
+    this.expression = ExpressionParser.parse(env, lexer, false, false, this.variableType, false)
   }
 
   doExecute(env: Frame, context: CProgramContext): void {

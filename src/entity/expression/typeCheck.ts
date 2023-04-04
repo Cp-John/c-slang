@@ -1,8 +1,5 @@
-import { Lexer, RELATIONAL_OPERATOR_RETEX } from '../../parser/lexer'
-import { ArrayType } from '../datatype/arrayType'
+import { Lexer } from '../../parser/lexer'
 import { DataType } from '../datatype/dataType'
-import { PointerType } from '../datatype/pointerType'
-import { PrimitiveType, PrimitiveTypes } from '../datatype/primitiveType'
 
 export function assertSubscriptable(type: DataType, lexer: Lexer) {
   if (!type.isSubscriptable()) {
@@ -28,23 +25,29 @@ export function checkUnaryMinusOperandType(type: DataType, row: number, col: num
   }
 }
 
-export function getHigherPrecisionType(leftType: DataType, rightType: DataType): DataType {
-  if (leftType.isPointer()) {
-    return leftType
-  } else if (rightType.isPointer()) {
-    return rightType
-  } else if (leftType instanceof ArrayType) {
-    return leftType
-  } else if (rightType instanceof ArrayType) {
-    return rightType
-  } else if (leftType == PrimitiveTypes.float || rightType == PrimitiveTypes.float) {
-    return PrimitiveTypes.float
-  } else if (leftType == PrimitiveTypes.int || rightType == PrimitiveTypes.int) {
-    return PrimitiveTypes.int
-  } else if (leftType == PrimitiveTypes.char && rightType == PrimitiveTypes.char) {
-    return PrimitiveTypes.char
+export function checkTernaryOperandType(
+  firstType: DataType,
+  secondType: DataType,
+  row: number,
+  col: number,
+  lexer: Lexer
+): DataType {
+  if (firstType.canImplicitCastTo(secondType)) {
+    return secondType
+  } else if (secondType.canImplicitCastTo(firstType)) {
+    return firstType
   } else {
-    throw new Error('impossible execution path')
+    throw new Error(
+      lexer.formatError(
+        "type mismatch in conditional expression ('" +
+          firstType.toString() +
+          "' and '" +
+          secondType.toString() +
+          "')",
+        row,
+        col
+      )
+    )
   }
 }
 
@@ -130,6 +133,14 @@ export function checkConditionOperandType(
   conditionType: DataType
 ) {
   if (!conditionType.isArithPrimitiveType()) {
-    throw new Error(lexer.formatError('expected a arithmetic primitive type', row, col))
+    throw new Error(
+      lexer.formatError(
+        "expected an arithmetic primitive type ('char', 'int', and 'float') for conditional expression, but got '" +
+          conditionType +
+          "'",
+        row,
+        col
+      )
+    )
   }
 }

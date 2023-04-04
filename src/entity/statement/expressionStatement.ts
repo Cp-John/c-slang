@@ -19,7 +19,7 @@ export class ExpressionStatement extends Statement {
 
   static parse(env: Frame, lexer: Lexer) {
     const expressionStatement = new ExpressionStatement(
-      ExpressionParser.parse(env, lexer, true, false, null)
+      ExpressionParser.parse(env, lexer, true, false, null, false)
     )
     lexer.eatDelimiter(';')
     return [expressionStatement]

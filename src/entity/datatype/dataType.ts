@@ -29,6 +29,22 @@ export abstract class DataType {
 
   abstract applyBinaryOperator(operator: string, rightType: DataType): DataType | undefined
 
+  getResultType(operator: string, rightType: DataType): DataType {
+    const resultType = this.applyBinaryOperator(operator, rightType)
+    if (resultType == undefined) {
+      throw new Error(
+        "attempting to apply operator '" +
+          operator +
+          "' to type '" +
+          this +
+          "' and '" +
+          rightType +
+          "'"
+      )
+    }
+    return resultType
+  }
+
   getSize(): number {
     return this.size
   }

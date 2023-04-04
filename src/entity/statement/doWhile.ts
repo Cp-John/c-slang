@@ -30,7 +30,7 @@ export class DoWhile extends LoopStatement {
     const body = Block.parse(env, lexer, true, true, returnType)
     lexer.eatKeyword('while')
     lexer.eatDelimiter('(')
-    const condition = ExpressionParser.parse(env, lexer, false, false, null)
+    const condition = ExpressionParser.parse(env, lexer, false, false, null, false)
     lexer.eatDelimiter(')')
     lexer.eatDelimiter(';')
     return [new DoWhile(body, condition)]

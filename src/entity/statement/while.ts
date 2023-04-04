@@ -29,7 +29,7 @@ export class While extends LoopStatement {
   ): While[] {
     lexer.eatKeyword('while')
     lexer.eatDelimiter('(')
-    const expression = ExpressionParser.parse(env, lexer, false, false, null)
+    const expression = ExpressionParser.parse(env, lexer, false, false, null, true)
     lexer.eatDelimiter(')')
     const body = Block.parse(env, lexer, true, true, returnType)
     return [new While(expression, body)]

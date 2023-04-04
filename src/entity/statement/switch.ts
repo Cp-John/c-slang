@@ -14,7 +14,7 @@ class Case {
 
   static parse(env: Frame, lexer: Lexer): Case {
     lexer.eatKeyword('case')
-    const expr = ExpressionParser.parse(env, lexer, false, true, null)
+    const expr = ExpressionParser.parse(env, lexer, false, true, null, false)
     lexer.eatDelimiter(':')
     return new Case(expr)
   }
@@ -53,7 +53,7 @@ export class Switch extends Statement {
   ): Switch[] {
     lexer.eatKeyword('switch')
     lexer.eatDelimiter('(')
-    const expression = ExpressionParser.parse(env, lexer, false, false, null)
+    const expression = ExpressionParser.parse(env, lexer, false, false, null, false)
     lexer.eatDelimiter(')')
     lexer.eatDelimiter('{')
     const body = []

@@ -74,7 +74,9 @@ export class BuiltinFunction extends Function {
       if (this.isAddress && expectedType != null && !(expectedType instanceof PointerType)) {
         expectedType = new PointerType(expectedType)
       }
-      formatStringParameters.push(ExpressionParser.parse(env, lexer, false, false, expectedType))
+      formatStringParameters.push(
+        ExpressionParser.parse(env, lexer, false, false, expectedType, false)
+      )
       formatString = formatString.replace(match[0], '0')
       match = PLACEHOLDER_REGEX.exec(formatString)
     }
@@ -89,7 +91,7 @@ export class BuiltinFunction extends Function {
       if (index != 0) {
         lexer.eatDelimiter(',')
       }
-      actualParameters.push(ExpressionParser.parse(env, lexer, false, false, type))
+      actualParameters.push(ExpressionParser.parse(env, lexer, false, false, type, false))
     })
     if (!this.isFormatString) {
       lexer.eatDelimiter(')')

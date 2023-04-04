@@ -13,9 +13,9 @@ import {
   checkBinaryExprssionOperandType,
   checkConditionOperandType,
   checkSubscriptType,
+  checkTernaryOperandType,
   checkTypeCastType,
-  checkUnaryMinusOperandType,
-  getHigherPrecisionType
+  checkUnaryMinusOperandType
 } from './typeCheck'
 
 function assertAddressable(
@@ -435,6 +435,7 @@ export class ExpressionParser {
       return conditionType
     }
     checkConditionOperandType(row, col, lexer, conditionType)
+    const [ternaryRow, ternaryCol] = lexer.tell()
     lexer.eatDelimiter('?')
     const jumpToElse = new Jump(false, true)
     result.push(jumpToElse)
@@ -457,7 +458,7 @@ export class ExpressionParser {
       isConstantExpression
     )
     jumpToEnd.toPosition = result.length
-    return getHigherPrecisionType(firstType, secondType)
+    return checkTernaryOperandType(firstType, secondType, ternaryRow, ternaryCol, lexer)
   }
 
   private static recurParseExpression(
@@ -490,7 +491,8 @@ export class ExpressionParser {
     lexer: Lexer,
     allowVoid: boolean,
     isConstantExpression: boolean,
-    expectedDataType: DataType | null
+    expectedDataType: DataType | null,
+    isConditionalExpression: boolean
   ): Expression {
     const result: (
       | string
@@ -512,6 +514,8 @@ export class ExpressionParser {
     if (expectedDataType != null) {
       checkAssignmentOperandType(row, col, lexer, expectedDataType, '=', actualType)
       return new Expression(result, expectedDataType)
+    } else if (isConditionalExpression) {
+      checkConditionOperandType(row, col, lexer, actualType)
     }
     return new Expression(result, actualType)
   }

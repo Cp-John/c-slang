@@ -5,7 +5,6 @@ import { DataType } from '../datatype/dataType'
 import { PointerType } from '../datatype/pointerType'
 import { PrimitiveTypes } from '../datatype/primitiveType'
 import { UNARY_MINUS_TAG } from './expressionParser'
-import { getHigherPrecisionType } from './typeCheck'
 
 interface BinaryArithmeticOperator {
   (right: NumericLiteral, left: NumericLiteral): NumericLiteral
@@ -181,7 +180,7 @@ export class NumericLiteral {
       throw new Error('division by 0 is undefined')
     }
     return NumericLiteral.new(this.val / right.val).castToType(
-      getHigherPrecisionType(this.type, right.type)
+      this.type.getResultType('/', right.type)
     )
   }
 
@@ -189,9 +188,8 @@ export class NumericLiteral {
     if (right.type instanceof PointerType || right.type instanceof ArrayType) {
       return right.plus(this)
     } else {
-      const resultType = getHigherPrecisionType(this.type, right.type)
       return NumericLiteral.new(this.val + right.val * this.getStep()).castToType(
-        resultType instanceof ArrayType ? resultType.toPointerType() : resultType
+        this.type.getResultType('+', right.type)
       )
     }
   }
@@ -205,16 +203,15 @@ export class NumericLiteral {
         PrimitiveTypes.int
       )
     } else {
-      const resultType = getHigherPrecisionType(this.type, right.type)
       return NumericLiteral.new(this.val - right.val * this.getStep()).castToType(
-        resultType instanceof ArrayType ? resultType.toPointerType() : resultType
+        this.type.getResultType('-', right.type)
       )
     }
   }
 
   multiply(right: NumericLiteral) {
     return NumericLiteral.new(this.val * right.val).castToType(
-      getHigherPrecisionType(this.type, right.type)
+      this.type.getResultType('*', right.type)
     )
   }
 
@@ -223,7 +220,7 @@ export class NumericLiteral {
       throw new Error('remainder by 0 is undefined')
     }
     return NumericLiteral.new(this.val % right.val).castToType(
-      getHigherPrecisionType(this.type, right.type)
+      this.type.getResultType('%', right.type)
     )
   }
 

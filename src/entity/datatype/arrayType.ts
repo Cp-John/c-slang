@@ -27,6 +27,9 @@ export class ArrayType extends SubscriptableType {
   }
 
   override applyBinaryOperator(operator: string, rightType: DataType): DataType | undefined {
+    if (operator == '+' || (operator == '-' && rightType.isWholePrimitiveType())) {
+      return this.toPointerType()
+    }
     return undefined
   }
 
@@ -106,10 +109,12 @@ export class ArrayType extends SubscriptableType {
       this.sizes.length == 1 ||
       !(lexer.matchDelimiter('"') || lexer.matchDelimiter('{'))
     ) {
-      currentExpressions.push(ExpressionParser.parse(env, lexer, false, false, this.eleType))
+      currentExpressions.push(ExpressionParser.parse(env, lexer, false, false, this.eleType, false))
       while (!lexer.matchDelimiter('}')) {
         lexer.eatDelimiter(',')
-        currentExpressions.push(ExpressionParser.parse(env, lexer, false, false, this.eleType))
+        currentExpressions.push(
+          ExpressionParser.parse(env, lexer, false, false, this.eleType, false)
+        )
       }
     } else {
       ;(this.dereference() as ArrayType).parseInitialArrayExpressions(
