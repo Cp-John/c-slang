@@ -39,7 +39,8 @@ const RESERVED_KEYWORDS = new Set([
   'case',
   'default',
   'sizeof',
-  'typeof'
+  'typeof',
+  'struct'
 ])
 
 const ESCAPE_CHARACTERS = {
