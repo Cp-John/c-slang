@@ -4,7 +4,7 @@ import {
   MAX_INT,
   MAX_UNSGINED_INT,
   MIN_CHAR,
-  MIN_INT,
+  MIN_INT
 } from '../../interpreter/builtins'
 import { Frame } from '../../interpreter/frame'
 import { ArrayType } from '../datatype/arrayType'
