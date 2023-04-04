@@ -3,9 +3,9 @@ import { PrimitiveTypes } from './primitiveType'
 import { SubscriptableType } from './subscritableType'
 
 export class PointerType extends SubscriptableType {
-  private pointingTo: any
+  private pointingTo: DataType
 
-  constructor(pointingTo: any) {
+  constructor(pointingTo: DataType) {
     super(4)
     this.pointingTo = pointingTo
   }
@@ -26,7 +26,7 @@ export class PointerType extends SubscriptableType {
     return true
   }
 
-  override dereference(): any {
+  override dereference(): DataType {
     return this.pointingTo
   }
 
