@@ -161,14 +161,20 @@ export class ArrayType extends SubscriptableType {
         )
       }
       const [row, col] = lexer.tell()
-      const size = ExpressionParser.parse(
+      const constExpr = ExpressionParser.parse(
         env,
         lexer,
         false,
         true,
         PrimitiveTypes.int,
         false
-      ).evaluate(env, initCProgramContext()) as NumericLiteral
+      )
+      let size;
+      try {
+        size = constExpr.evaluate(env, initCProgramContext()) as NumericLiteral
+      } catch (err) {
+        throw new Error('Line ' + String(row) + ': ' + (err instanceof Error ? err.message : String(err)))
+      }
       if (size.getValue() <= 0) {
         throw new Error(
           lexer.formatError('declared as an array with a non-positive size', row, col)
