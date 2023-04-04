@@ -83,23 +83,36 @@ export class StructType extends DataType {
     this.fields = []
     this.size = 0
     while (!lexer.matchDelimiter('}')) {
-      let fieldType: DataType = lexer.eatElementType(env)
-      const [row, col] = lexer.tell()
-      const fieldName = lexer.eatIdentifier()
-      if (!fieldType.isComplete()) {
-        throw new Error(
-          lexer.formatError("variable has incomplete type '" + fieldType.toString() + "'", row, col)
-        )
+      const [typeRow, typeCol] = lexer.tell()
+      const nonPointerType = lexer.eatNonPointerLikeType(env)
+      while (true) {
+        const elementType: ElementType = lexer.wrapType(nonPointerType)
+        if (!elementType.isComplete()) {
+          throw new Error(
+            lexer.formatError(
+              "encountered incomplete type '" + elementType.toString() + "'",
+              typeRow,
+              typeCol
+            )
+          )
+        }
+        const [row, col] = lexer.tell()
+        const fieldName = lexer.eatIdentifier()
+        if (declaredFieldNames.has(fieldName)) {
+          throw new Error(lexer.formatError("redefinition of '" + fieldName + "'", row, col))
+        }
+        let actualType: DataType = elementType
+        if (lexer.matchDelimiter('[')) {
+          actualType = ArrayType.wrap(env, lexer, elementType)
+        }
+        this.fields.push([fieldName, actualType])
+        declaredFieldNames.add(fieldName)
+        this.size += actualType.getSize()
+        if (!lexer.matchDelimiter(',')) {
+          break
+        }
+        lexer.eatDelimiter(',')
       }
-      if (declaredFieldNames.has(fieldName)) {
-        throw new Error(lexer.formatError("redefinition of '" + fieldName + "'", row, col))
-      }
-      if (lexer.matchDelimiter('[')) {
-        fieldType = ArrayType.wrap(env, lexer, fieldType as ElementType)
-      }
-      this.fields.push([fieldName, fieldType])
-      declaredFieldNames.add(fieldName)
-      this.size += fieldType.getSize()
       lexer.eatDelimiter(';')
     }
     lexer.eatDelimiter('}')
