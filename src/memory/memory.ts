@@ -34,6 +34,10 @@ export class Memory {
     this.setTag(this.heapBottom, this.heapBottom, true, Memory.DEFAULT_HEAP_SIZE)
   }
 
+  getSize(): number {
+    return this.buffer.byteLength
+  }
+
   getStackBottom(): number {
     return this.stackBottom
   }

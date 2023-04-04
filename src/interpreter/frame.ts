@@ -237,6 +237,13 @@ export class Frame {
     if ((this.stackTop % 4) + eleSize > 4) {
       this.stackTop = Math.ceil(this.stackTop / 4) * 4
     }
+    if (this.stackTop + type.getSize() > this.memory.getSize()) {
+      let errMsg = 'stack out of memory'
+      if (lexer != null) {
+        errMsg = lexer.formatError(errMsg, row, col)
+      }
+      throw new Error(errMsg)
+    }
     this.boundings[name] = { type: type, val: this.stackTop }
     this.stackTop += type.getSize()
     // console.log('declared variable: ' + name + ':' + type + ' [' + this.stackTop + ']')

@@ -6,6 +6,8 @@ export type NonPointerLikeType = PrimitiveType | StructType
 
 export type ElementType = PointerType | PrimitiveType | StructType
 
+const MAX_ARRAY_SIZE = Math.pow(2, 20)
+
 export class ArrayType extends SubscriptableType {
   private eleType: ElementType
   private sizes: number[]
@@ -153,6 +155,7 @@ export class ArrayType extends SubscriptableType {
 
   static wrap(env: Frame, lexer: Lexer, eleType: ElementType): ArrayType {
     const sizes: number[] = []
+    let eleCount: number = 1
     do {
       lexer.eatDelimiter('[')
       if (lexer.matchDelimiter(']')) {
@@ -174,6 +177,10 @@ export class ArrayType extends SubscriptableType {
         throw new Error(
           lexer.formatError('declared as an array with a non-positive size', row, col)
         )
+      }
+      eleCount *= size.getValue()
+      if (eleCount * eleType.getSize() > MAX_ARRAY_SIZE) {
+        throw new Error(lexer.formatError('array is too large', row, col))
       }
       sizes.push(size.getValue())
       lexer.eatDelimiter(']')
