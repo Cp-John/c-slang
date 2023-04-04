@@ -61,7 +61,9 @@ export class ArrayType extends SubscriptableType {
   private parseInitialStringExpressions(lexer: Lexer, expressions: Expression[]): void {
     const stringLiteral = lexer.eatStringLiteral()
     for (let i = 1; i < stringLiteral.length - 1; i++) {
-      expressions.push(Expression.of(NumericLiteral.new(stringLiteral.charCodeAt(i)).castToType(this.eleType)))
+      expressions.push(
+        Expression.of(NumericLiteral.new(stringLiteral.charCodeAt(i)).castToType(this.eleType))
+      )
     }
     expressions.push(Expression.of(NumericLiteral.new(0).castToType(this.eleType)))
   }
