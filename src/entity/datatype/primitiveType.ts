@@ -63,7 +63,6 @@ class FloatType extends ArithPrimitiveType {
   }
 
   override canImplicitCastTo(targetType: DataType): boolean {
-    console.log('casting float to ' + targetType.toString())
     return this.toString() == targetType.toString()
   }
 

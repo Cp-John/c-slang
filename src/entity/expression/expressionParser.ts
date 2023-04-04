@@ -221,8 +221,6 @@ export class ExpressionParser {
       throw new Error(lexer.formatError('expression expected'))
     }
 
-    console.log('parsed:', result)
-
     while (true) {
       if (lexer.matchIncrementDecrementOperator()) {
         const [row, col] = lexer.tell()
