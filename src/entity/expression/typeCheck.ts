@@ -88,11 +88,16 @@ export function checkAssignmentOperandType(
   if (rightResultType.canImplicitCastTo(leftType)) {
     return leftType
   }
-  let errMsg;
+  let errMsg
   if (rightResultType.canExplicitCastTo(leftType)) {
     errMsg = "implicit conversion from '" + rightResultType + "' to '" + leftType + "'"
   } else {
-    errMsg = "assigning to '" + leftType.toString() + "' from incompatible type '" + rightResultType.toString() + "'"
+    errMsg =
+      "assigning to '" +
+      leftType.toString() +
+      "' from incompatible type '" +
+      rightResultType.toString() +
+      "'"
   }
   throw new Error(lexer.formatError(errMsg, row, col))
 }
@@ -125,6 +130,6 @@ export function checkConditionOperandType(
   conditionType: DataType
 ) {
   if (!conditionType.isArithPrimitiveType()) {
-    throw new Error(lexer.formatError("expected a arithmetic primitive type", row, col))
+    throw new Error(lexer.formatError('expected a arithmetic primitive type', row, col))
   }
 }
