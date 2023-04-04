@@ -1,8 +1,9 @@
-import { DataType, PrimitiveType } from '../../interpreter/builtins'
+import { DataType } from '../../interpreter/builtins'
 import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
+import { PrimitiveTypes } from '../datatype/primitiveType'
 import { Expression } from '../expression/expression'
 import { ExpressionParser } from '../expression/expressionParser'
 import { NumericLiteral } from '../expression/numericLiteral'
@@ -51,12 +52,12 @@ export class SelfDefinedFunction extends Function {
     )
     try {
       this.body.execute(newEnv, context)
-      if (this.returnType != PrimitiveType.VOID) {
+      if (this.returnType != PrimitiveTypes.void) {
         return NumericLiteral.new(0).castToType(this.returnType)
       }
     } catch (err) {
       if (err instanceof Return) {
-        if (this.returnType != PrimitiveType.VOID) {
+        if (this.returnType != PrimitiveTypes.void) {
           return err.getEvaluated()
         }
       } else {

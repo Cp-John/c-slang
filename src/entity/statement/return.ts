@@ -1,7 +1,8 @@
-import { DataType, PrimitiveType } from '../../interpreter/builtins'
+import { DataType } from '../../interpreter/builtins'
 import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
+import { PrimitiveTypes } from '../datatype/primitiveType'
 import { Expression } from '../expression/expression'
 import { ExpressionParser } from '../expression/expressionParser'
 import { NumericLiteral } from '../expression/numericLiteral'
@@ -30,7 +31,7 @@ export class Return extends Statement {
     }
     lexer.eatKeyword('return')
     let expression = null
-    if (returnType != PrimitiveType.VOID) {
+    if (returnType != PrimitiveTypes.void) {
       if (lexer.matchDelimiter(';')) {
         throw new Error(lexer.formatError('non-void function should return a value'))
       }

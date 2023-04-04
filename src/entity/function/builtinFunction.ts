@@ -1,7 +1,9 @@
-import { DataType, PLACEHOLDER_REGEX, PointerType, PrimitiveType } from '../../interpreter/builtins'
+import { DataType, PLACEHOLDER_REGEX } from '../../interpreter/builtins'
 import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
+import { PointerType } from '../datatype/pointerType'
+import { PrimitiveTypes } from '../datatype/primitiveType'
 import { Expression } from '../expression/expression'
 import { ExpressionParser } from '../expression/expressionParser'
 import { NumericLiteral } from '../expression/numericLiteral'
@@ -56,15 +58,15 @@ export class BuiltinFunction extends Function {
       lexer.eatDelimiter(',')
       let expectedType: DataType | null
       if (match[0] == '%d' || match[0] == '%ld') {
-        expectedType = PrimitiveType.INT
+        expectedType = PrimitiveTypes.int
       } else if (match[0] == '%f' || match[0] == '%lf') {
-        expectedType = PrimitiveType.FLOAT
+        expectedType = PrimitiveTypes.float
       } else if (match[0] == '%c') {
-        expectedType = PrimitiveType.CHAR
+        expectedType = PrimitiveTypes.char
       } else if (match[0] == '%s') {
-        expectedType = new PointerType(PrimitiveType.CHAR)
+        expectedType = new PointerType(PrimitiveTypes.char)
       } else if (match[0] == '%p') {
-        expectedType = new PointerType(PrimitiveType.VOID)
+        expectedType = new PointerType(PrimitiveTypes.void)
       } else {
         throw new Error('impossible execution path')
       }

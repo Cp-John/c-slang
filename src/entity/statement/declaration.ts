@@ -1,8 +1,10 @@
-import { ArrayType, DataType, PointerType, PrimitiveType } from '../../interpreter/builtins'
+import { ArrayType, DataType } from '../../interpreter/builtins'
 import { CProgramContext, initCProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
+import { PointerType } from '../datatype/pointerType'
+import { PrimitiveType, PrimitiveTypes } from '../datatype/primitiveType'
 import { Expression } from '../expression/expression'
 import { ExpressionParser } from '../expression/expressionParser'
 import { NumericLiteral } from '../expression/numericLiteral'
@@ -19,7 +21,7 @@ function eatArrayDimension(env: Frame, lexer: Lexer): number[] {
       )
     }
     const [row, col] = lexer.tell()
-    const size = ExpressionParser.parse(env, lexer, false, true, PrimitiveType.INT).evaluate(
+    const size = ExpressionParser.parse(env, lexer, false, true, PrimitiveTypes.int).evaluate(
       env,
       initCProgramContext(1000)
     ) as NumericLiteral
@@ -45,7 +47,7 @@ export abstract class Declaration extends Statement {
       return result
     }
     const type = lexer.wrapType(lexer.eatPrimitiveDataType())
-    if (type == PrimitiveType.VOID) {
+    if (type == PrimitiveTypes.void) {
       lexer.eatDelimiter(')')
       return result
     }
@@ -59,7 +61,7 @@ export abstract class Declaration extends Statement {
       lexer.eatDelimiter(',')
       const [typeRow, typeCol] = lexer.tell()
       const type = lexer.wrapType(lexer.eatPrimitiveDataType())
-      if (type == PrimitiveType.VOID) {
+      if (type == PrimitiveTypes.void) {
         throw new Error(lexer.formatError("argument may not have 'void' type", typeRow, typeCol))
       }
       ;[row, col] = lexer.tell()
@@ -124,8 +126,8 @@ export abstract class Declaration extends Statement {
     allowFunctionDeclaration: boolean
   ): Statement[] {
     const [typeRow, typeCol] = lexer.tell()
-    let primitiveType: PrimitiveType = PrimitiveType.VOID
-    let type: DataType = PrimitiveType.VOID
+    let primitiveType: PrimitiveType = PrimitiveTypes.void
+    let type: DataType = PrimitiveTypes.void
     if (lexer.matchDataType()) {
       primitiveType = lexer.eatPrimitiveDataType()
       type = lexer.wrapType(primitiveType)
@@ -138,7 +140,7 @@ export abstract class Declaration extends Statement {
       if (!allowFunctionDeclaration) {
         throw new Error(lexer.formatError('function definition is not allowed here', row, col))
       }
-      if (identifier == 'main' && type != PrimitiveType.VOID && type != PrimitiveType.INT) {
+      if (identifier == 'main' && type != PrimitiveTypes.void && type != PrimitiveTypes.int) {
         throw new Error(
           lexer.formatError(
             "return type of 'main' function is not 'int' or 'void'",
@@ -158,7 +160,7 @@ export abstract class Declaration extends Statement {
       }
       return [new FunctionDeclaration(type, identifier, formalParameterList, functionObj.body)]
     } else {
-      if (type == PrimitiveType.VOID) {
+      if (type == PrimitiveTypes.void) {
         throw new Error(lexer.formatError("variable has incomplete type 'void'", row, col))
       }
       return this.parseDeclaredVariables(env, primitiveType, type, identifier, row, col, lexer)

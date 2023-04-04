@@ -115,9 +115,32 @@ class VoidType extends PrimitiveType {
   }
 }
 
+class FunctionType extends PrimitiveType {
+    constructor() {
+      super('function', 0)
+    }
+  
+    canImplicitCastTo(targetType: DataType): boolean {
+      return false
+    }
+  
+    canExplicitCastTo(targetType: DataType): boolean {
+      return false
+    }
+  
+    override isArithPrimitiveType(): boolean {
+      return false
+    }
+  
+    override applyBinaryOperator(operator: string, leftType: DataType): DataType | undefined {
+      return undefined
+    }
+  }
+
 export const PrimitiveTypes = {
   int: new IntType(),
   float: new FloatType(),
   void: new VoidType(),
-  char: new CharType()
+  char: new CharType(),
+  function: new FunctionType()
 }

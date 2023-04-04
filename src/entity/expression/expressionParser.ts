@@ -1,6 +1,8 @@
-import { ArrayType, DataType, PointerType, PrimitiveType, sizeof } from '../../interpreter/builtins'
+import { ArrayType, DataType, sizeof } from '../../interpreter/builtins'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
+import { PointerType } from '../datatype/pointerType'
+import { PrimitiveType, PrimitiveTypes } from '../datatype/primitiveType'
 import { Expression, IncrementDecrement, Jump } from './expression'
 import { FunctionCall } from './functionCall'
 import { NumericLiteral } from './numericLiteral'
@@ -26,7 +28,7 @@ function assertAddressable(
     throw new Error(lexer.formatError('expression is not addressable', row, col))
   } else if (
     ele == DEREFERENCE_TAG ||
-    (new Lexer(ele).matchIdentifier() && env.lookupType(ele) != PrimitiveType.FUNCTION)
+    (new Lexer(ele).matchIdentifier() && env.lookupType(ele) != PrimitiveTypes.function)
   ) {
     return
   } else {
@@ -48,7 +50,7 @@ function assertAssignable(
     ele != DEREFERENCE_TAG &&
     (typeof ele != 'string' ||
       !new Lexer(ele).matchIdentifier() ||
-      env.lookupType(ele) == PrimitiveType.FUNCTION ||
+      env.lookupType(ele) == PrimitiveTypes.function ||
       env.lookupType(ele) instanceof ArrayType)
   ) {
     throw new Error(lexer.formatError('expression is not assignable', row, col))
@@ -74,7 +76,7 @@ export class ExpressionParser {
       lexer.eatDelimiter('!')
       this.recurParseNumericTerm(env, lexer, result, false, isConstantExpression)
       result.push('!')
-      dataType = PrimitiveType.INT
+      dataType = PrimitiveTypes.int
     } else if (lexer.matchDelimiter('&')) {
       const [row, col] = lexer.tell()
       lexer.eatDelimiter('&')
@@ -102,7 +104,7 @@ export class ExpressionParser {
       if (lexer.matchDataType()) {
         const [row, col] = lexer.tell()
         const typeToCast = lexer.eatDataType()
-        if (typeToCast == PrimitiveType.VOID && !allowVoid) {
+        if (typeToCast == PrimitiveTypes.void && !allowVoid) {
           throw new Error(
             lexer.formatError("expected expression of scalar type ('void' invalid)", row, col)
           )
@@ -123,10 +125,10 @@ export class ExpressionParser {
       dataType = numeric.getDataType()
     } else if (lexer.matchDelimiter("'")) {
       result.push(lexer.eatCharacterLiteral())
-      dataType = PrimitiveType.CHAR
+      dataType = PrimitiveTypes.char
     } else if (lexer.matchDelimiter('"')) {
       result.push(lexer.eatStringLiteral())
-      dataType = new PointerType(PrimitiveType.CHAR)
+      dataType = new PointerType(PrimitiveTypes.char)
     } else if (lexer.matchIncrementDecrementOperator()) {
       if (isConstantExpression) {
         throw new Error(lexer.formatError('expected a constant expression'))
@@ -156,7 +158,7 @@ export class ExpressionParser {
       result.push(identifier)
       assertIsDeclared(identifier, env, row, col, lexer)
       const type = env.lookupType(identifier)
-      if (type != PrimitiveType.FUNCTION) {
+      if (type != PrimitiveTypes.function) {
         dataType = type
         if (lexer.matchDelimiter('(')) {
           throw new Error(lexer.formatError('called object type is not a function', row, col))
@@ -170,7 +172,7 @@ export class ExpressionParser {
           row,
           col
         )
-        if (!allowVoid && functionCall.getReturnType() == 'void') {
+        if (!allowVoid && functionCall.getReturnType().toString() == 'void') {
           throw new Error(
             lexer.formatError("expected expression of scalar type ('void' invalid)", row, col)
           )
@@ -196,8 +198,8 @@ export class ExpressionParser {
         type = this.recurParseExpression(env, lexer, tempResult, true, false)
       }
       lexer.eatDelimiter(')')
-      result.push(NumericLiteral.new(sizeof(type)).castToType(PrimitiveType.INT))
-      dataType = PrimitiveType.INT
+      result.push(NumericLiteral.new(sizeof(type)).castToType(PrimitiveTypes.int))
+      dataType = PrimitiveTypes.int
     } else if (lexer.matchKeyword('typeof')) {
       lexer.eatKeyword('typeof')
       lexer.eatDelimiter('(')
@@ -212,7 +214,7 @@ export class ExpressionParser {
       const type = this.recurParseExpression(env, lexer, tempResult, true, false)
       lexer.eatDelimiter(')')
       result.push('"' + type.toString() + '"')
-      dataType = new PointerType(PrimitiveType.CHAR)
+      dataType = new PointerType(PrimitiveTypes.char)
     } else {
       throw new Error(lexer.formatError('expression expected'))
     }

@@ -1,6 +1,8 @@
-import { DataType, PointerType, PRIMITIVE_TYPES, PrimitiveType } from '../../interpreter/builtins'
+import { DataType, PRIMITIVE_TYPES } from '../../interpreter/builtins'
 import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
+import { PointerType } from '../datatype/pointerType'
+import { PrimitiveType, PrimitiveTypes } from '../datatype/primitiveType'
 import { DEREFERENCE_TAG } from './expressionParser'
 import { FunctionCall } from './functionCall'
 import { NumericLiteral } from './numericLiteral'
@@ -96,7 +98,7 @@ export class Expression {
     const result: NumericLiteral[] = []
     let i = 0
     while (i < this.elements.length) {
-      const ele = this.elements[i]
+      var ele = this.elements[i]
       if (ele instanceof Jump) {
         const jump = ele as Jump
         if (
@@ -112,49 +114,52 @@ export class Expression {
         }
       } else if (ele instanceof FunctionCall) {
         const returnVal = ele.execute(env, context)
-        if (ele.getReturnType() != PrimitiveType.VOID) {
+        if (ele.getReturnType() != PrimitiveTypes.void) {
           result.push(returnVal as NumericLiteral)
         }
       } else if (ele instanceof NumericLiteral) {
         result.push(ele)
       } else if (ele instanceof PointerType || PRIMITIVE_TYPES.includes(ele as PrimitiveType)) {
         result.push(Expression.toNumberLiteral(result.pop(), env).castToType(ele as DataType))
-      } else if (ele.startsWith('"')) {
-        result.push(env.allocateStringLiteral(ele))
-      } else if (ele == '&') {
-        result.push(Expression.toNumberLiteral(result.pop(), env).toAddress())
-      } else if (ele == DEREFERENCE_TAG) {
-        result.push(env.dereference(Expression.toNumberLiteral(result.pop(), env)))
-      } else if (ele in Expression.INCREMENT_DECREMENT_OPERATORS) {
-        result.push(Expression.INCREMENT_DECREMENT_OPERATORS[ele](result.pop(), env))
-      } else if (NumericLiteral.BINARY_ARITHMETIC_OPERATORS.has(ele)) {
-        const operator = NumericLiteral.BINARY_ARITHMETIC_OPERATORS.get(ele)
-        if (!operator) {
-          throw new Error('impossible execution path')
-        }
-        result.push(
-          operator(
-            Expression.toNumberLiteral(result.pop(), env),
-            Expression.toNumberLiteral(result.pop(), env)
-          )
-        )
-      } else if (NumericLiteral.UNARY_ARITHMETIC_OPERATORS.has(ele)) {
-        const operator = NumericLiteral.UNARY_ARITHMETIC_OPERATORS.get(ele)
-        if (!operator) {
-          throw new Error('impossible execution path')
-        }
-        result.push(operator(Expression.toNumberLiteral(result.pop(), env)))
-      } else if (Expression.ASSIGNMENT_OPERATORS.has(ele)) {
-        const right = result.pop()
-        result.push(
-          Expression.toNumberLiteral(result.pop(), env).assign(
-            env,
-            Expression.toNumberLiteral(right, env),
-            ele
-          )
-        )
       } else {
-        result.push(env.lookupNumber(ele))
+        ele = ele.toString()
+        if (ele.startsWith('"')) {
+          result.push(env.allocateStringLiteral(ele))
+        } else if (ele == '&') {
+          result.push(Expression.toNumberLiteral(result.pop(), env).toAddress())
+        } else if (ele == DEREFERENCE_TAG) {
+          result.push(env.dereference(Expression.toNumberLiteral(result.pop(), env)))
+        } else if (ele in Expression.INCREMENT_DECREMENT_OPERATORS) {
+          result.push(Expression.INCREMENT_DECREMENT_OPERATORS[ele](result.pop(), env))
+        } else if (NumericLiteral.BINARY_ARITHMETIC_OPERATORS.has(ele)) {
+          const operator = NumericLiteral.BINARY_ARITHMETIC_OPERATORS.get(ele)
+          if (!operator) {
+            throw new Error('impossible execution path')
+          }
+          result.push(
+            operator(
+              Expression.toNumberLiteral(result.pop(), env),
+              Expression.toNumberLiteral(result.pop(), env)
+            )
+          )
+        } else if (NumericLiteral.UNARY_ARITHMETIC_OPERATORS.has(ele)) {
+          const operator = NumericLiteral.UNARY_ARITHMETIC_OPERATORS.get(ele)
+          if (!operator) {
+            throw new Error('impossible execution path')
+          }
+          result.push(operator(Expression.toNumberLiteral(result.pop(), env)))
+        } else if (Expression.ASSIGNMENT_OPERATORS.has(ele)) {
+          const right = result.pop()
+          result.push(
+            Expression.toNumberLiteral(result.pop(), env).assign(
+              env,
+              Expression.toNumberLiteral(right, env),
+              ele
+            )
+          )
+        } else {
+          result.push(env.lookupNumber(ele))
+        }
       }
       i++
     }

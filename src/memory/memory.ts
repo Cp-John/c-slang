@@ -1,5 +1,6 @@
+import { PointerType } from '../entity/datatype/pointerType'
+import { PrimitiveTypes } from '../entity/datatype/primitiveType'
 import { NumericLiteral } from '../entity/expression/numericLiteral'
-import { PointerType, PrimitiveType } from '../interpreter/builtins'
 import { CProgramContext } from '../interpreter/cProgramContext'
 
 export class Memory {
@@ -69,7 +70,7 @@ export class Memory {
   readInt(address: number): NumericLiteral {
     this.assertValidAddress(address, true)
     return NumericLiteral.new(this.view.getInt32(address), address).castToType(
-      PrimitiveType.INT,
+      PrimitiveTypes.int,
       true
     )
   }
@@ -83,11 +84,11 @@ export class Memory {
     this.assertValidAddress(address, false)
     if (numeric.getDataType() instanceof PointerType) {
       this.view.setInt32(address, numeric.getValue())
-    } else if (numeric.getDataType() == PrimitiveType.INT) {
+    } else if (numeric.getDataType() == PrimitiveTypes.int) {
       this.view.setInt32(address, numeric.getValue())
-    } else if (numeric.getDataType() == PrimitiveType.FLOAT) {
+    } else if (numeric.getDataType() == PrimitiveTypes.float) {
       this.view.setFloat32(address, numeric.getValue())
-    } else if (numeric.getDataType() == PrimitiveType.CHAR) {
+    } else if (numeric.getDataType() == PrimitiveTypes.char) {
       // word alignment
       this.view.setUint8(address, numeric.getValue())
     } else {
@@ -99,7 +100,7 @@ export class Memory {
   readFloat(address: number): NumericLiteral {
     this.assertValidAddress(address, true)
     return NumericLiteral.new(this.view.getFloat32(address), address).castToType(
-      PrimitiveType.FLOAT,
+      PrimitiveTypes.float,
       true
     )
   }
@@ -107,7 +108,7 @@ export class Memory {
   readChar(address: number): NumericLiteral {
     this.assertValidAddress(address, true)
     return NumericLiteral.new(this.view.getUint8(address), address).castToType(
-      PrimitiveType.CHAR,
+      PrimitiveTypes.char,
       true
     )
   }
@@ -238,7 +239,7 @@ export class Memory {
     }
     this.allocatedAddresses.add(addr + Memory.TAG_LENGTH)
     return NumericLiteral.new(addr + Memory.TAG_LENGTH).castToType(
-      new PointerType(PrimitiveType.VOID)
+      new PointerType(PrimitiveTypes.void)
     )
   }
 

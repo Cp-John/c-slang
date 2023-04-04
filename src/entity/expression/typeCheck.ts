@@ -2,11 +2,11 @@ import {
   ARITH_PRIMITIVE_TYPES,
   ArrayType,
   DataType,
-  PointerType,
-  PrimitiveType,
   WHOLE_PRIMITIVE_TYPES
 } from '../../interpreter/builtins'
 import { Lexer, RELATIONAL_OPERATOR_RETEX } from '../../parser/lexer'
+import { PointerType } from '../datatype/pointerType'
+import { PrimitiveType, PrimitiveTypes } from '../datatype/primitiveType'
 
 export function assertSubscritable(type: DataType, lexer: Lexer) {
   if (type instanceof PointerType || type instanceof ArrayType) {
@@ -58,12 +58,12 @@ export function getHigherPrecisionType(leftType: DataType, rightType: DataType):
     return leftType
   } else if (rightType instanceof ArrayType) {
     return rightType
-  } else if (leftType == PrimitiveType.FLOAT || rightType == PrimitiveType.FLOAT) {
-    return PrimitiveType.FLOAT
-  } else if (leftType == PrimitiveType.INT || rightType == PrimitiveType.INT) {
-    return PrimitiveType.INT
-  } else if (leftType == PrimitiveType.CHAR && rightType == PrimitiveType.CHAR) {
-    return PrimitiveType.CHAR
+  } else if (leftType == PrimitiveTypes.float || rightType == PrimitiveTypes.float) {
+    return PrimitiveTypes.float
+  } else if (leftType == PrimitiveTypes.int || rightType == PrimitiveTypes.int) {
+    return PrimitiveTypes.int
+  } else if (leftType == PrimitiveTypes.char && rightType == PrimitiveTypes.char) {
+    return PrimitiveTypes.char
   } else {
     throw new Error('impossible execution path')
   }
@@ -79,13 +79,13 @@ function checkImplicitConversion(
   if (leftType.toString() == rightType.toString()) {
     return
   }
-  if (leftType == PrimitiveType.CHAR && rightType == PrimitiveType.INT) {
+  if (leftType == PrimitiveTypes.char && rightType == PrimitiveTypes.int) {
     return
   }
   if (
     leftType instanceof PointerType &&
     rightType instanceof PointerType &&
-    (leftType.dereference() == PrimitiveType.VOID || rightType.dereference() == PrimitiveType.VOID)
+    (leftType.dereference() == PrimitiveTypes.void || rightType.dereference() == PrimitiveTypes.void)
   ) {
     return
   }
@@ -124,7 +124,7 @@ export function checkTypeCastType(
   ) {
     return
   }
-  if (oldType == PrimitiveType.VOID || oldType instanceof ArrayType) {
+  if (oldType == PrimitiveTypes.void || oldType instanceof ArrayType) {
     throw new Error(
       lexer.formatError(
         "cannot cast type '" + oldType.toString() + "' to '" + typeToCast.toString() + "'",
@@ -169,7 +169,7 @@ export function checkBinaryExprssionOperandType(
   if (opr == '+' || opr == '-') {
     if (leftType instanceof PointerType || leftType instanceof ArrayType) {
       if (opr == '-' && leftType.toString() == rightType.toString()) {
-        return PrimitiveType.INT
+        return PrimitiveTypes.int
       } else if (!WHOLE_PRIMITIVE_TYPES.has(rightType.toString())) {
         invalidBinaryExprssionOperandType(row, col, lexer, leftType, rightType)
       }
@@ -212,7 +212,7 @@ export function checkBinaryExprssionOperandType(
       ) {
         invalidBinaryExprssionOperandType(row, col, lexer, leftType, rightType)
       }
-      return PrimitiveType.INT
+      return PrimitiveTypes.int
     } else {
       throw new Error('impossible execution path')
     }
@@ -225,7 +225,7 @@ export function checkConditionOperandType(
   lexer: Lexer,
   conditionType: DataType
 ) {
-  if (conditionType == PrimitiveType.VOID) {
+  if (conditionType == PrimitiveTypes.void) {
     throw new Error(lexer.formatError("non-'void' type is required", row, col))
   }
 }

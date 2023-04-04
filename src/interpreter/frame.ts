@@ -1,9 +1,11 @@
+import { PointerType } from '../entity/datatype/pointerType'
+import { PrimitiveTypes } from '../entity/datatype/primitiveType'
 import { NumericLiteral } from '../entity/expression/numericLiteral'
 import { Function } from '../entity/function/function'
 import { SelfDefinedFunction } from '../entity/function/selfDefinedFunction'
 import { Memory } from '../memory/memory'
 import { Lexer } from '../parser/lexer'
-import { ArrayType, BUILTINS, DataType, PointerType, PrimitiveType, sizeof } from './builtins'
+import { ArrayType, BUILTINS, DataType, sizeof } from './builtins'
 import { CProgramContext } from './cProgramContext'
 
 export class Frame {
@@ -15,7 +17,7 @@ export class Frame {
 
   private static addBuiltins(frame: Frame): Frame {
     for (const name in BUILTINS) {
-      if (BUILTINS[name][1] == PrimitiveType.FUNCTION) {
+      if (BUILTINS[name][1] == PrimitiveTypes.function) {
         frame.declareFunction(name, BUILTINS[name][0])
       } else {
         frame.declareVariable(name, BUILTINS[name][1])
@@ -98,13 +100,13 @@ export class Frame {
       throw new Error('unbounded identifier: ' + name)
     } else if (type instanceof PointerType) {
       return this.memory.readPointer(val, type)
-    } else if (type == PrimitiveType.FUNCTION) {
+    } else if (type == PrimitiveTypes.function) {
       return val
-    } else if (type == PrimitiveType.INT) {
+    } else if (type == PrimitiveTypes.int) {
       return this.memory.readInt(val)
-    } else if (type == PrimitiveType.FLOAT) {
+    } else if (type == PrimitiveTypes.float) {
       return this.memory.readFloat(val)
-    } else if (type == PrimitiveType.CHAR) {
+    } else if (type == PrimitiveTypes.char) {
       return this.memory.readChar(val)
     } else if (type instanceof ArrayType) {
       // console.log('lookup array ' + name + ': ' + String(val))
@@ -121,7 +123,7 @@ export class Frame {
   private isRedefinition(name: string, type: DataType): boolean {
     if (!(name in this.boundings)) {
       return false
-    } else if (type != PrimitiveType.FUNCTION) {
+    } else if (type != PrimitiveTypes.function) {
       return true
     } else if (
       this.boundings[name]['val'] instanceof SelfDefinedFunction &&
@@ -134,7 +136,7 @@ export class Frame {
 
   allocateStringLiteral(stringLiteral: string): NumericLiteral {
     const addr = this.memory.allocateStringLiteral(stringLiteral)
-    return NumericLiteral.new(addr).castToType(new PointerType(PrimitiveType.CHAR))
+    return NumericLiteral.new(addr).castToType(new PointerType(PrimitiveTypes.char))
   }
 
   private checkRedefinition(
@@ -173,14 +175,14 @@ export class Frame {
     col: number = -1,
     lexer: Lexer | null = null
   ): string {
-    this.checkRedefinition(name, PrimitiveType.FUNCTION, row, col, lexer)
+    this.checkRedefinition(name, PrimitiveTypes.function, row, col, lexer)
     if (
       name in this.boundings &&
       (this.boundings[name]['val'] as Function).toString() != functionObj.toString()
     ) {
       this.conflictingFunctionSignatures(name, row, col, lexer)
     }
-    this.boundings[name] = { type: PrimitiveType.FUNCTION, val: functionObj }
+    this.boundings[name] = { type: PrimitiveTypes.function, val: functionObj }
     // console.log('declared function: ' + functionObj.toString() + ' [' + this.stackTop + ']')
     return name
   }
@@ -227,9 +229,9 @@ export class Frame {
     const address = this.findFrameWith(name).boundings[name]['val']
     if (
       variableType instanceof PointerType ||
-      variableType == PrimitiveType.INT ||
-      variableType == PrimitiveType.FLOAT ||
-      variableType == PrimitiveType.CHAR
+      variableType == PrimitiveTypes.int ||
+      variableType == PrimitiveTypes.float ||
+      variableType == PrimitiveTypes.char
     ) {
       this.memory.writeNumeric(address, (val as NumericLiteral).castToType(variableType))
     } else {
@@ -242,7 +244,7 @@ export class Frame {
     const type = numeric.getDataType()
     if (!(type instanceof PointerType || type instanceof ArrayType)) {
       throw new Error("attempt to dereference non-pointer type '" + type + "' to 'char*'")
-    } else if (type.dereference() != PrimitiveType.CHAR) {
+    } else if (type.dereference() != PrimitiveTypes.char) {
       throw new Error("attempt to dereference type '" + type + "' to 'char*'")
     }
     return this.memory.readStringLiteral(numeric.getValue())
@@ -260,11 +262,11 @@ export class Frame {
       return NumericLiteral.new(val).castToType(resultType)
     } else if (resultType instanceof PointerType) {
       return this.memory.readPointer(val, resultType)
-    } else if (resultType == PrimitiveType.CHAR) {
+    } else if (resultType == PrimitiveTypes.char) {
       return this.memory.readChar(val)
-    } else if (resultType == PrimitiveType.INT) {
+    } else if (resultType == PrimitiveTypes.int) {
       return this.memory.readInt(val)
-    } else if (resultType == PrimitiveType.FLOAT) {
+    } else if (resultType == PrimitiveTypes.float) {
       return this.memory.readFloat(val)
     } else {
       throw new Error("attempt to dereference unknown pointer type '" + type + "'")
@@ -310,7 +312,7 @@ export class Frame {
         return
       }
       const type = this.boundings[name]['type']
-      if (type == PrimitiveType.FUNCTION) {
+      if (type == PrimitiveTypes.function) {
         context.stdout += name + ': ' + this.boundings[name]['val'].toString() + '\n'
       } else {
         context.stdout += name + ': ' + type.toString() + '\n'

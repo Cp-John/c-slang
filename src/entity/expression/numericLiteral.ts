@@ -6,12 +6,11 @@ import {
   MAX_UNSGINED_INT,
   MIN_CHAR,
   MIN_INT,
-  PointerType,
-  PRIMITIVE_TYPES,
-  PrimitiveType,
   sizeof
 } from '../../interpreter/builtins'
 import { Frame } from '../../interpreter/frame'
+import { PointerType } from '../datatype/pointerType'
+import { PrimitiveTypes } from '../datatype/primitiveType'
 import { UNARY_MINUS_TAG } from './expressionParser'
 import { getHigherPrecisionType } from './typeCheck'
 
@@ -62,12 +61,12 @@ export class NumericLiteral {
   }
 
   private cap(): NumericLiteral {
-    if (this.type == PrimitiveType.INT) {
+    if (this.type == PrimitiveTypes.int) {
       this.val = ((this.val - MIN_INT) % (MAX_INT - MIN_INT + 1)) + MIN_INT
       if (this.val < MIN_INT) {
         this.val += MAX_INT - MIN_INT + 1
       }
-    } else if (this.type == PrimitiveType.CHAR) {
+    } else if (this.type == PrimitiveTypes.char) {
       this.val = ((this.val - MIN_CHAR) % (MAX_CHAR - MIN_CHAR + 1)) + MIN_CHAR
       if (this.val < MIN_CHAR) {
         this.val += MAX_CHAR - MIN_CHAR + 1
@@ -82,7 +81,7 @@ export class NumericLiteral {
   }
 
   castToType(newType: DataType, isInPlace: boolean = false): NumericLiteral {
-    if (newType == PrimitiveType.FUNCTION || newType == PrimitiveType.VOID) {
+    if (newType == PrimitiveTypes.function || newType == PrimitiveTypes.void) {
       throw new Error('impossible execution path')
     }
     if (
@@ -90,10 +89,10 @@ export class NumericLiteral {
       (newType instanceof PointerType && this.type instanceof PointerType)
     ) {
       return new NumericLiteral(this.val, newType, isInPlace ? this.address : null).cap()
-    } else if (this.type == PrimitiveType.FLOAT) {
+    } else if (this.type == PrimitiveTypes.float) {
       this.truncateDecimals()
       return this.castToType(newType, isInPlace).cap()
-    } else if (newType == PrimitiveType.CHAR) {
+    } else if (newType == PrimitiveTypes.char) {
       return new NumericLiteral(this.val % 256, newType, isInPlace ? this.address : null).cap()
     } else if (newType instanceof PointerType || newType instanceof ArrayType) {
       return new NumericLiteral(this.val, newType, isInPlace ? this.address : null).cap()
@@ -179,7 +178,7 @@ export class NumericLiteral {
   ])
 
   private truncateDecimals() {
-    this.type = PrimitiveType.INT
+    this.type = PrimitiveTypes.int
     this.val = Math[this.val < 0 ? 'ceil' : 'floor'](this.val)
     return this
   }
@@ -210,7 +209,7 @@ export class NumericLiteral {
       (this.type instanceof ArrayType && right.type instanceof ArrayType)
     ) {
       return NumericLiteral.new((this.val - right.val) / this.getStep()).castToType(
-        PrimitiveType.INT
+        PrimitiveTypes.int
       )
     } else {
       const resultType = getHigherPrecisionType(this.type, right.type)
@@ -236,21 +235,21 @@ export class NumericLiteral {
   }
 
   sqrt() {
-    return new NumericLiteral(Math.sqrt(this.val), PrimitiveType.FLOAT)
+    return new NumericLiteral(Math.sqrt(this.val), PrimitiveTypes.float)
   }
 
   abs() {
-    return new NumericLiteral(Math.abs(this.val), PrimitiveType.INT)
+    return new NumericLiteral(Math.abs(this.val), PrimitiveTypes.int)
   }
 
   static new(val: number, address: number | null = null): NumericLiteral {
     return new NumericLiteral(
       val,
       val % 1 != 0
-        ? PrimitiveType.FLOAT
+        ? PrimitiveTypes.float
         : val >= -128 && val <= 127
-        ? PrimitiveType.CHAR
-        : PrimitiveType.INT,
+        ? PrimitiveTypes.char
+        : PrimitiveTypes.int,
       address
     )
   }
@@ -261,9 +260,9 @@ export class NumericLiteral {
       return NumericLiteral.new(0)
     }
     if (str.includes('.')) {
-      return new NumericLiteral(val, PrimitiveType.FLOAT)
+      return new NumericLiteral(val, PrimitiveTypes.float)
     } else {
-      return new NumericLiteral(val, PrimitiveType.INT)
+      return new NumericLiteral(val, PrimitiveTypes.int)
     }
   }
 

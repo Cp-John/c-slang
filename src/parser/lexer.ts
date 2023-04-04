@@ -1,10 +1,6 @@
+import { PointerType } from '../entity/datatype/pointerType'
+import { PrimitiveType, PrimitiveTypes } from '../entity/datatype/primitiveType'
 import { NumericLiteral } from '../entity/expression/numericLiteral'
-import {
-  DataType,
-  PointerType,
-  PrimitiveType,
-  WHOLE_PRIMITIVE_TYPES
-} from '../interpreter/builtins'
 
 const PREPROCESSOR_DIRECTIVEG =
   /^\s*#\s*include\b|^\s*#\s*define\b|^\s*#\s*ifdef\b|^\s*#\s*ifndef\b|^\s*#\s*if\b|^\s*#\s*elif\b|^\s*#\s*else\b|^\s*#\s*pragma\b/
@@ -213,7 +209,10 @@ export class Lexer {
     }
     this.currentLine = this.currentLine.substring(match[0].length)
     this.col += match[0].length
-    return match[0] == 'double' ? PrimitiveType.FLOAT : (match[0] as PrimitiveType)
+    return match[0] == 'double' ? PrimitiveTypes.float :
+    match[0] == 'float' ? PrimitiveTypes.float :
+    match[0] == 'int' ? PrimitiveTypes.int :
+    match[0] == 'char' ? PrimitiveTypes.char : PrimitiveTypes.void
   }
 
   eatDataType(): PrimitiveType | PointerType {
@@ -317,7 +316,7 @@ export class Lexer {
     this.currentLine = this.currentLine.substring(match[0].length)
     this.col += match[0].length
     return NumericLiteral.new(Lexer.restoreEscapeChars(match[0]).charCodeAt(1)).castToType(
-      PrimitiveType.CHAR
+      PrimitiveTypes.char
     )
   }
 
