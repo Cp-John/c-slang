@@ -78,6 +78,7 @@ export class StructType extends DataType {
   }
 
   parseDefinitionBody(env: Frame, lexer: Lexer): StructType {
+    const [bodyRow, bodyCol] = lexer.tell()
     lexer.eatDelimiter('{')
     const declaredFieldNames = new Set<string>()
     this.fields = []
@@ -114,6 +115,9 @@ export class StructType extends DataType {
         lexer.eatDelimiter(',')
       }
       lexer.eatDelimiter(';')
+    }
+    if (this.fields.length == 0) {
+        throw new Error(lexer.formatError('requires at least one member in structure', bodyRow, bodyCol))
     }
     lexer.eatDelimiter('}')
     this._isComplete = true
