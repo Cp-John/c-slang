@@ -28,7 +28,6 @@ export function checkUnaryMinusOperandType(type: DataType, row: number, col: num
   }
 }
 
-
 export function getHigherPrecisionType(leftType: DataType, rightType: DataType): DataType {
   if (leftType.isPointer()) {
     return leftType
