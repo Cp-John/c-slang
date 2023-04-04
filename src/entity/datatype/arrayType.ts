@@ -2,7 +2,7 @@ import { DataType } from './dataType'
 import { PrimitiveType, PrimitiveTypes } from './primitiveType'
 import { SubscriptableType } from './subscriptableType'
 
-export type ElementType = PointerType | PrimitiveType
+export type ElementType = PointerType | PrimitiveType | StructType
 
 export class ArrayType extends SubscriptableType {
   private eleType: ElementType
@@ -12,6 +12,10 @@ export class ArrayType extends SubscriptableType {
     super(sizes.reduce((a, b) => a * b, 1) * eleType.getSize())
     this.eleType = eleType
     this.sizes = sizes
+  }
+
+  override isArrayType(): boolean {
+    return true
   }
 
   toPointerType(): PointerType {
@@ -49,7 +53,7 @@ export class ArrayType extends SubscriptableType {
     return result
   }
 
-  canImplicitCastTo(targetType: DataType): boolean {
+  override canImplicitCastTo(targetType: DataType): boolean {
     return (
       this.toString() == targetType.toString() || this.toPointerType().canImplicitCastTo(targetType)
     )
@@ -134,3 +138,4 @@ import { Expression } from '../expression/expression'
 import { ExpressionParser } from '../expression/expressionParser'
 import { NumericLiteral } from '../expression/numericLiteral'
 import { PointerType } from './pointerType'
+import { StructType } from './structType'

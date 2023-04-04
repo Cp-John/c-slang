@@ -226,7 +226,7 @@ export class Lexer {
   }
 
   wrapType(primitiveType: PrimitiveType): ElementType {
-    let finalType: PrimitiveType | PointerType = primitiveType
+    let finalType: ElementType = primitiveType
     while (this.matchDelimiter('*')) {
       this.eatDelimiter('*')
       finalType = new PointerType(finalType)

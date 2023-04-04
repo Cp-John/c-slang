@@ -21,6 +21,10 @@ export abstract class DataType {
     return false
   }
 
+  isArrayType(): boolean {
+    return false
+  }
+
   abstract toString(): string
 
   abstract canImplicitCastTo(targetType: DataType): boolean

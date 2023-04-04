@@ -4,6 +4,7 @@ import { ArrayType } from '../datatype/arrayType'
 import { DataType } from '../datatype/dataType'
 import { PointerType } from '../datatype/pointerType'
 import { PrimitiveType, PrimitiveTypes } from '../datatype/primitiveType'
+import { SubscriptableType } from '../datatype/subscriptableType'
 import { Expression, IncrementDecrement, Jump } from './expression'
 import { FunctionCall } from './functionCall'
 import { NumericLiteral } from './numericLiteral'
@@ -89,7 +90,7 @@ export class ExpressionParser {
       const [row, col] = lexer.tell()
       lexer.eatDelimiter('*')
       const type = this.recurParseNumericTerm(env, lexer, result, false, isConstantExpression)
-      if (!(type instanceof PointerType || type instanceof ArrayType)) {
+      if (!type.isSubscriptable()) {
         throw new Error(
           lexer.formatError(
             "indirection requires pointer operand, ('" + type + "' invalid)",
@@ -99,7 +100,7 @@ export class ExpressionParser {
         )
       }
       result.push(DEREFERENCE_TAG)
-      dataType = type.dereference()
+      dataType = (type as SubscriptableType).dereference()
     } else if (lexer.matchDelimiter('(')) {
       lexer.eatDelimiter('(')
       if (lexer.matchDataType()) {

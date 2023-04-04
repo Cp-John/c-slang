@@ -44,7 +44,7 @@ class IntType extends WholePrimitiveType {
     super('int', 4)
   }
 
-  canImplicitCastTo(targetType: DataType): boolean {
+  override canImplicitCastTo(targetType: DataType): boolean {
     return (
       this.toString() == targetType.toString() ||
       targetType == PrimitiveTypes.float ||
@@ -99,7 +99,7 @@ class VoidType extends PrimitiveType {
     super('void', 1)
   }
 
-  canImplicitCastTo(targetType: DataType): boolean {
+  override canImplicitCastTo(targetType: DataType): boolean {
     return false
   }
 
@@ -117,7 +117,7 @@ class FunctionType extends PrimitiveType {
     super('function', 0)
   }
 
-  canImplicitCastTo(targetType: DataType): boolean {
+  override canImplicitCastTo(targetType: DataType): boolean {
     return false
   }
 

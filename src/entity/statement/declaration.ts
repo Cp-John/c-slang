@@ -4,7 +4,6 @@ import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
 import { ArrayType, ElementType } from '../datatype/arrayType'
 import { DataType } from '../datatype/dataType'
-import { PointerType } from '../datatype/pointerType'
 import { PrimitiveType, PrimitiveTypes } from '../datatype/primitiveType'
 import { Expression } from '../expression/expression'
 import { ExpressionParser } from '../expression/expressionParser'
@@ -203,11 +202,11 @@ class ArrayDeclaration extends Declaration {
 }
 
 class VariableDeclaration extends Declaration {
-  private variableType: PrimitiveType | PointerType
+  private variableType: ElementType
   private variableName: string
   expression: Expression | null
 
-  constructor(variableType: PrimitiveType | PointerType, variableName: string) {
+  constructor(variableType: ElementType, variableName: string) {
     super()
     this.variableType = variableType
     this.variableName = variableName

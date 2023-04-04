@@ -22,7 +22,7 @@ export class StructType extends DataType {
     return 'struct ' + this.tag
   }
 
-  canImplicitCastTo(targetType: DataType): boolean {
+  override canImplicitCastTo(targetType: DataType): boolean {
     return this.toString() == targetType.toString()
   }
 

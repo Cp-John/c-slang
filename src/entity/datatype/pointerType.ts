@@ -34,13 +34,13 @@ export class PointerType extends SubscriptableType {
     return this.pointingTo.toString() + '*'
   }
 
-  canImplicitCastTo(targetType: DataType): boolean {
+  override canImplicitCastTo(targetType: DataType): boolean {
     return (
       this.toString() == targetType.toString() || targetType == new PointerType(PrimitiveTypes.void)
     )
   }
 
   override canExplicitCastTo(targetType: DataType): boolean {
-    return targetType instanceof PointerType || targetType == PrimitiveTypes.int
+    return targetType.isPointerType() || targetType == PrimitiveTypes.int
   }
 }
