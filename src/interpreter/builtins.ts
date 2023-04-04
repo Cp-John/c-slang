@@ -14,17 +14,6 @@ export const MIN_CHAR = -128
 
 export const MAX_UNSGINED_INT = 4294967295
 
-export const ARITH_PRIMITIVE_TYPES = new Set<string>([
-  PrimitiveTypes.char.toString(),
-  PrimitiveTypes.float.toString(),
-  PrimitiveTypes.int.toString()
-])
-
-export const WHOLE_PRIMITIVE_TYPES = new Set<string>([
-  PrimitiveTypes.char.toString(),
-  PrimitiveTypes.int.toString()
-])
-
 export const PRIMITIVE_TYPES = Object.values(PrimitiveType)
 
 const rand: RealBuiltinFunction = (

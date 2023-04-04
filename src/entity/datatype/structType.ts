@@ -14,7 +14,7 @@ export class StructType extends DataType {
     this.fields = fields
   }
 
-  override applyBinaryOperator(operator: string, leftType: DataType): DataType | undefined {
+  override applyBinaryOperator(operator: string, rightType: DataType): DataType | undefined {
     return undefined
   }
 

@@ -1,6 +1,6 @@
 import { DataType } from './dataType'
 import { PrimitiveTypes } from './primitiveType'
-import { SubscriptableType } from './subscritableType'
+import { SubscriptableType } from './subscriptableType'
 
 export class PointerType extends SubscriptableType {
   private pointingTo: DataType
@@ -10,13 +10,13 @@ export class PointerType extends SubscriptableType {
     this.pointingTo = pointingTo
   }
 
-  override applyBinaryOperator(operator: string, leftType: DataType): DataType | undefined {
+  override applyBinaryOperator(operator: string, rightType: DataType): DataType | undefined {
     if (operator != '+' && operator != '-') {
       return undefined
-    } else if (leftType.isWholePrimitiveType()) {
+    } else if (rightType.isWholePrimitiveType()) {
       return this
     } else {
-      return operator == '-' && leftType.toString() == this.toString()
+      return operator == '-' && rightType.toString() == this.toString()
         ? PrimitiveTypes.int
         : undefined
     }

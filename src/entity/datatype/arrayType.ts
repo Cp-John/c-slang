@@ -1,6 +1,6 @@
 import { DataType } from './dataType'
 import { PrimitiveType, PrimitiveTypes } from './primitiveType'
-import { SubscriptableType } from './subscritableType'
+import { SubscriptableType } from './subscriptableType'
 
 export type ElementType = PointerType | PrimitiveType
 
@@ -26,7 +26,7 @@ export class ArrayType extends SubscriptableType {
     return this.sizes.reduce((a, b) => a * b, 1)
   }
 
-  override applyBinaryOperator(operator: string, leftType: DataType): DataType | undefined {
+  override applyBinaryOperator(operator: string, rightType: DataType): DataType | undefined {
     return undefined
   }
 

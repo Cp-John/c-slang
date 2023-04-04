@@ -27,7 +27,7 @@ export abstract class DataType {
 
   abstract canExplicitCastTo(targetType: DataType): boolean
 
-  abstract applyBinaryOperator(operator: string, leftType: DataType): DataType | undefined
+  abstract applyBinaryOperator(operator: string, rightType: DataType): DataType | undefined
 
   getSize(): number {
     return this.size

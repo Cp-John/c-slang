@@ -20,12 +20,12 @@ abstract class ArithPrimitiveType extends PrimitiveType {
     return true
   }
 
-  override applyBinaryOperator(operator: string, leftType: DataType): DataType | undefined {
-    if (!leftType.isArithPrimitiveType()) {
-      return leftType.applyBinaryOperator(operator, this)
+  override applyBinaryOperator(operator: string, rightType: DataType): DataType | undefined {
+    if (!rightType.isArithPrimitiveType()) {
+      return rightType.applyBinaryOperator(operator, this)
     } else if (ArithPrimitiveType.BOOL_BINARY_OPERATORS.has(operator)) {
       return PrimitiveTypes.int
-    } else if (this instanceof FloatType || leftType instanceof FloatType) {
+    } else if (this instanceof FloatType || rightType instanceof FloatType) {
       return operator == '%' ? undefined : PrimitiveTypes.float
     } else {
       return PrimitiveTypes.int
@@ -106,11 +106,7 @@ class VoidType extends PrimitiveType {
     return false
   }
 
-  override isArithPrimitiveType(): boolean {
-    return false
-  }
-
-  override applyBinaryOperator(operator: string, leftType: DataType): DataType | undefined {
+  override applyBinaryOperator(operator: string, rightType: DataType): DataType | undefined {
     return undefined
   }
 }
@@ -128,11 +124,7 @@ class FunctionType extends PrimitiveType {
     return false
   }
 
-  override isArithPrimitiveType(): boolean {
-    return false
-  }
-
-  override applyBinaryOperator(operator: string, leftType: DataType): DataType | undefined {
+  override applyBinaryOperator(operator: string, rightType: DataType): DataType | undefined {
     return undefined
   }
 }

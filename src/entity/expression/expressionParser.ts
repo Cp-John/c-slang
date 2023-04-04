@@ -8,7 +8,7 @@ import { Expression, IncrementDecrement, Jump } from './expression'
 import { FunctionCall } from './functionCall'
 import { NumericLiteral } from './numericLiteral'
 import {
-  assertSubscritable,
+  assertSubscriptable,
   checkAssignmentOperandType,
   checkBinaryExprssionOperandType,
   checkConditionOperandType,
@@ -230,7 +230,7 @@ export class ExpressionParser {
       )
     }
     while (lexer.matchDelimiter('[')) {
-      assertSubscritable(dataType, lexer)
+      assertSubscriptable(dataType, lexer)
       lexer.eatDelimiter('[')
       const [row, col] = lexer.tell()
       checkSubscriptType(
