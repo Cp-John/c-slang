@@ -47,20 +47,18 @@ export const UNARY_MINUS_TAG = '$UNARY_MINUS'
 export const STRUCT_MEMBER_ACCESS_TAG = '$STRUCT_MEMBER_ACCESS_TAG'
 
 function assertAssignable(
+  currentDataType: DataType,
   ele: string | DataType | NumericLiteral | IncrementDecrement | FunctionCall | Jump,
   env: Frame,
   row: number,
   col: number,
   lexer: Lexer
 ) {
-  if (
-    ele != STRUCT_MEMBER_ACCESS_TAG &&
-    ele != DEREFERENCE_TAG &&
-    (typeof ele != 'string' ||
-      !new Lexer(ele).matchIdentifier() ||
-      env.lookupType(ele) == PrimitiveTypes.function ||
-      env.lookupType(ele) instanceof ArrayType)
-  ) {
+  if (currentDataType instanceof ArrayType || currentDataType instanceof StructType) {
+    throw new Error(lexer.formatError('expression is not assignable', row, col))
+  } else if (ele == STRUCT_MEMBER_ACCESS_TAG || ele == DEREFERENCE_TAG) {
+    return
+  } else if (typeof ele != 'string' || !env.isDeclared(ele) || env.lookupType(ele) == PrimitiveTypes.function) {
     throw new Error(lexer.formatError('expression is not assignable', row, col))
   }
 }
@@ -141,7 +139,7 @@ export class ExpressionParser {
           ? IncrementDecrement.PRE_INCREMENT
           : IncrementDecrement.PRE_DECREMENT
       dataType = this.recurParseNumericTerm(env, lexer, result, false, isConstantExpression)
-      assertAssignable(result[result.length - 1], env, row, col, lexer)
+      assertAssignable(dataType, result[result.length - 1], env, row, col, lexer)
       result.push(opr)
     } else if (lexer.matchUnaryPlusMinus()) {
       const [row, col] = lexer.tell()
@@ -224,7 +222,7 @@ export class ExpressionParser {
     while (true) {
       if (lexer.matchIncrementDecrementOperator()) {
         const [row, col] = lexer.tell()
-        assertAssignable(result[result.length - 1], env, row, col, lexer)
+        assertAssignable(dataType, result[result.length - 1], env, row, col, lexer)
         result.push(
           lexer.eatIncrementDecrementOperator() == '++'
             ? IncrementDecrement.POST_INCREMENT
@@ -507,7 +505,7 @@ export class ExpressionParser {
     )
     if (lexer.matchAssignmentOperator()) {
       const [row, col] = lexer.tell()
-      assertAssignable(result[result.length - 1], env, row, col, lexer)
+      assertAssignable(leftType, result[result.length - 1], env, row, col, lexer)
       const opr = lexer.eatAssignmentOperator()
       const rightType = this.recurParseExpression(env, lexer, result, false, isConstantExpression)
       leftType = checkAssignmentOperandType(row, col, lexer, leftType, opr, rightType)
