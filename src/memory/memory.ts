@@ -75,14 +75,6 @@ export class Memory {
     for (let i = 0; i < size; i++) {
       this.assertValidAddress(targetAddr + i, false)
       this.assertValidAddress(fromAddr + i, true)
-      console.log(
-        'assigning: ',
-        this.view.getUint8(fromAddr + i),
-        'from',
-        fromAddr + i,
-        ' to',
-        targetAddr + i
-      )
       this.view.setUint8(targetAddr + i, this.view.getUint8(fromAddr + i))
     }
   }

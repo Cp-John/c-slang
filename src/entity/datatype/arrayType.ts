@@ -155,7 +155,6 @@ export class ArrayType extends SubscriptableType {
       }
     }
     lexer.eatDelimiter('}')
-    console.log('eleCount:', eleCount)
     this.padInitialArrayExpressions(eleCount, currentExpressions, expressions, row, col, lexer)
   }
 

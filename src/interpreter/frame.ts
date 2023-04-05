@@ -316,19 +316,14 @@ export class Frame {
   }
 
   dereference(numeric: NumericLiteral): NumericLiteral {
-    // console.log('dereference: ' + JSON.stringify(numeric))
     const type = numeric.getDataType()
     if (!(type instanceof PointerType || type instanceof ArrayType)) {
       throw new Error("attempt to dereference non-pointer type '" + type + "'")
     }
     const val = numeric.getValue()
     const resultType = type.dereference()
-    if (resultType instanceof ArrayType) {
-      return NumericLiteral.new(val).castToType(resultType)
-    } else if (resultType instanceof StructType) {
-      return this.memory
-        .readPointer(val, new PointerType(PrimitiveTypes.void))
-        .castToType(resultType, true)
+    if (resultType instanceof ArrayType || resultType instanceof StructType) {
+      return NumericLiteral.new(val, val).castToType(resultType, true)
     } else if (resultType instanceof PointerType) {
       return this.memory.readPointer(val, resultType)
     } else if (resultType == PrimitiveTypes.char) {

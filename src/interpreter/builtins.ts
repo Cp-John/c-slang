@@ -71,10 +71,10 @@ const scanf: RealBuiltinFunction = (
   let formatString = env.dereferenceAsString(args[0])
   while (i < args.length) {
     const input = prompt(context.stdout)
-    context.stdout += input + '\n'
     if (input == null) {
       throw Error('execution interrupted')
     }
+    context.stdout += input + '\n'
     const tokens = input?.split(/\s+/)
     for (let j = 0; i < args.length && tokens && j < tokens.length; j++) {
       const match = PLACEHOLDER_REGEX.exec(formatString)

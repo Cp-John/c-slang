@@ -4,6 +4,7 @@ import { ArrayType } from '../datatype/arrayType'
 import { DataType } from '../datatype/dataType'
 import { PointerType } from '../datatype/pointerType'
 import { PrimitiveTypes } from '../datatype/primitiveType'
+import { StructType } from '../datatype/structType'
 import { UNARY_MINUS_TAG } from './expressionParser'
 
 interface BinaryArithmeticOperator {
@@ -63,7 +64,11 @@ export class NumericLiteral {
       if (this.val < MIN_CHAR) {
         this.val += MAX_CHAR - MIN_CHAR + 1
       }
-    } else if (this.type instanceof PointerType || this.type instanceof ArrayType) {
+    } else if (
+      this.type instanceof PointerType ||
+      this.type instanceof ArrayType ||
+      this.type instanceof StructType
+    ) {
       this.val = this.val % (MAX_UNSGINED_INT + 1)
       if (this.val < 0) {
         this.val += MAX_UNSGINED_INT + 1
