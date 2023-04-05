@@ -24,7 +24,7 @@ export abstract class Declaration extends Statement {
       lexer.eatDelimiter(')')
       return result
     }
-    const type = lexer.eatElementType(env)
+    let type: ElementType = lexer.eatElementType(env)
     if (type == PrimitiveTypes.void) {
       lexer.eatDelimiter(')')
       return result
@@ -34,16 +34,22 @@ export abstract class Declaration extends Statement {
     }
     let [row, col] = lexer.tell()
     let name = lexer.eatIdentifier()
+    if (lexer.matchDelimiter('[')) {
+      type = ArrayType.wrap(env, lexer, type).toPointerType()
+    }
     result.push([type, env.declareVariable(name, type, row, col, lexer)])
     while (!lexer.matchDelimiter(')')) {
       lexer.eatDelimiter(',')
       const [typeRow, typeCol] = lexer.tell()
-      const type = lexer.eatElementType(env)
+      type = lexer.eatElementType(env)
       if (type == PrimitiveTypes.void) {
         throw new Error(lexer.formatError("argument may not have 'void' type", typeRow, typeCol))
       }
       ;[row, col] = lexer.tell()
       name = lexer.eatIdentifier()
+      if (lexer.matchDelimiter('[')) {
+        type = ArrayType.wrap(env, lexer, type).toPointerType()
+      }
       result.push([type, env.declareVariable(name, type, row, col, lexer)])
     }
     lexer.eatDelimiter(')')
