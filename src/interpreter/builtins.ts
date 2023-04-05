@@ -70,10 +70,6 @@ const scanf: RealBuiltinFunction = (
   let i = 1
   let formatString = env.dereferenceAsString(args[0])
 
-  // reset context
-  context.startTimeMs = new Date().getTime()
-  context.executedStatementCount = 0
-
   while (i < args.length) {
     const input = prompt(context.stdout)
     if (input == null) {
@@ -122,6 +118,9 @@ const scanf: RealBuiltinFunction = (
       i++
     }
   }
+  // reset context
+  context.startTimeMs = new Date().getTime()
+  context.executedStatementCount = 0
   return NumericLiteral.new(i - 1).castToType(PrimitiveTypes.int)
 }
 
