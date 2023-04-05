@@ -40,7 +40,8 @@ const RESERVED_KEYWORDS = new Set([
   'default',
   'sizeof',
   'typeof',
-  'struct'
+  'struct',
+  'NULL'
 ])
 
 const ESCAPE_CHARACTERS = {

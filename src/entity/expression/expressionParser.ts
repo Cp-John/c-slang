@@ -81,6 +81,7 @@ export class ExpressionParser {
     allowVoid: boolean,
     isConstantExpression: boolean
   ): DataType {
+    const [termRow, termCol] = lexer.tell()
     let dataType: DataType
     if (lexer.matchDelimiter('!')) {
       lexer.eatDelimiter('!')
@@ -153,37 +154,9 @@ export class ExpressionParser {
         checkUnaryMinusOperandType(dataType, row, col, lexer)
         result.push(UNARY_MINUS_TAG)
       }
-    } else if (lexer.matchIdentifier()) {
-      if (isConstantExpression) {
-        throw new Error(lexer.formatError('expected a constant expression'))
-      }
-      const [row, col] = lexer.tell()
-      const identifier = lexer.eatIdentifier()
-      result.push(identifier)
-      assertIsDeclared(identifier, env, row, col, lexer)
-      const type = env.lookupType(identifier)
-      if (type != PrimitiveTypes.function) {
-        dataType = type
-        if (lexer.matchDelimiter('(')) {
-          throw new Error(lexer.formatError('called object type is not a function', row, col))
-        }
-      } else {
-        const functionName = String(result.pop())
-        const functionCall = new FunctionCall(
-          env,
-          functionName,
-          env.lookupFunction(functionName).parseActualParameters(env, lexer),
-          row,
-          col
-        )
-        if (!allowVoid && functionCall.getReturnType().toString() == 'void') {
-          throw new Error(
-            lexer.formatError("expected expression of scalar type ('void' invalid)", row, col)
-          )
-        }
-        result.push(functionCall)
-        dataType = functionCall.getReturnType()
-      }
+    } else if (lexer.matchKeyword('NULL')) {
+      dataType = new PointerType(PrimitiveTypes.void)
+      result.push(NumericLiteral.new(0).castToType(dataType))
     } else if (lexer.matchKeyword('sizeof')) {
       lexer.eatKeyword('sizeof')
       lexer.eatDelimiter('(')
@@ -219,6 +192,32 @@ export class ExpressionParser {
       lexer.eatDelimiter(')')
       result.push('"' + type.toString() + '"')
       dataType = new PointerType(PrimitiveTypes.char)
+    } else if (lexer.matchIdentifier()) {
+      if (isConstantExpression) {
+        throw new Error(lexer.formatError('expected a constant expression'))
+      }
+      const [row, col] = lexer.tell()
+      const identifier = lexer.eatIdentifier()
+      result.push(identifier)
+      assertIsDeclared(identifier, env, row, col, lexer)
+      const type = env.lookupType(identifier)
+      if (type != PrimitiveTypes.function) {
+        dataType = type
+        if (lexer.matchDelimiter('(')) {
+          throw new Error(lexer.formatError('called object type is not a function', row, col))
+        }
+      } else {
+        const functionName = String(result.pop())
+        const functionCall = new FunctionCall(
+          env,
+          functionName,
+          env.lookupFunction(functionName).parseActualParameters(env, lexer),
+          row,
+          col
+        )
+        result.push(functionCall)
+        dataType = functionCall.getReturnType()
+      }
     } else {
       throw new Error(lexer.formatError('expression expected'))
     }
@@ -253,11 +252,7 @@ export class ExpressionParser {
         dataType = assertStructFieldExists(fieldName, dataType as StructType, lexer, row, col)
         result.push(fieldName, STRUCT_MEMBER_ACCESS_TAG)
       } else if (lexer.matchDelimiter('->')) {
-        if (!dataType.isSubscriptable()) {
-          throw new Error(
-            lexer.formatError("indirection requires pointer operand, ('" + dataType + "' invalid)")
-          )
-        }
+        assertSubscriptable(dataType, lexer)
         assertIsStruct((dataType as SubscriptableType).dereference(), lexer)
         lexer.eatDelimiter('->')
         const [row, col] = lexer.tell()
@@ -268,6 +263,12 @@ export class ExpressionParser {
       } else {
         break
       }
+    }
+
+    if (!allowVoid && dataType == PrimitiveTypes.void) {
+      throw new Error(
+        lexer.formatError("expected expression of scalar type ('void' invalid)", termRow, termCol)
+      )
     }
     return dataType
   }
@@ -546,7 +547,8 @@ export class ExpressionParser {
     if (expectedDataType != null) {
       checkAssignmentOperandType(row, col, lexer, expectedDataType, '=', actualType)
       return new Expression(result, expectedDataType)
-    } else if (isConditionalExpression) {
+    }
+    if (isConditionalExpression) {
       checkConditionOperandType(row, col, lexer, actualType)
     }
     return new Expression(result, actualType)

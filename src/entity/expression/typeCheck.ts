@@ -4,7 +4,11 @@ import { StructType } from '../datatype/structType'
 
 export function assertSubscriptable(type: DataType, lexer: Lexer) {
   if (!type.isSubscriptable()) {
-    throw new Error(lexer.formatError('subscripted value is not an array, pointer'))
+    throw new Error(
+      lexer.formatError(
+        "subscripted value is not an array or pointer, ('" + type.toString() + "' invalid)"
+      )
+    )
   }
 }
 
@@ -33,7 +37,7 @@ export function assertStructFieldExists(
 
 export function checkSubscriptType(type: DataType, row: number, col: number, lexer: Lexer) {
   if (!type.isWholePrimitiveType()) {
-    throw new Error(lexer.formatError('array subscript is not an integer', row, col))
+    throw new Error(lexer.formatError("array subscript is not an integer, ('" + type.toString() + "' invalid)", row, col))
   }
 }
 
@@ -159,9 +163,9 @@ export function checkConditionOperandType(
   if (!conditionType.isArithPrimitiveType()) {
     throw new Error(
       lexer.formatError(
-        "expected an arithmetic primitive type ('char', 'int', and 'float') for conditional expression, but got '" +
+        "expected an arithmetic primitive type ('char', 'int', and 'float') for conditional expression, ('" +
           conditionType +
-          "'",
+          "' invalid)",
         row,
         col
       )
