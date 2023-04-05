@@ -232,6 +232,9 @@ export class Frame {
     col: number = -1,
     lexer: Lexer | null = null
   ): string {
+    if (!type.isComplete()) {
+      throw new Error('attemting to declare an incomplete type')
+    }
     this.checkRedefinition(name, type, row, col, lexer)
     const eleSize = (type instanceof ArrayType ? type.getEleType() : type).getSize()
     if ((this.stackTop % 4) + eleSize > 4) {

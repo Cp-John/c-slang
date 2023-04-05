@@ -104,7 +104,7 @@ export class StructType extends DataType {
         }
         let actualType: DataType = elementType
         if (lexer.matchDelimiter('[')) {
-          actualType = ArrayType.wrap(env, lexer, elementType)
+          actualType = ArrayType.wrap(env, lexer, elementType, false)
         }
         this.fields.push([fieldName, actualType])
         declaredFieldNames.add(fieldName)

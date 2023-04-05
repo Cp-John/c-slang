@@ -10,12 +10,25 @@ const MAX_ARRAY_SIZE = Math.pow(2, 20)
 
 export class ArrayType extends SubscriptableType {
   private eleType: ElementType
+  private dimension: number
   private sizes: number[]
+  private _isComplete: boolean
 
-  constructor(eleType: ElementType, sizes: number[]) {
+  private constructor(
+    eleType: ElementType,
+    dimension: number,
+    sizes: number[],
+    isComplete: boolean
+  ) {
     super(sizes.reduce((a, b) => a * b, 1) * eleType.getSize())
     this.eleType = eleType
+    this.dimension = dimension
     this.sizes = sizes
+    this._isComplete = isComplete
+  }
+
+  override isComplete(): boolean {
+    return this._isComplete
   }
 
   override isArrayType(): boolean {
@@ -31,6 +44,7 @@ export class ArrayType extends SubscriptableType {
   }
 
   getEleCount(): number {
+    this.assertIsComplete()
     return this.sizes.reduce((a, b) => a * b, 1)
   }
 
@@ -42,16 +56,22 @@ export class ArrayType extends SubscriptableType {
   }
 
   override dereference(): DataType {
-    if (this.sizes.length == 1) {
+    if (this.dimension == 1) {
       return this.eleType
     } else {
-      return new ArrayType(this.eleType, this.sizes.slice(1))
+      return new ArrayType(
+        this.eleType,
+        this.dimension - 1,
+        this._isComplete ? this.sizes.slice(1) : this.sizes,
+        true
+      )
     }
   }
 
   toString(): string {
+    this.assertIsComplete()
     let result = this.eleType.toString()
-    for (let i = 0; i < this.sizes.length; i++) {
+    for (let i = 0; i < this.dimension; i++) {
       result += '[' + String(this.sizes[i]) + ']'
     }
     return result
@@ -88,7 +108,12 @@ export class ArrayType extends SubscriptableType {
     col: number,
     lexer: Lexer
   ) {
-    if (eleCount > this.getEleCount()) {
+    if (!this._isComplete) {
+      this._isComplete = true
+      console.log(this.size)
+      this.sizes.unshift(Math.ceil((eleCount * this.eleType.getSize()) / this.size))
+      this.size *= this.sizes[0]
+    } else if (eleCount > this.getEleCount()) {
       throw new Error(
         lexer.formatError('more elements in array initializer than expected', row, col)
       )
@@ -105,6 +130,7 @@ export class ArrayType extends SubscriptableType {
 
   defaultInitialExpressions(): Expression[] {
     const result: Expression[] = []
+    this.assertIsComplete()
     for (let i = 0; i < this.getEleCount(); i++) {
       if (this.eleType instanceof StructType) {
         this.eleType.defaultInitialExpressions().forEach(expr => result.push(expr))
@@ -126,11 +152,7 @@ export class ArrayType extends SubscriptableType {
   parseInitialArrayExpressions(env: Frame, lexer: Lexer, expressions: Expression[]): void {
     const [row, col] = lexer.tell()
     const currentExpressions: Expression[] = []
-    if (
-      lexer.matchDelimiter('"') &&
-      this.eleType == PrimitiveTypes.char &&
-      this.sizes.length == 1
-    ) {
+    if (lexer.matchDelimiter('"') && this.eleType == PrimitiveTypes.char && this.dimension == 1) {
       const len = this.parseInitialStringExpressions(lexer, currentExpressions)
       this.padInitialArrayExpressions(len, currentExpressions, expressions, row, col, lexer)
       return
@@ -140,7 +162,7 @@ export class ArrayType extends SubscriptableType {
 
     lexer.eatDelimiter('{')
     while (!lexer.matchDelimiter('}')) {
-      if (this.sizes.length == 1) {
+      if (this.dimension == 1 || (!lexer.matchDelimiter('{') && !lexer.matchDelimiter('"'))) {
         this.parseElement(env, lexer, currentExpressions)
         eleCount++
       } else {
@@ -158,15 +180,25 @@ export class ArrayType extends SubscriptableType {
     this.padInitialArrayExpressions(eleCount, currentExpressions, expressions, row, col, lexer)
   }
 
-  static wrap(env: Frame, lexer: Lexer, eleType: ElementType): ArrayType {
+  static wrap(env: Frame, lexer: Lexer, eleType: ElementType, allowInComplete: boolean): ArrayType {
     const sizes: number[] = []
     let eleCount: number = 1
+    let isComplete = null
+    let dimension = 0
     do {
       lexer.eatDelimiter('[')
+      dimension++
       if (lexer.matchDelimiter(']')) {
-        throw new Error(
-          lexer.formatError('definition of variable with array type needs an explicit size')
-        )
+        if (isComplete != null || !allowInComplete) {
+          throw new Error(
+            lexer.formatError('definition of variable with array type needs an explicit size')
+          )
+        }
+        lexer.eatDelimiter(']')
+        isComplete = false
+        continue
+      } else if (isComplete == null) {
+        isComplete = true
       }
       const [row, col] = lexer.tell()
       const constExpr = ExpressionParser.parse(env, lexer, false, true, PrimitiveTypes.int, false)
@@ -190,7 +222,7 @@ export class ArrayType extends SubscriptableType {
       sizes.push(size.getValue())
       lexer.eatDelimiter(']')
     } while (lexer.matchDelimiter('['))
-    return new ArrayType(eleType, sizes)
+    return new ArrayType(eleType, dimension, sizes, isComplete)
   }
 }
 

@@ -4,7 +4,8 @@ import { Lexer } from '../../parser/lexer'
 import { Block } from '../block'
 import { ArrayType, ElementType, NonPointerLikeType } from '../datatype/arrayType'
 import { DataType } from '../datatype/dataType'
-import { PrimitiveTypes } from '../datatype/primitiveType'
+import { PointerType } from '../datatype/pointerType'
+import { PrimitiveType, PrimitiveTypes } from '../datatype/primitiveType'
 import { StructType } from '../datatype/structType'
 import { Expression } from '../expression/expression'
 import { ExpressionParser } from '../expression/expressionParser'
@@ -35,7 +36,7 @@ export abstract class Declaration extends Statement {
     let [row, col] = lexer.tell()
     let name = lexer.eatIdentifier()
     if (lexer.matchDelimiter('[')) {
-      type = ArrayType.wrap(env, lexer, type).toPointerType()
+      type = ArrayType.wrap(env, lexer, type, true).toPointerType()
     }
     result.push([type, env.declareVariable(name, type, row, col, lexer)])
     while (!lexer.matchDelimiter(')')) {
@@ -48,7 +49,7 @@ export abstract class Declaration extends Statement {
       ;[row, col] = lexer.tell()
       name = lexer.eatIdentifier()
       if (lexer.matchDelimiter('[')) {
-        type = ArrayType.wrap(env, lexer, type).toPointerType()
+        type = ArrayType.wrap(env, lexer, type, true).toPointerType()
       }
       result.push([type, env.declareVariable(name, type, row, col, lexer)])
     }
@@ -66,17 +67,17 @@ export abstract class Declaration extends Statement {
     lexer: Lexer
   ): Statement[] {
     const statements: (VariableDeclaration | ArrayDeclaration | StructDeclaration)[] = []
+    let actualType: DataType = firstVariableType
     if (lexer.matchDelimiter('[')) {
-      const actualType = ArrayType.wrap(env, lexer, firstVariableType)
-      env.declareVariable(firstVariable, actualType, firstRow, firstCol, lexer)
-      statements.push(new ArrayDeclaration(actualType, firstVariable))
+      actualType = ArrayType.wrap(env, lexer, firstVariableType, true)
+      statements.push(new ArrayDeclaration(actualType as ArrayType, firstVariable))
     } else if (firstVariableType instanceof StructType) {
-      env.declareVariable(firstVariable, firstVariableType, firstRow, firstCol, lexer)
       statements.push(new StructDeclaration(firstVariableType, firstVariable))
     } else {
-      env.declareVariable(firstVariable, firstVariableType, firstRow, firstCol, lexer)
       statements.push(new VariableDeclaration(firstVariableType, firstVariable))
     }
+
+    let [row, col] = [firstRow, firstCol]
 
     let declaredVariable = firstVariable
     while (true) {
@@ -84,23 +85,27 @@ export abstract class Declaration extends Statement {
         lexer.eatDelimiter('=')
         statements[statements.length - 1].parseExpression(env, lexer)
       }
+      if (!actualType.isComplete()) {
+        throw new Error(lexer.formatError('variable has incomplete type', row, col))
+      }
+      env.declareVariable(declaredVariable, actualType, row, col, lexer)
       if (!lexer.matchDelimiter(',')) {
         break
       }
       lexer.eatDelimiter(',')
-      const eleType: ElementType = lexer.wrapType(nonPointerLikeType)
-      const [row, col] = lexer.tell()
+      actualType = lexer.wrapType(nonPointerLikeType)
+      row = lexer.tell()[0]
+      col = lexer.tell()[1]
       declaredVariable = lexer.eatIdentifier()
       if (lexer.matchDelimiter('[')) {
-        const arrayType = ArrayType.wrap(env, lexer, eleType)
-        env.declareVariable(declaredVariable, arrayType, row, col, lexer)
-        statements.push(new ArrayDeclaration(arrayType, declaredVariable))
-      } else if (eleType instanceof StructType) {
-        env.declareVariable(declaredVariable, eleType, row, col, lexer)
-        statements.push(new StructDeclaration(eleType, declaredVariable))
+        actualType = ArrayType.wrap(env, lexer, actualType as ElementType, true)
+        statements.push(new ArrayDeclaration(actualType as ArrayType, declaredVariable))
+      } else if (actualType instanceof StructType) {
+        statements.push(new StructDeclaration(actualType, declaredVariable))
       } else {
-        env.declareVariable(declaredVariable, eleType, row, col, lexer)
-        statements.push(new VariableDeclaration(eleType, declaredVariable))
+        statements.push(
+          new VariableDeclaration(actualType as PointerType | PrimitiveType, declaredVariable)
+        )
       }
     }
     lexer.eatDelimiter(';')
@@ -241,11 +246,11 @@ class StructDeclaration extends Declaration {
 }
 
 class VariableDeclaration extends Declaration {
-  private variableType: ElementType
+  private variableType: PointerType | PrimitiveType
   private variableName: string
   expression: Expression | null
 
-  constructor(variableType: ElementType, variableName: string) {
+  constructor(variableType: PointerType | PrimitiveType, variableName: string) {
     super()
     this.variableType = variableType
     this.variableName = variableName

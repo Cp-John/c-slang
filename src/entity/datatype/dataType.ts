@@ -55,7 +55,14 @@ export abstract class DataType {
     return resultType
   }
 
+  protected assertIsComplete(): void {
+    if (!this.isComplete()) {
+      throw new Error('impossible execution path, imcomplete type')
+    }
+  }
+
   getSize(): number {
+    this.assertIsComplete()
     return this.size
   }
 }
