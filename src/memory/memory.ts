@@ -71,8 +71,25 @@ export class Memory {
     }
   }
 
+  copyBytes(targetAddr: number, fromAddr: number, size: number) {
+    for (let i = 0; i < size; i++) {
+      this.assertValidAddress(targetAddr + i, false)
+      this.assertValidAddress(fromAddr + i, true)
+      console.log(
+        'assigning: ',
+        this.view.getUint8(fromAddr + i),
+        'from',
+        fromAddr + i,
+        ' to',
+        targetAddr + i
+      )
+      this.view.setUint8(targetAddr + i, this.view.getUint8(fromAddr + i))
+    }
+  }
+
   readInt(address: number): NumericLiteral {
     this.assertValidAddress(address, true)
+    this.assertValidAddress(address + PrimitiveTypes.int.getSize() - 1, true)
     return NumericLiteral.new(this.view.getInt32(address), address).castToType(
       PrimitiveTypes.int,
       true
@@ -81,11 +98,13 @@ export class Memory {
 
   readPointer(address: number, type: PointerType): NumericLiteral {
     this.assertValidAddress(address, true)
+    this.assertValidAddress(address + new PointerType(PrimitiveTypes.void).getSize() - 1, true)
     return NumericLiteral.new(this.view.getInt32(address), address).castToType(type, true)
   }
 
-  writeNumeric(address: number, numeric: NumericLiteral): number {
+  writeNumeric(address: number, numeric: NumericLiteral) {
     this.assertValidAddress(address, false)
+    this.assertValidAddress(address + numeric.getDataType().getSize() - 1, false)
     if (numeric.getDataType() instanceof PointerType) {
       this.view.setInt32(address, numeric.getValue())
     } else if (numeric.getDataType() == PrimitiveTypes.int) {
@@ -93,16 +112,15 @@ export class Memory {
     } else if (numeric.getDataType() == PrimitiveTypes.float) {
       this.view.setFloat32(address, numeric.getValue())
     } else if (numeric.getDataType() == PrimitiveTypes.char) {
-      // word alignment
       this.view.setUint8(address, numeric.getValue())
     } else {
       throw new Error("attempt to write datatype '" + numeric.getDataType() + "' as numeric type")
     }
-    return address + 4
   }
 
   readFloat(address: number): NumericLiteral {
     this.assertValidAddress(address, true)
+    this.assertValidAddress(address + PrimitiveTypes.float.getSize() - 1, true)
     return NumericLiteral.new(this.view.getFloat32(address), address).castToType(
       PrimitiveTypes.float,
       true

@@ -144,6 +144,14 @@ const strlen: RealBuiltinFunction = (
   return NumericLiteral.new(env.dereferenceAsString(args[0]).length).castToType(PrimitiveTypes.int)
 }
 
+const strncpy: RealBuiltinFunction = (
+  env: Frame,
+  context: CProgramContext,
+  args: NumericLiteral[]
+): void => {
+  env.copyString(args[0], args[1], args[2].getValue())
+}
+
 const malloc: RealBuiltinFunction = (
   env: Frame,
   context: CProgramContext,
@@ -204,6 +212,17 @@ export const BUILTIN_FUNCTIONS = {
     'strlen',
     [new PointerType(PrimitiveTypes.char)],
     strlen
+  ),
+
+  strncpy: new BuiltinFunction(
+    PrimitiveTypes.void,
+    'strncpy',
+    [
+      new PointerType(PrimitiveTypes.char),
+      new PointerType(PrimitiveTypes.char),
+      PrimitiveTypes.int
+    ],
+    strncpy
   ),
 
   malloc: new BuiltinFunction(

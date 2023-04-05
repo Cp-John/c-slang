@@ -287,10 +287,22 @@ export class Frame {
       variableType == PrimitiveTypes.char
     ) {
       this.memory.writeNumeric(address, (val as NumericLiteral).castToType(variableType))
+    } else if (variableType instanceof StructType) {
+      this.memory.copyBytes(address, (val as NumericLiteral).getValue(), variableType.getSize())
     } else {
       throw new Error("attempt to assign to unknown varialble type '" + variableType + "'")
     }
     return val
+  }
+
+  copyString(dst: NumericLiteral, src: NumericLiteral, len: number): void {
+    const stringLiteral = this.memory.readStringLiteral(src.getValue())
+    const actualLen = Math.max(Math.min(len, stringLiteral.length), 0)
+    this.memory.copyBytes(dst.getValue(), src.getValue(), actualLen)
+    this.memory.writeNumeric(
+      dst.getValue() + actualLen,
+      NumericLiteral.new(0).castToType(PrimitiveTypes.char)
+    )
   }
 
   dereferenceAsString(numeric: NumericLiteral): string {

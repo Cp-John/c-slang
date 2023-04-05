@@ -199,27 +199,37 @@ class StructDeclaration extends Declaration {
   private variableType: StructType
   private variableName: string
   private expressions: Expression[] | null
+  private toCopy: Expression | null
 
   constructor(variableType: StructType, variableName: string) {
     super()
     this.variableType = variableType
     this.variableName = variableName
     this.expressions = null
+    this.toCopy = null
   }
 
   parseExpression(env: Frame, lexer: Lexer): void {
-    this.expressions = this.variableType.parseInitialExpressions(env, lexer)
+    if (lexer.matchDelimiter('{')) {
+      this.expressions = this.variableType.parseInitialExpressions(env, lexer)
+    } else {
+      this.toCopy = ExpressionParser.parse(env, lexer, false, false, this.variableType, false)
+    }
   }
 
   doExecute(env: Frame, context: CProgramContext): void {
     env.declareVariable(this.variableName, this.variableType)
-    const initialValues: NumericLiteral[] = []
-    this.expressions =
-      this.expressions == null ? this.variableType.defaultInitialExpressions() : this.expressions
-    this.expressions.forEach(expr =>
-      initialValues.push(expr.evaluate(env, context) as NumericLiteral)
-    )
-    env.initializeStruct(this.variableName, initialValues)
+    if (this.toCopy != null) {
+      env.assignValue(this.variableName, this.toCopy.evaluate(env, context) as NumericLiteral)
+    } else {
+      const initialValues: NumericLiteral[] = []
+      this.expressions =
+        this.expressions == null ? this.variableType.defaultInitialExpressions() : this.expressions
+      this.expressions.forEach(expr =>
+        initialValues.push(expr.evaluate(env, context) as NumericLiteral)
+      )
+      env.initializeStruct(this.variableName, initialValues)
+    }
   }
 }
 
