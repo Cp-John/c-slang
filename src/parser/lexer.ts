@@ -3,10 +3,11 @@ import { PointerType } from '../entity/datatype/pointerType'
 import { PrimitiveType, PrimitiveTypes } from '../entity/datatype/primitiveType'
 import { StructType } from '../entity/datatype/structType'
 import { NumericLiteral } from '../entity/expression/numericLiteral'
+import { CHAR_MAX, CHAR_MIN, INT_MAX, INT_MIN, RAND_MAX, UINT_MAX } from '../interpreter/builtins'
 import { Frame } from '../interpreter/frame'
 
 const PREPROCESSOR_DIRECTIVEG =
-  /^\s*#\s*include\b|^\s*#\s*define\b|^\s*#\s*ifdef\b|^\s*#\s*ifndef\b|^\s*#\s*if\b|^\s*#\s*elif\b|^\s*#\s*else\b|^\s*#\s*pragma\b/
+  /^\s*#include\b|^\s*#define\b|^\s*#\s*ifdef\b|^\s*#\s*ifndef\b|^\s*#\s*if\b|^\s*#\s*elif\b|^\s*#\s*else\b|^\s*#\s*pragma\b/
 const NUMBER_REGEX = /^[+-]?([0-9]*[.])?[0-9]+/
 const IDENTIFIER_REGEX = /^[_a-zA-Z][_a-zA-Z0-9]*/
 const STRING_LITERAL_REGEX = /^".*?(?<!\\)"/
@@ -20,6 +21,7 @@ const UNARY_PLUS_MINUS = /^\+(?!\+)|^-(?!-)/
 export const RELATIONAL_OPERATOR_RETEX = /^>=|^<=|^>|^<|^==|^!=/
 const PRIORITIZED_RELATIONAL_OPERATOR_REGEX = /^>=|^<=|^>|^</
 const ASSIGNMENT_OPERATOR_REGEX = /^\+=|^-=|^\*=|^\/=|^%=|^=/
+const UNTIL_SPACE_REGEX = /^\s*[^\s]+/
 
 const RESERVED_KEYWORDS = new Set([
   'void',
@@ -41,7 +43,13 @@ const RESERVED_KEYWORDS = new Set([
   'sizeof',
   'typeof',
   'struct',
-  'NULL'
+  'NULL',
+  'RAND_MAX',
+  'INT_MAX',
+  'INT_MIN',
+  'CHAR_MAX',
+  'CHAR_INT',
+  'UINT_MAX'
 ])
 
 const ESCAPE_CHARACTERS = {
@@ -60,6 +68,15 @@ const ESCAPE_CHARACTERS = {
 }
 
 export class Lexer {
+  private macroDefinitions: Map<string, string> = new Map([
+    ['RAND_MAX', String(RAND_MAX)],
+    ['INT_MAX', String(INT_MAX)],
+    ['INT_MIN', String(INT_MIN)],
+    ['CHAR_MAX', String(CHAR_MAX)],
+    ['CHAR_MIN', String(CHAR_MIN)],
+    ['UINT_MAX', String(UINT_MAX)]
+  ])
+
   private lines: string[]
   private row: number
   private col: number
@@ -98,16 +115,38 @@ export class Lexer {
     return this.currentLine.length > 0
   }
 
+  private replaceMacros(str: string): string {
+    let result = str
+    this.macroDefinitions.forEach((value, key) => {
+      result = result.replaceAll(key, value)
+    })
+    return result
+  }
+
   private skipToNextLine(): void {
     if (this.row < this.lines.length) {
+      this.lines[this.row] = this.replaceMacros(this.lines[this.row])
       this.currentLine = this.lines[this.row]
       this.row += 1
       this.col = 1
+
       const match = PREPROCESSOR_DIRECTIVEG.exec(this.currentLine)
+
       if (match == null) {
         return
-      } else if (match[0].includes('include')) {
+      } else if (match[0] == '#include') {
         this.skipToNextLine()
+      } else if (match[0] == '#define') {
+        this.eatKeyword('#define')
+        const constName = this.eatIdentifier()
+        const expression = UNTIL_SPACE_REGEX.exec(this.currentLine)
+        if (expression == null || expression[0].trim().length == 0) {
+          throw new Error(this.formatError('expected value or expression for macro definition'))
+        }
+        this.currentLine = this.currentLine.substring(expression[0].length)
+        this.col += expression[0].length
+        this.macroDefinitions.set(constName, expression[0].trim())
+        this.hasNext()
       } else {
         throw new Error(this.formatError('preprocessor directive is not supported'))
       }

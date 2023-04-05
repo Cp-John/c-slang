@@ -6,14 +6,14 @@ import { Lexer } from '../parser/lexer'
 import { CProgramContext } from './cProgramContext'
 import { Frame } from './frame'
 
-const RAND_MAX = 2147483647
-export const MAX_INT = 2147483647
-export const MIN_INT = -2147483648
+export const RAND_MAX = 2147483647
+export const INT_MAX = 2147483647
+export const INT_MIN = -2147483648
 
-export const MAX_CHAR = 127
-export const MIN_CHAR = -128
+export const CHAR_MAX = 127
+export const CHAR_MIN = -128
 
-export const MAX_UNSGINED_INT = 4294967295
+export const UINT_MAX = 4294967295
 
 export const PRIMITIVE_TYPES = Object.values(PrimitiveType)
 
@@ -22,7 +22,7 @@ const rand: RealBuiltinFunction = (
   context: CProgramContext,
   args: NumericLiteral[]
 ): NumericLiteral => {
-  return NumericLiteral.new(Math.floor(Math.random() * MAX_INT)).castToType(PrimitiveTypes.int)
+  return NumericLiteral.new(Math.floor(Math.random() * INT_MAX)).castToType(PrimitiveTypes.int)
 }
 
 const time: RealBuiltinFunction = (
@@ -299,5 +299,5 @@ export const BUILTIN_FUNCTIONS = {
 
   printEnv: new BuiltinFunction(PrimitiveTypes.void, 'printEnv', [], printEnv)
   //   RAND_MAX: [new NumericLiteral(RAND_MAX, PrimitiveTypes.int), PrimitiveTypes.int],
-  //   MAX_INT: [new NumericLiteral(MAX_INT, PrimitiveTypes.int), PrimitiveTypes.int]
+  //   INT_MAX: [new NumericLiteral(INT_MAX, PrimitiveTypes.int), PrimitiveTypes.int]
 }

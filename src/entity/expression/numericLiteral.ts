@@ -1,4 +1,4 @@
-import { MAX_CHAR, MAX_INT, MAX_UNSGINED_INT, MIN_CHAR, MIN_INT } from '../../interpreter/builtins'
+import { CHAR_MAX, CHAR_MIN, INT_MAX, INT_MIN, UINT_MAX } from '../../interpreter/builtins'
 import { Frame } from '../../interpreter/frame'
 import { ArrayType } from '../datatype/arrayType'
 import { DataType } from '../datatype/dataType'
@@ -55,23 +55,23 @@ export class NumericLiteral {
 
   private cap(): NumericLiteral {
     if (this.type == PrimitiveTypes.int) {
-      this.val = ((this.val - MIN_INT) % (MAX_INT - MIN_INT + 1)) + MIN_INT
-      if (this.val < MIN_INT) {
-        this.val += MAX_INT - MIN_INT + 1
+      this.val = ((this.val - INT_MIN) % (INT_MAX - INT_MIN + 1)) + INT_MIN
+      if (this.val < INT_MIN) {
+        this.val += INT_MAX - INT_MIN + 1
       }
     } else if (this.type == PrimitiveTypes.char) {
-      this.val = ((this.val - MIN_CHAR) % (MAX_CHAR - MIN_CHAR + 1)) + MIN_CHAR
-      if (this.val < MIN_CHAR) {
-        this.val += MAX_CHAR - MIN_CHAR + 1
+      this.val = ((this.val - CHAR_MIN) % (CHAR_MAX - CHAR_MIN + 1)) + CHAR_MIN
+      if (this.val < CHAR_MIN) {
+        this.val += CHAR_MAX - CHAR_MIN + 1
       }
     } else if (
       this.type instanceof PointerType ||
       this.type instanceof ArrayType ||
       this.type instanceof StructType
     ) {
-      this.val = this.val % (MAX_UNSGINED_INT + 1)
+      this.val = this.val % (UINT_MAX + 1)
       if (this.val < 0) {
-        this.val += MAX_UNSGINED_INT + 1
+        this.val += UINT_MAX + 1
       }
     }
     return this
