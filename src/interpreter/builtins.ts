@@ -184,6 +184,24 @@ const printEnv: RealBuiltinFunction = (
   env.printEnv(context)
 }
 
+const exit: RealBuiltinFunction = (
+  env: Frame,
+  context: CProgramContext,
+  args: NumericLiteral[]
+): void => {
+  const status = args[0].getValue()
+  const msg =
+    'program terminated ' +
+    (status == 0 ? 'successfully' : 'unsuccessfully') +
+    ' with status ' +
+    String(status)
+  if (status == 0) {
+    throw msg
+  } else {
+    throw new Error(msg)
+  }
+}
+
 export const BUILTIN_FUNCTIONS = {
   printf: new BuiltinFunction(
     PrimitiveTypes.int,
@@ -238,6 +256,8 @@ export const BUILTIN_FUNCTIONS = {
     [new PointerType(PrimitiveTypes.void)],
     free
   ),
+
+  exit: new BuiltinFunction(PrimitiveTypes.void, 'exit', [PrimitiveTypes.int], exit),
 
   printHeap: new BuiltinFunction(PrimitiveTypes.void, 'printHeap', [], printHeap),
 

@@ -41,18 +41,19 @@ export class Program {
     try {
       this.declarations.forEach(declaration => declaration.execute(context.baseFrame, context))
       context.baseFrame.lookupFunction('main').call(context.baseFrame, context, [])
-      return context.stdout
     } catch (err: any) {
       // console.log('stdout:', context.stdout)
       frontendContext['stdout'] = context.stdout
-      throw new Error(
-        'Line ' +
-          String(context.currentLine) +
-          ': execution failed, ' +
-          (err instanceof Error ? err.message : String(err))
-      )
+      if (err instanceof Error) {
+        throw new Error(
+          'Line ' + String(context.currentLine) + ': execution failed, ' + err.message
+        )
+      } else {
+        context.stdout += '\nLine ' + String(context.currentLine) + ': ' + String(err)
+      }
     } finally {
       // console.log('='.repeat(20) + 'executing finished' + '='.repeat(20))
     }
+    return context.stdout
   }
 }

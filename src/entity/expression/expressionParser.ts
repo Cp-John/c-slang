@@ -155,6 +155,7 @@ export class ExpressionParser {
         result.push(UNARY_MINUS_TAG)
       }
     } else if (lexer.matchKeyword('NULL')) {
+      lexer.eatKeyword('NULL')
       dataType = new PointerType(PrimitiveTypes.void)
       result.push(NumericLiteral.new(0).castToType(dataType))
     } else if (lexer.matchKeyword('sizeof')) {
