@@ -58,7 +58,11 @@ function assertAssignable(
     throw new Error(lexer.formatError('expression is not assignable', row, col))
   } else if (ele == STRUCT_MEMBER_ACCESS_TAG || ele == DEREFERENCE_TAG) {
     return
-  } else if (typeof ele != 'string' || !env.isDeclared(ele) || env.lookupType(ele) == PrimitiveTypes.function) {
+  } else if (
+    typeof ele != 'string' ||
+    !env.isDeclared(ele) ||
+    env.lookupType(ele) == PrimitiveTypes.function
+  ) {
     throw new Error(lexer.formatError('expression is not assignable', row, col))
   }
 }
