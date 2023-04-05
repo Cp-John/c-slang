@@ -169,28 +169,27 @@ export abstract class Declaration extends Statement {
 class ArrayDeclaration extends Declaration {
   private variableType: ArrayType
   private variableName: string
-  private expressions: Expression[]
+  private expressions: Expression[] | null
 
   constructor(variableType: ArrayType, variableName: string) {
     super()
     this.variableType = variableType
     this.variableName = variableName
-    this.expressions = []
+    this.expressions = null
   }
 
   parseExpression(env: Frame, lexer: Lexer): void {
+    this.expressions = []
     this.variableType.parseInitialArrayExpressions(env, lexer, this.expressions)
   }
 
   protected doExecute(env: Frame, context: CProgramContext): void {
     env.declareVariable(this.variableName, this.variableType)
+    if (this.expressions == null) {
+      this.expressions = this.variableType.defaultInitialExpressions()
+    }
     const initialValues: NumericLiteral[] = []
-    for (let i = 0; i < this.expressions.length; i++) {
-      initialValues.push(this.expressions[i].evaluate(env, context) as NumericLiteral)
-    }
-    for (let i = initialValues.length; i < this.variableType.getEleCount(); i++) {
-      initialValues.push(NumericLiteral.new(0).castToType(this.variableType.getEleType()))
-    }
+    this.expressions.forEach(expr => initialValues.push(expr.evaluate(env, context) as NumericLiteral))
     env.initializeArray(this.variableName, initialValues)
   }
 }
