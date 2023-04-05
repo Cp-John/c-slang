@@ -1,4 +1,4 @@
-import { DataType } from './dataType'
+import { DataType, RELATIONAL_OPERATORS } from './dataType'
 import { PrimitiveTypes } from './primitiveType'
 import { SubscriptableType } from './subscriptableType'
 
@@ -11,7 +11,9 @@ export class PointerType extends SubscriptableType {
   }
 
   override applyBinaryOperator(operator: string, rightType: DataType): DataType | undefined {
-    if (operator != '+' && operator != '-') {
+    if (RELATIONAL_OPERATORS.has(operator)) {
+      return rightType.isPointerType() ? PrimitiveTypes.int : undefined
+    } else if (operator != '+' && operator != '-') {
       return undefined
     } else if (rightType.isWholePrimitiveType()) {
       return this

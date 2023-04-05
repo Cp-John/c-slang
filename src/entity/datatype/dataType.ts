@@ -1,3 +1,5 @@
+export const RELATIONAL_OPERATORS = new Set<string>(['==', '!=', '>=', '>', '<=', '<'])
+
 export abstract class DataType {
   protected size: number
 

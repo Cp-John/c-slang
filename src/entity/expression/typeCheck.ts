@@ -37,7 +37,13 @@ export function assertStructFieldExists(
 
 export function checkSubscriptType(type: DataType, row: number, col: number, lexer: Lexer) {
   if (!type.isWholePrimitiveType()) {
-    throw new Error(lexer.formatError("array subscript is not an integer, ('" + type.toString() + "' invalid)", row, col))
+    throw new Error(
+      lexer.formatError(
+        "array subscript is not an integer, ('" + type.toString() + "' invalid)",
+        row,
+        col
+      )
+    )
   }
 }
 

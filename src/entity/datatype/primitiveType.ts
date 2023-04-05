@@ -1,4 +1,4 @@
-import { DataType } from './dataType'
+import { DataType, RELATIONAL_OPERATORS } from './dataType'
 
 export abstract class PrimitiveType extends DataType {
   private repr: string
@@ -14,8 +14,6 @@ export abstract class PrimitiveType extends DataType {
 }
 
 abstract class ArithPrimitiveType extends PrimitiveType {
-  static BOOL_BINARY_OPERATORS = new Set<string>(['==', '!=', '>=', '>', '<=', '<', '&&', '||'])
-
   override isArithPrimitiveType(): boolean {
     return true
   }
@@ -23,7 +21,7 @@ abstract class ArithPrimitiveType extends PrimitiveType {
   override applyBinaryOperator(operator: string, rightType: DataType): DataType | undefined {
     if (!rightType.isArithPrimitiveType()) {
       return rightType.applyBinaryOperator(operator, this)
-    } else if (ArithPrimitiveType.BOOL_BINARY_OPERATORS.has(operator)) {
+    } else if (RELATIONAL_OPERATORS.has(operator) || operator == '&&' || operator == '||') {
       return PrimitiveTypes.int
     } else if (this instanceof FloatType || rightType instanceof FloatType) {
       return operator == '%' ? undefined : PrimitiveTypes.float
