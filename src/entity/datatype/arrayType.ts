@@ -143,11 +143,18 @@ export class ArrayType extends SubscriptableType {
         )
       }
     } else {
-      ;(this.dereference() as ArrayType).parseInitialArrayExpressions(
-        env,
-        lexer,
-        currentExpressions
-      )
+      while (true) {
+        ;(this.dereference() as ArrayType).parseInitialArrayExpressions(
+          env,
+          lexer,
+          currentExpressions
+        )
+        if (lexer.matchDelimiter(',')) {
+          lexer.eatDelimiter(',')
+        } else {
+          break
+        }
+      }
     }
     lexer.eatDelimiter('}')
     this.padInitialArrayExpressions(currentExpressions, expressions, row, col, lexer)
