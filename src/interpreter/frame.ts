@@ -259,8 +259,7 @@ export class Frame {
   }
 
   initializeArray(name: string, initialValues: NumericLiteral[]): void {
-    const startAddr = this.boundings[name]['val']
-    const eleType = (this.boundings[name]['type'] as ArrayType).getEleType()
+    let addr = this.boundings[name]['val']
     for (let i = 0; i < initialValues.length; i++) {
       // console.log(
       //   'assign: ' +
@@ -269,7 +268,8 @@ export class Frame {
       //     startAddr +
       //     i * sizeof(eleType)
       // )
-      this.memory.writeNumeric(startAddr + i * eleType.getSize(), initialValues[i])
+      this.memory.writeNumeric(addr, initialValues[i])
+      addr += initialValues[i].getDataType().getSize()
     }
   }
 

@@ -69,7 +69,7 @@ export class ArrayType extends SubscriptableType {
     )
   }
 
-  private parseInitialStringExpressions(lexer: Lexer, expressions: Expression[]): void {
+  private parseInitialStringExpressions(lexer: Lexer, expressions: Expression[]): number {
     const stringLiteral = lexer.eatStringLiteral()
     for (let i = 1; i < stringLiteral.length - 1; i++) {
       expressions.push(
@@ -77,30 +77,30 @@ export class ArrayType extends SubscriptableType {
       )
     }
     expressions.push(Expression.of(NumericLiteral.new(0).castToType(this.eleType)))
+    return stringLiteral.length - 1
   }
 
   private padInitialArrayExpressions(
+    eleCount: number,
     currentExpressions: Expression[],
     expressions: Expression[],
     row: number,
     col: number,
     lexer: Lexer
   ) {
-    if (currentExpressions.length > this.getEleCount()) {
+    if (eleCount > this.getEleCount()) {
       throw new Error(
         lexer.formatError('more elements in array initializer than expected', row, col)
       )
     }
-    for (let i = currentExpressions.length; i < this.getEleCount(); i++) {
-      currentExpressions.push(Expression.of(NumericLiteral.new(0).castToType(this.eleType)))
+    for (let i = eleCount; i < this.getEleCount(); i++) {
+      if (this.eleType instanceof StructType) {
+        this.eleType.defaultInitialExpressions().forEach(expr => currentExpressions.push(expr))
+      } else {
+        currentExpressions.push(Expression.of(NumericLiteral.new(0).castToType(this.eleType)))
+      }
     }
     currentExpressions.forEach(expr => expressions.push(expr))
-  }
-
-  parseInitialExpressions(env: Frame, lexer: Lexer) {
-    const result: Expression[] = []
-    this.parseInitialArrayExpressions(env, lexer, result)
-    return result
   }
 
   defaultInitialExpressions(): Expression[] {
@@ -115,6 +115,14 @@ export class ArrayType extends SubscriptableType {
     return result
   }
 
+  private parseElement(env: Frame, lexer: Lexer, expressions: Expression[]): void {
+    if (this.eleType instanceof StructType) {
+      this.eleType.parseInitialExpressions(env, lexer).forEach(expr => expressions.push(expr))
+    } else {
+      expressions.push(ExpressionParser.parse(env, lexer, false, false, this.eleType, false))
+    }
+  }
+
   parseInitialArrayExpressions(env: Frame, lexer: Lexer, expressions: Expression[]): void {
     const [row, col] = lexer.tell()
     const currentExpressions: Expression[] = []
@@ -123,41 +131,32 @@ export class ArrayType extends SubscriptableType {
       this.eleType == PrimitiveTypes.char &&
       this.sizes.length == 1
     ) {
-      this.parseInitialStringExpressions(lexer, currentExpressions)
-      this.padInitialArrayExpressions(currentExpressions, expressions, row, col, lexer)
+      const len = this.parseInitialStringExpressions(lexer, currentExpressions)
+      this.padInitialArrayExpressions(len, currentExpressions, expressions, row, col, lexer)
       return
     }
 
+    let eleCount = 0
+
     lexer.eatDelimiter('{')
-    if (lexer.matchDelimiter('}')) {
-      // pass
-    } else if (
-      this.sizes.length == 1 ||
-      !(lexer.matchDelimiter('"') || lexer.matchDelimiter('{'))
-    ) {
-      currentExpressions.push(ExpressionParser.parse(env, lexer, false, false, this.eleType, false))
-      while (!lexer.matchDelimiter('}')) {
-        lexer.eatDelimiter(',')
-        currentExpressions.push(
-          ExpressionParser.parse(env, lexer, false, false, this.eleType, false)
-        )
+    while (!lexer.matchDelimiter('}')) {
+      if (this.sizes.length == 1) {
+        this.parseElement(env, lexer, currentExpressions)
+        eleCount++
+      } else {
+        const subArrayType = this.dereference() as ArrayType
+        subArrayType.parseInitialArrayExpressions(env, lexer, currentExpressions)
+        eleCount += subArrayType.getEleCount()
       }
-    } else {
-      while (true) {
-        ;(this.dereference() as ArrayType).parseInitialArrayExpressions(
-          env,
-          lexer,
-          currentExpressions
-        )
-        if (lexer.matchDelimiter(',')) {
-          lexer.eatDelimiter(',')
-        } else {
-          break
-        }
+      if (lexer.matchDelimiter(',')) {
+        lexer.eatDelimiter(',')
+      } else {
+        break
       }
     }
     lexer.eatDelimiter('}')
-    this.padInitialArrayExpressions(currentExpressions, expressions, row, col, lexer)
+    console.log('eleCount:', eleCount)
+    this.padInitialArrayExpressions(eleCount, currentExpressions, expressions, row, col, lexer)
   }
 
   static wrap(env: Frame, lexer: Lexer, eleType: ElementType): ArrayType {
