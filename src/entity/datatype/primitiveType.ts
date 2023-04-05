@@ -47,8 +47,8 @@ class IntType extends WholePrimitiveType {
   override canImplicitCastTo(targetType: DataType): boolean {
     return (
       this.toString() == targetType.toString() ||
-      targetType == PrimitiveTypes.float ||
-      targetType == PrimitiveTypes.int
+      targetType == PrimitiveTypes.char ||
+      targetType == PrimitiveTypes.float
     )
   }
 

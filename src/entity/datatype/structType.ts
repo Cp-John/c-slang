@@ -60,7 +60,7 @@ export class StructType extends DataType {
         result.push(ExpressionParser.parse(env, lexer, false, false, fieldType, false))
       }
       fieldId += 1
-      if (!lexer.matchDelimiter('}')) {
+      if (fieldId < this.fields.length && !lexer.matchDelimiter('}')) {
         lexer.eatDelimiter(',')
       }
     }

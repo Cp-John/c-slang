@@ -1,6 +1,6 @@
 {
   "name": "c-slang",
-  "version": "1.0.38",
+  "version": "1.0.39",
   "license": "Apache-2.0",
   "description": "Calc language as a start point for CS4215's project",
   "keywords": [
