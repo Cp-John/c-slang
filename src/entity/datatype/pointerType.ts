@@ -37,7 +37,8 @@ export class PointerType extends SubscriptableType {
   override canImplicitCastTo(targetType: DataType): boolean {
     return (
       this.toString() == targetType.toString() ||
-      targetType.toString() == new PointerType(PrimitiveTypes.void).toString()
+      targetType.toString() == new PointerType(PrimitiveTypes.void).toString() ||
+      (this.dereference() == PrimitiveTypes.void && targetType.isPointerType())
     )
   }
 
