@@ -69,6 +69,11 @@ const scanf: RealBuiltinFunction = (
 ): NumericLiteral => {
   let i = 1
   let formatString = env.dereferenceAsString(args[0])
+
+  // reset context
+  context.startTimeMs = new Date().getTime()
+  context.executedStatementCount = 0
+
   while (i < args.length) {
     const input = prompt(context.stdout)
     if (input == null) {
@@ -149,7 +154,25 @@ const strncpy: RealBuiltinFunction = (
   context: CProgramContext,
   args: NumericLiteral[]
 ): void => {
-  env.copyString(args[0], args[1], args[2].getValue())
+  env.copyNString(args[0], args[1], args[2].getValue())
+}
+
+const strcpy: RealBuiltinFunction = (
+  env: Frame,
+  context: CProgramContext,
+  args: NumericLiteral[]
+): void => {
+  env.copyString(args[0], args[1])
+}
+
+const strcmp: RealBuiltinFunction = (
+  env: Frame,
+  context: CProgramContext,
+  args: NumericLiteral[]
+): NumericLiteral => {
+  return NumericLiteral.new(
+    env.dereferenceAsString(args[0]).localeCompare(env.dereferenceAsString(args[1]))
+  ).castToType(PrimitiveTypes.int)
 }
 
 const malloc: RealBuiltinFunction = (
@@ -241,6 +264,20 @@ export const BUILTIN_FUNCTIONS = {
       PrimitiveTypes.int
     ],
     strncpy
+  ),
+
+  strcpy: new BuiltinFunction(
+    PrimitiveTypes.void,
+    'strcpy',
+    [new PointerType(PrimitiveTypes.char), new PointerType(PrimitiveTypes.char)],
+    strcpy
+  ),
+
+  strcmp: new BuiltinFunction(
+    PrimitiveTypes.int,
+    'strcmp',
+    [new PointerType(PrimitiveTypes.char), new PointerType(PrimitiveTypes.char)],
+    strcmp
   ),
 
   malloc: new BuiltinFunction(

@@ -295,12 +295,21 @@ export class Frame {
     return val
   }
 
-  copyString(dst: NumericLiteral, src: NumericLiteral, len: number): void {
+  copyNString(dst: NumericLiteral, src: NumericLiteral, len: number): void {
     const stringLiteral = this.memory.readStringLiteral(src.getValue())
     const actualLen = Math.max(Math.min(len, stringLiteral.length), 0)
     this.memory.copyBytes(dst.getValue(), src.getValue(), actualLen)
     this.memory.writeNumeric(
       dst.getValue() + actualLen,
+      NumericLiteral.new(0).castToType(PrimitiveTypes.char)
+    )
+  }
+
+  copyString(dst: NumericLiteral, src: NumericLiteral): void {
+    const stringLiteral = this.memory.readStringLiteral(src.getValue())
+    this.memory.copyBytes(dst.getValue(), src.getValue(), stringLiteral.length)
+    this.memory.writeNumeric(
+      dst.getValue() + stringLiteral.length,
       NumericLiteral.new(0).castToType(PrimitiveTypes.char)
     )
   }
