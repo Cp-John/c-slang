@@ -189,7 +189,9 @@ class ArrayDeclaration extends Declaration {
       this.expressions = this.variableType.defaultInitialExpressions()
     }
     const initialValues: NumericLiteral[] = []
-    this.expressions.forEach(expr => initialValues.push(expr.evaluate(env, context) as NumericLiteral))
+    this.expressions.forEach(expr =>
+      initialValues.push(expr.evaluate(env, context) as NumericLiteral)
+    )
     env.initializeArray(this.variableName, initialValues)
   }
 }
