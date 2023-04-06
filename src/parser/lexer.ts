@@ -118,14 +118,55 @@ export class Lexer {
   private replaceMacros(str: string): string {
     let result = str
     this.macroDefinitions.forEach((value, key) => {
-      result = result.replaceAll(key, value)
+      result = result.replaceAll(new RegExp('\\b' + key + '\\b', 'g'), value)
     })
+    return result
+  }
+
+  private preprocess(str: string): string {
+    let result = ''
+    let temp = str
+    while (temp.length > 0) {
+      const doubleQuoteIdx = temp.indexOf('"')
+      const singleQuoteIdx = temp.indexOf("'")
+      if (doubleQuoteIdx == -1 && singleQuoteIdx == -1) {
+        // do nothing
+        result += this.replaceMacros(temp)
+        return result
+      }
+      let another = -1
+      if (doubleQuoteIdx != -1 && singleQuoteIdx != -1) {
+        if (doubleQuoteIdx < singleQuoteIdx) {
+          result += this.replaceMacros(temp.substring(0, doubleQuoteIdx))
+          temp = temp.substring(doubleQuoteIdx)
+          another = temp.indexOf('"', 1)
+        } else {
+          result += this.replaceMacros(temp.substring(0, singleQuoteIdx))
+          temp = temp.substring(singleQuoteIdx)
+          another = temp.indexOf("'", 1)
+        }
+      } else if (doubleQuoteIdx != -1) {
+        result += this.replaceMacros(temp.substring(0, doubleQuoteIdx))
+        temp = temp.substring(doubleQuoteIdx)
+        another = temp.indexOf('"', 1)
+      } else {
+        result += this.replaceMacros(temp.substring(0, singleQuoteIdx))
+        temp = temp.substring(singleQuoteIdx)
+        another = temp.indexOf("'", 1)
+      }
+      if (another == -1) {
+        return result + temp
+      } else {
+        result += temp.substring(0, another + 1)
+        temp = temp.substring(another + 1)
+      }
+    }
     return result
   }
 
   private skipToNextLine(): void {
     if (this.row < this.lines.length) {
-      this.lines[this.row] = this.replaceMacros(this.lines[this.row])
+      this.lines[this.row] = this.preprocess(this.lines[this.row])
       this.currentLine = this.lines[this.row]
       this.row += 1
       this.col = 1
