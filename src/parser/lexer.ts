@@ -29,7 +29,6 @@ const UNARY_PLUS_MINUS = /^\+(?!\+)|^-(?!-)/
 export const RELATIONAL_OPERATOR_RETEX = /^>=|^<=|^>|^<|^==|^!=/
 const PRIORITIZED_RELATIONAL_OPERATOR_REGEX = /^>=|^<=|^>|^</
 const ASSIGNMENT_OPERATOR_REGEX = /^\+=|^-=|^\*=|^\/=|^%=|^=/
-const UNTIL_SPACE_REGEX = /^\s*[^\s]+/
 
 const RESERVED_KEYWORDS = new Set([
   'void',
@@ -193,14 +192,16 @@ export class Lexer {
       } else if (match[0] == '#define') {
         this.eatKeyword('#define')
         const constName = this.eatIdentifier()
-        const expression = UNTIL_SPACE_REGEX.exec(this.currentLine)
-        if (expression == null || expression[0].trim().length == 0) {
+        if (this.currentLine.length > 0 && !new RegExp(/^\s/).test(this.currentLine)) {
+          throw new Error(this.formatError('expected a whitespace after the macro name'))
+        }
+        if (this.currentLine.trim().length == 0) {
           throw new Error(this.formatError('expected value or expression for macro definition'))
         }
-        this.currentLine = this.currentLine.substring(expression[0].length)
-        this.col += expression[0].length
-        this.macroDefinitions.set(constName, expression[0].trim())
-        this.hasNext()
+        this.macroDefinitions.set(constName, this.currentLine.trim())
+        this.col += this.currentLine.length
+        this.currentLine = ''
+        this.skipToNextLine()
       } else {
         throw new Error(this.formatError('preprocessor directive is not supported'))
       }
