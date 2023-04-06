@@ -65,6 +65,7 @@ export abstract class Statement {
   execute(env: Frame, context: CProgramContext): void {
     context.incrementExecutedStatementCount()
     context.setCurrentLineNum(this.row)
+    context.checkTimeout()
     this.doExecute(env, context)
   }
 }

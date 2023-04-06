@@ -56,7 +56,6 @@ export class Block {
   }
 
   execute(env: Frame, context: CProgramContext): void {
-    context.checkTimeout()
     const newEnv = this.isFunctionBody ? env : Frame.extend(env)
     this.content.forEach(executable => executable.execute(newEnv, context))
   }

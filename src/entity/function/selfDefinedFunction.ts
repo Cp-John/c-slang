@@ -45,7 +45,7 @@ export class SelfDefinedFunction extends Function {
           String(actualParameterList.length)
       )
     }
-    const newEnv = Frame.extendWithStackTop(context.baseFrame, env.getStackTop())
+    const newEnv = Frame.extendWithStackTop(context.getBaseFrame(), env.getStackTop())
     this.parameterList.forEach(pair => newEnv.declareVariable(pair[1], pair[0]))
     actualParameterList.forEach((val, index) =>
       newEnv.assignValue(this.parameterList[index][1], val)
