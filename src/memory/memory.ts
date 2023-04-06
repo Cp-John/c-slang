@@ -259,19 +259,20 @@ export class Memory {
 
   printHeap(context: CProgramContext) {
     let addr = this.heapBottom
-    context.stdout += '\n' + '='.repeat(15) + 'Heap Visualization' + '='.repeat(15) + '\n'
+    context.print('\n' + '='.repeat(15) + 'Heap Visualization' + '='.repeat(15) + '\n')
     while (addr < this.stackBottom) {
-      context.stdout +=
+      context.print(
         String(addr) +
-        ': isfree=' +
-        String(this.isFree(addr)) +
-        '; length=' +
-        String(this.getLength(addr)) +
-        '; prev=' +
-        String(this.getPrev(addr)) +
-        '\n'
+          ': isfree=' +
+          String(this.isFree(addr)) +
+          '; length=' +
+          String(this.getLength(addr)) +
+          '; prev=' +
+          String(this.getPrev(addr)) +
+          '\n'
+      )
       addr += this.getLength(addr)
     }
-    context.stdout += '='.repeat(21) + 'ENDING' + '='.repeat(21) + '\n'
+    context.print('='.repeat(21) + 'ENDING' + '='.repeat(21) + '\n')
   }
 }
