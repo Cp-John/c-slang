@@ -3,7 +3,15 @@ import { PointerType } from '../entity/datatype/pointerType'
 import { PrimitiveType, PrimitiveTypes } from '../entity/datatype/primitiveType'
 import { StructType } from '../entity/datatype/structType'
 import { NumericLiteral } from '../entity/expression/numericLiteral'
-import { CHAR_MAX, CHAR_MIN, INT_MAX, INT_MIN, RAND_MAX, UINT_MAX } from '../interpreter/builtins'
+import {
+  CHAR_MAX,
+  CHAR_MIN,
+  INT_MAX,
+  INT_MIN,
+  M_PI,
+  RAND_MAX,
+  UINT_MAX
+} from '../interpreter/builtins'
 import { Frame } from '../interpreter/frame'
 
 const PREPROCESSOR_DIRECTIVEG =
@@ -49,7 +57,8 @@ const RESERVED_KEYWORDS = new Set([
   'INT_MIN',
   'CHAR_MAX',
   'CHAR_INT',
-  'UINT_MAX'
+  'UINT_MAX',
+  'M_PI'
 ])
 
 const ESCAPE_CHARACTERS = {
@@ -74,7 +83,8 @@ export class Lexer {
     ['INT_MIN', String(INT_MIN)],
     ['CHAR_MAX', String(CHAR_MAX)],
     ['CHAR_MIN', String(CHAR_MIN)],
-    ['UINT_MAX', String(UINT_MAX)]
+    ['UINT_MAX', String(UINT_MAX)],
+    ['M_PI', String(M_PI)]
   ])
 
   private lines: string[]

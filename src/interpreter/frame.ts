@@ -310,11 +310,18 @@ export class Frame {
 
   copyString(dst: NumericLiteral, src: NumericLiteral): void {
     const stringLiteral = this.memory.readStringLiteral(src.getValue())
-    this.memory.copyBytes(dst.getValue(), src.getValue(), stringLiteral.length)
-    this.memory.writeNumeric(
-      dst.getValue() + stringLiteral.length,
-      NumericLiteral.new(0).castToType(PrimitiveTypes.char)
+    this.memory.copyBytes(dst.getValue(), src.getValue(), stringLiteral.length + 1)
+  }
+
+  concatString(dst: NumericLiteral, src: NumericLiteral): NumericLiteral {
+    const srcStringLiteral = this.memory.readStringLiteral(src.getValue())
+    const dstStringLiteral = this.memory.readStringLiteral(dst.getValue())
+    this.memory.copyBytes(
+      dst.getValue() + dstStringLiteral.length,
+      src.getValue(),
+      srcStringLiteral.length + 1
     )
+    return dst
   }
 
   dereferenceAsString(numeric: NumericLiteral): string {

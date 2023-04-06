@@ -15,6 +15,8 @@ export const CHAR_MIN = -128
 
 export const UINT_MAX = 4294967295
 
+export const M_PI = 3.14159265359
+
 export const PRIMITIVE_TYPES = Object.values(PrimitiveType)
 
 const rand: RealBuiltinFunction = (
@@ -140,6 +142,48 @@ const abs: RealBuiltinFunction = (
   return args[0].abs()
 }
 
+const fabs: RealBuiltinFunction = (
+  env: Frame,
+  context: CProgramContext,
+  args: NumericLiteral[]
+): NumericLiteral => {
+  return NumericLiteral.new(Math.abs(args[0].getValue())).castToType(PrimitiveTypes.float)
+}
+
+const floor: RealBuiltinFunction = (
+  env: Frame,
+  context: CProgramContext,
+  args: NumericLiteral[]
+): NumericLiteral => {
+  return NumericLiteral.new(Math.floor(args[0].getValue())).castToType(PrimitiveTypes.float)
+}
+
+const ceil: RealBuiltinFunction = (
+  env: Frame,
+  context: CProgramContext,
+  args: NumericLiteral[]
+): NumericLiteral => {
+  return NumericLiteral.new(Math.ceil(args[0].getValue())).castToType(PrimitiveTypes.float)
+}
+
+const pow: RealBuiltinFunction = (
+  env: Frame,
+  context: CProgramContext,
+  args: NumericLiteral[]
+): NumericLiteral => {
+  return NumericLiteral.new(Math.pow(args[0].getValue(), args[1].getValue())).castToType(
+    PrimitiveTypes.float
+  )
+}
+
+const strcat: RealBuiltinFunction = (
+  env: Frame,
+  context: CProgramContext,
+  args: NumericLiteral[]
+): NumericLiteral => {
+  return env.concatString(args[0], args[1])
+}
+
 const strlen: RealBuiltinFunction = (
   env: Frame,
   context: CProgramContext,
@@ -247,11 +291,31 @@ export const BUILTIN_FUNCTIONS = {
 
   abs: new BuiltinFunction(PrimitiveTypes.int, 'abs', [PrimitiveTypes.int], abs),
 
+  floor: new BuiltinFunction(PrimitiveTypes.float, 'floor', [PrimitiveTypes.float], floor),
+
+  ceil: new BuiltinFunction(PrimitiveTypes.float, 'ceil', [PrimitiveTypes.float], ceil),
+
+  fabs: new BuiltinFunction(PrimitiveTypes.float, 'fabs', [PrimitiveTypes.float], fabs),
+
+  pow: new BuiltinFunction(
+    PrimitiveTypes.float,
+    'pow',
+    [PrimitiveTypes.float, PrimitiveTypes.float],
+    pow
+  ),
+
   strlen: new BuiltinFunction(
     PrimitiveTypes.int,
     'strlen',
     [new PointerType(PrimitiveTypes.char)],
     strlen
+  ),
+
+  strcat: new BuiltinFunction(
+    new PointerType(PrimitiveTypes.char),
+    'strcat',
+    [new PointerType(PrimitiveTypes.char), new PointerType(PrimitiveTypes.char)],
+    strcat
   ),
 
   strncpy: new BuiltinFunction(
