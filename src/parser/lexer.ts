@@ -116,6 +116,9 @@ export class Lexer {
   }
 
   private replaceMacros(str: string): string {
+    if (str.length == 0) {
+      return str
+    }
     let result = str
     this.macroDefinitions.forEach((value, key) => {
       result = result.replaceAll(new RegExp('\\b' + key + '\\b', 'g'), value)
