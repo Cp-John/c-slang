@@ -60,7 +60,7 @@ const printf: RealBuiltinFunction = (
   if (PLACEHOLDER_REGEX.test(outputString)) {
     throw new Error("expected more data arguments, '" + outputString + "'")
   }
-  context.stdout += outputString
+  context.print(outputString)
   return NumericLiteral.new(outputString.length).castToType(PrimitiveTypes.int)
 }
 
@@ -73,11 +73,11 @@ const scanf: RealBuiltinFunction = (
   let formatString = env.dereferenceAsString(args[0])
 
   while (i < args.length) {
-    const input = prompt(context.stdout)
+    const input = prompt(context.getStdout())
     if (input == null) {
       throw Error('execution interrupted')
     }
-    context.stdout += input + '\n'
+    context.print(input + '\n')
     const tokens = input?.split(/\s+/)
     for (let j = 0; i < args.length && tokens && j < tokens.length; j++) {
       const match = PLACEHOLDER_REGEX.exec(formatString)
@@ -121,8 +121,7 @@ const scanf: RealBuiltinFunction = (
     }
   }
   // reset context
-  context.startTimeMs = new Date().getTime()
-  context.executedStatementCount = 0
+  context.resetTimeout()
   return NumericLiteral.new(i - 1).castToType(PrimitiveTypes.int)
 }
 

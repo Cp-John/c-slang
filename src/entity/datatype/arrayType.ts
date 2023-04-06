@@ -204,7 +204,7 @@ export class ArrayType extends SubscriptableType {
       const constExpr = ExpressionParser.parse(env, lexer, false, true, PrimitiveTypes.int, false)
       let size
       try {
-        size = constExpr.evaluate(env, initCProgramContext()) as NumericLiteral
+        size = constExpr.evaluate(env, new CProgramContext()) as NumericLiteral
       } catch (err) {
         throw new Error(
           'Line ' + String(row) + ': ' + (err instanceof Error ? err.message : String(err))
@@ -226,7 +226,7 @@ export class ArrayType extends SubscriptableType {
   }
 }
 
-import { initCProgramContext } from '../../interpreter/cProgramContext'
+import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
 import { Expression } from '../expression/expression'

@@ -12,7 +12,7 @@ export abstract class LoopStatement extends Statement {
   incrementLoopCounter(context: CProgramContext) {
     this.loopCounter++
     if (this.loopCounter >= LoopStatement.MAX_LOOP_COUNT) {
-      context.currentLine = this.row
+      context.setCurrentLineNum(this.row)
       throw new Error('maximum loop count exceeded.')
     }
   }

@@ -1,30 +1,54 @@
 import { Frame } from './frame'
 
-export interface CProgramContext {
-  stdout: string
-  baseFrame: Frame
-  currentLine: number
-  startTimeMs: number
-  maxExecutionTimeMs: number
-  executedStatementCount: number
-}
+export class CProgramContext {
+  private stdout: string
+  private baseFrame: Frame
+  private currentLineNum: number
+  private maxExecutionTimeMs: number
+  private expireTimeMs: number
+  private executedStatementCount: number
 
-export function initCProgramContext(maxExecTimMs: number = 1000): CProgramContext {
-  return {
-    stdout: '',
-    baseFrame: Frame.extend(Frame.getBuiltinFrame()),
-    currentLine: 0,
-    startTimeMs: new Date().getTime(),
-    maxExecutionTimeMs: maxExecTimMs,
-    executedStatementCount: 0
+  constructor(maxExecTimMs: number = 1000) {
+    this.stdout = ''
+    this.baseFrame = Frame.extend(Frame.getBuiltinFrame())
+    this.maxExecutionTimeMs = Math.max(maxExecTimMs, 1000)
+    this.currentLineNum = 0
+    this.expireTimeMs = new Date().getTime() + maxExecTimMs
+    this.executedStatementCount = 0
   }
-}
 
-export function checkTimeout(context: CProgramContext) {
-  if (
-    context.executedStatementCount > 50 &&
-    new Date().getTime() > context.startTimeMs + context.maxExecutionTimeMs
-  ) {
-    throw new Error('execution timeout')
+  incrementExecutedStatementCount() {
+    this.executedStatementCount++
+  }
+
+  setCurrentLineNum(currentLineNum: number) {
+    this.currentLineNum = currentLineNum
+  }
+
+  getCurrentLineNum() {
+    return this.currentLineNum
+  }
+
+  getStdout() {
+    return this.stdout
+  }
+
+  getBaseFrame() {
+    return this.baseFrame
+  }
+
+  print(str: string) {
+    this.stdout += str
+  }
+
+  resetTimeout() {
+    this.expireTimeMs = new Date().getTime() + this.maxExecutionTimeMs
+    this.executedStatementCount = 0
+  }
+
+  checkTimeout() {
+    if (this.executedStatementCount > 50 && new Date().getTime() > this.expireTimeMs) {
+      throw new Error('execution timeout')
+    }
   }
 }

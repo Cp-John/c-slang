@@ -380,7 +380,7 @@ export class Frame {
     if (this.prev != null) {
       this.prev.recurPrintEnv(context)
     }
-    context.stdout += '='.repeat(20) + 'depth: ' + String(this.depth) + '='.repeat(20) + '\n'
+    context.print('='.repeat(20) + 'depth: ' + String(this.depth) + '='.repeat(20) + '\n')
     const names = Object.keys(this.boundings)
     if (this.depth == 0) {
       names.push('sizeof')
@@ -388,24 +388,24 @@ export class Frame {
     }
     names.sort().forEach(name => {
       if (name == 'sizeof') {
-        context.stdout += name + ': int sizeof(any)\n'
+        context.print(name + ': int sizeof(any)\n')
         return
       } else if (name == 'typeof') {
-        context.stdout += name + ': char* typeof(any)\n'
+        context.print(name + ': char* typeof(any)\n')
         return
       }
       const type = this.boundings[name]['type']
       if (type == PrimitiveTypes.function) {
-        context.stdout += name + ': ' + this.boundings[name]['val'].toString() + '\n'
+        context.print(name + ': ' + this.boundings[name]['val'].toString() + '\n')
       } else {
-        context.stdout += name + ': ' + type.toString() + '\n'
+        context.print(name + ': ' + type.toString() + '\n')
       }
     })
   }
 
   printEnv(context: CProgramContext) {
-    context.stdout += '\n'
+    context.print('\n')
     this.recurPrintEnv(context)
-    context.stdout += '='.repeat(21) + 'ENDING' + '='.repeat(21) + '\n'
+    context.print('='.repeat(21) + 'ENDING' + '='.repeat(21) + '\n')
   }
 }

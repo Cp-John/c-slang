@@ -1,4 +1,4 @@
-import { CProgramContext, initCProgramContext } from '../interpreter/cProgramContext'
+import { CProgramContext } from '../interpreter/cProgramContext'
 import { Frame } from '../interpreter/frame'
 import { Lexer } from '../parser/lexer'
 import { FunctionCall } from './expression/functionCall'
@@ -37,23 +37,23 @@ export class Program {
 
   execute(frontendContext: any, maxExecTimMs: number): string {
     // console.log('='.repeat(20) + 'start executing' + '='.repeat(20))
-    const context: CProgramContext = initCProgramContext(maxExecTimMs)
+    const context: CProgramContext = new CProgramContext(maxExecTimMs)
     try {
-      this.declarations.forEach(declaration => declaration.execute(context.baseFrame, context))
-      context.baseFrame.lookupFunction('main').call(context.baseFrame, context, [])
+      this.declarations.forEach(declaration => declaration.execute(context.getBaseFrame(), context))
+      context.getBaseFrame().lookupFunction('main').call(context.getBaseFrame(), context, [])
     } catch (err: any) {
       // console.log('stdout:', context.stdout)
-      frontendContext['stdout'] = context.stdout
+      frontendContext['stdout'] = context.getStdout()
       if (err instanceof Error) {
         throw new Error(
-          'Line ' + String(context.currentLine) + ': execution failed, ' + err.message
+          'Line ' + String(context.getCurrentLineNum()) + ': execution failed, ' + err.message
         )
       } else {
-        context.stdout += '\nLine ' + String(context.currentLine) + ': ' + String(err)
+        context.print('\nLine ' + String(context.getCurrentLineNum()) + ': ' + String(err))
       }
     } finally {
       // console.log('='.repeat(20) + 'executing finished' + '='.repeat(20))
     }
-    return context.stdout
+    return context.getStdout()
   }
 }

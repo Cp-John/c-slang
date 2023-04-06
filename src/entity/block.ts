@@ -1,4 +1,4 @@
-import { checkTimeout, CProgramContext } from '../interpreter/cProgramContext'
+import { CProgramContext } from '../interpreter/cProgramContext'
 import { Frame } from '../interpreter/frame'
 import { Lexer } from '../parser/lexer'
 import { DataType } from './datatype/dataType'
@@ -56,7 +56,7 @@ export class Block {
   }
 
   execute(env: Frame, context: CProgramContext): void {
-    checkTimeout(context)
+    context.checkTimeout()
     const newEnv = this.isFunctionBody ? env : Frame.extend(env)
     this.content.forEach(executable => executable.execute(newEnv, context))
   }
