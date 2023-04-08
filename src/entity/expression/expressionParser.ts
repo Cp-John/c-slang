@@ -164,6 +164,9 @@ export class ExpressionParser {
       let type
       if (lexer.matchDataType()) {
         type = lexer.eatElementType(env)
+        if (lexer.matchDelimiter('[')) {
+          type = ArrayType.wrap(env, lexer, type, false)
+        }
       } else {
         const tempResult: (
           | string

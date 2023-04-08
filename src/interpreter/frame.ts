@@ -142,7 +142,7 @@ export class Frame {
   lookupStructType(name: string, row: number, col: number, lexer: Lexer): StructType {
     const frame = this.getFrameWithName(name)
     if (frame == null) {
-      throw new Error(lexer.formatError("variable has incomplete type '" + name + "'", row, col))
+      throw new Error(lexer.formatError("incomplete type '" + name + "'", row, col))
     }
     return frame.boundings[name]['val']
   }

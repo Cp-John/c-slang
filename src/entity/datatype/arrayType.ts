@@ -190,9 +190,7 @@ export class ArrayType extends SubscriptableType {
       dimension++
       if (lexer.matchDelimiter(']')) {
         if (isComplete != null || !allowInComplete) {
-          throw new Error(
-            lexer.formatError('definition of variable with array type needs an explicit size')
-          )
+          throw new Error(lexer.formatError('array type needs an explicit size'))
         }
         lexer.eatDelimiter(']')
         isComplete = false
@@ -212,7 +210,7 @@ export class ArrayType extends SubscriptableType {
       }
       if (size.getValue() <= 0) {
         throw new Error(
-          lexer.formatError('declared as an array with a non-positive size', row, col)
+          lexer.formatError('array type with a non-positive size', row, col)
         )
       }
       eleCount *= size.getValue()
