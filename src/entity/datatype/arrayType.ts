@@ -209,9 +209,7 @@ export class ArrayType extends SubscriptableType {
         )
       }
       if (size.getValue() <= 0) {
-        throw new Error(
-          lexer.formatError('array type with a non-positive size', row, col)
-        )
+        throw new Error(lexer.formatError('array type needs a positive size', row, col))
       }
       eleCount *= size.getValue()
       if (eleCount * eleType.getSize() > MAX_ARRAY_SIZE) {
