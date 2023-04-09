@@ -28,7 +28,7 @@ export class Memory {
     this.view = new DataView(this.buffer)
     this.allocatedAddresses = new Set<number>()
     this.stringLiteralToAddress = new Map<string, number>()
-    this.readonlyTop = 0
+    this.readonlyTop = 1
     this.stackBottom = Memory.DEFAULT_READONLY_MEMORY_SIZE + Memory.DEFAULT_HEAP_SIZE
     this.heapBottom = Memory.DEFAULT_READONLY_MEMORY_SIZE
     this.setTag(this.heapBottom, this.heapBottom, true, Memory.DEFAULT_HEAP_SIZE)
