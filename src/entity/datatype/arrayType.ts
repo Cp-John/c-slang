@@ -49,10 +49,7 @@ export class ArrayType extends SubscriptableType {
   }
 
   override applyBinaryOperator(operator: string, rightType: DataType): DataType | undefined {
-    if (operator == '+' || (operator == '-' && rightType.isWholePrimitiveType())) {
-      return this.toPointerType()
-    }
-    return undefined
+    return this.toPointerType().applyBinaryOperator(operator, rightType)
   }
 
   override dereference(): DataType {
