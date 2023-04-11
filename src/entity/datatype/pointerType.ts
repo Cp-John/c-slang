@@ -12,7 +12,7 @@ export class PointerType extends SubscriptableType {
   }
 
   override applyBinaryOperator(operator: string, rightType: DataType): DataType | undefined {
-    var rightTypeStr = rightType.toString();
+    let rightTypeStr = rightType.toString()
     if (rightType.isArrayType()) {
       rightTypeStr = (rightType as ArrayType).toPointerType().toString()
     }
@@ -23,9 +23,7 @@ export class PointerType extends SubscriptableType {
     } else if (rightType.isWholePrimitiveType()) {
       return this
     } else {
-      return operator == '-' && rightTypeStr == this.toString()
-        ? PrimitiveTypes.int
-        : undefined
+      return operator == '-' && rightTypeStr == this.toString() ? PrimitiveTypes.int : undefined
     }
   }
 
