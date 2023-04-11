@@ -13,7 +13,7 @@ import { CProgramContext } from './cProgramContext'
 
 export class Frame {
   private depth: number
-  private boundings
+  private mappings
   private prev: Frame | null
   private stackTop: number
   private memory: Memory
@@ -31,7 +31,7 @@ export class Frame {
   }
 
   private constructor(prev: Frame | null, stackTop: number, memory: Memory, depth: number) {
-    this.boundings = {}
+    this.mappings = {}
     this.prev = prev
     this.stackTop = stackTop
     this.memory = memory
@@ -43,11 +43,11 @@ export class Frame {
   }
 
   private getFrameWithName(name: string): Frame | null {
-    if (name in this.boundings) {
+    if (name in this.mappings) {
       return this
     }
     let currentFrame = this.prev
-    while (currentFrame != null && !(name in currentFrame.boundings)) {
+    while (currentFrame != null && !(name in currentFrame.mappings)) {
       currentFrame = currentFrame.prev
     }
     return currentFrame
@@ -70,7 +70,7 @@ export class Frame {
     if (frame == null) {
       return false
     }
-    const obj = frame.boundings[functionName]
+    const obj = frame.mappings[functionName]
     return obj['val'] instanceof Function && obj['val'].isDefined()
   }
 
@@ -124,8 +124,8 @@ export class Frame {
 
   private lookup(name: string): Function | NumericLiteral | string {
     const frame = this.findFrameWith(name)
-    const val = frame.boundings[name]['val']
-    const type = frame.boundings[name]['type']
+    const val = frame.mappings[name]['val']
+    const type = frame.mappings[name]['type']
     if (val == undefined) {
       throw new Error('unbounded identifier: ' + name)
     } else if (type == PrimitiveTypes.function) {
@@ -136,7 +136,7 @@ export class Frame {
   }
 
   lookupType(name: string): DataType {
-    return this.findFrameWith(name).boundings[name]['type']
+    return this.findFrameWith(name).mappings[name]['type']
   }
 
   lookupStructType(name: string, row: number, col: number, lexer: Lexer): StructType {
@@ -144,17 +144,17 @@ export class Frame {
     if (frame == null) {
       throw new Error(lexer.formatError("incomplete type '" + name + "'", row, col))
     }
-    return frame.boundings[name]['val']
+    return frame.mappings[name]['val']
   }
 
   private isRedefinition(name: string, type: DataType): boolean {
-    if (!(name in this.boundings)) {
+    if (!(name in this.mappings)) {
       return false
     } else if (type != PrimitiveTypes.function) {
       return true
     } else if (
-      this.boundings[name]['val'] instanceof SelfDefinedFunction &&
-      !this.boundings[name]['val'].isDefined()
+      this.mappings[name]['val'] instanceof SelfDefinedFunction &&
+      !this.mappings[name]['val'].isDefined()
     ) {
       return false
     }
@@ -204,12 +204,12 @@ export class Frame {
   ): string {
     this.checkRedefinition(name, PrimitiveTypes.function, row, col, lexer)
     if (
-      name in this.boundings &&
-      (this.boundings[name]['val'] as Function).toString() != functionObj.toString()
+      name in this.mappings &&
+      (this.mappings[name]['val'] as Function).toString() != functionObj.toString()
     ) {
       this.conflictingFunctionSignatures(name, row, col, lexer)
     }
-    this.boundings[name] = { type: PrimitiveTypes.function, val: functionObj }
+    this.mappings[name] = { type: PrimitiveTypes.function, val: functionObj }
     // console.log('declared function: ' + functionObj.toString() + ' [' + this.stackTop + ']')
     return name
   }
@@ -221,7 +221,7 @@ export class Frame {
     lexer: Lexer | null = null
   ): StructType {
     this.checkRedefinition(structType.toString(), structType, row, col, lexer)
-    this.boundings[structType.toString()] = { type: 'struct type', val: structType }
+    this.mappings[structType.toString()] = { type: 'struct type', val: structType }
     return structType
   }
 
@@ -247,14 +247,14 @@ export class Frame {
       }
       throw new Error(errMsg)
     }
-    this.boundings[name] = { type: type, val: this.stackTop }
+    this.mappings[name] = { type: type, val: this.stackTop }
     this.stackTop += type.getSize()
     // console.log('declared variable: ' + name + ':' + type + ' [' + this.stackTop + ']')
     return name
   }
 
   initializeStruct(name: string, initialValues: NumericLiteral[]): void {
-    let addr = this.boundings[name]['val']
+    let addr = this.mappings[name]['val']
     initialValues.forEach(value => {
       this.assignValueByAddress(addr, value)
       addr += value.getDataType().getSize()
@@ -262,7 +262,7 @@ export class Frame {
   }
 
   initializeArray(name: string, initialValues: NumericLiteral[]): void {
-    let addr = this.boundings[name]['val']
+    let addr = this.mappings[name]['val']
     for (let i = 0; i < initialValues.length; i++) {
       // console.log(
       //   'assign: ' +
@@ -282,7 +282,7 @@ export class Frame {
 
   assignValue(name: string, val: NumericLiteral): NumericLiteral {
     const variableType = this.lookupType(name)
-    const address = this.findFrameWith(name).boundings[name]['val']
+    const address = this.findFrameWith(name).mappings[name]['val']
     if (
       variableType instanceof PointerType ||
       variableType == PrimitiveTypes.int ||
@@ -381,7 +381,7 @@ export class Frame {
       this.prev.recurPrintEnv(context)
     }
     context.print('='.repeat(20) + 'depth: ' + String(this.depth) + '='.repeat(20) + '\n')
-    const names = Object.keys(this.boundings)
+    const names = Object.keys(this.mappings)
     if (this.depth == 0) {
       names.push('sizeof')
       names.push('typeof')
@@ -394,9 +394,9 @@ export class Frame {
         context.print(name + ': char* typeof(any)\n')
         return
       }
-      const type = this.boundings[name]['type']
+      const type = this.mappings[name]['type']
       if (type == PrimitiveTypes.function) {
-        context.print(name + ': ' + this.boundings[name]['val'].toString() + '\n')
+        context.print(name + ': ' + this.mappings[name]['val'].toString() + '\n')
       } else {
         context.print(name + ': ' + type.toString() + '\n')
       }
