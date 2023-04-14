@@ -1,10 +1,10 @@
 import { RELATIONAL_OPERATORS } from '../constant'
 import { ArrayType } from './arrayType'
 import { DataType } from './dataType'
+import { DereferencableType } from './dereferencableType'
 import { PrimitiveTypes } from './primitiveType'
-import { SubscriptableType } from './subscriptableType'
 
-export class PointerType extends SubscriptableType {
+export class PointerType extends DereferencableType {
   private pointingTo: DataType
 
   constructor(pointingTo: DataType) {

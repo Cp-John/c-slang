@@ -1,6 +1,6 @@
 import { DataType } from './dataType'
+import { DereferencableType } from './dereferencableType'
 import { PrimitiveType, PrimitiveTypes } from './primitiveType'
-import { SubscriptableType } from './subscriptableType'
 
 export type NonPointerLikeType = PrimitiveType | StructType
 
@@ -8,7 +8,7 @@ export type ElementType = PointerType | PrimitiveType | StructType
 
 const MAX_ARRAY_SIZE = Math.pow(2, 20)
 
-export class ArrayType extends SubscriptableType {
+export class ArrayType extends DereferencableType {
   private eleType: ElementType
   private dimension: number
   private sizes: number[]

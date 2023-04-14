@@ -5,7 +5,7 @@ export abstract class DataType {
     this.size = size
   }
 
-  isSubscriptable(): boolean {
+  isDereferencable(): boolean {
     return false
   }
 

@@ -3,17 +3,17 @@ import { Lexer } from '../../parser/lexer'
 import { DEREFERENCE_TAG, STRUCT_MEMBER_ACCESS_TAG, UNARY_MINUS_TAG } from '../constant'
 import { ArrayType } from '../datatype/arrayType'
 import { DataType } from '../datatype/dataType'
+import { DereferencableType } from '../datatype/dereferencableType'
 import { PointerType } from '../datatype/pointerType'
 import { PrimitiveType, PrimitiveTypes } from '../datatype/primitiveType'
 import { StructType } from '../datatype/structType'
-import { SubscriptableType } from '../datatype/subscriptableType'
 import { Expression, IncrementDecrement, Jump } from './expression'
 import { FunctionCall } from './functionCall'
 import { NumericLiteral } from './numericLiteral'
 import {
+  assertDereferencable,
   assertIsStruct,
   assertStructFieldExists,
-  assertSubscriptable,
   checkAssignmentOperandType,
   checkBinaryExprssionOperandType,
   checkConditionOperandType,
@@ -94,17 +94,9 @@ export class ExpressionParser {
     } else if (lexer.matchDelimiter('*')) {
       lexer.eatDelimiter('*')
       const type = this.recurParseNumericTerm(env, lexer, result, false, isConstantExpression)
-      if (!type.isSubscriptable()) {
-        throw new Error(
-          lexer.formatError(
-            "indirection requires pointer operand, ('" + type + "' invalid)",
-            termRow,
-            termCol
-          )
-        )
-      }
+      assertDereferencable(type, lexer, termRow, termCol)
       result.push(DEREFERENCE_TAG)
-      dataType = (type as SubscriptableType).dereference()
+      dataType = (type as DereferencableType).dereference()
     } else if (lexer.matchDelimiter('(')) {
       lexer.eatDelimiter('(')
       if (lexer.matchDataType()) {
@@ -221,16 +213,16 @@ export class ExpressionParser {
     }
 
     while (true) {
+      const [oprRow, oprCol] = lexer.tell()
       if (lexer.matchIncrementDecrementOperator()) {
-        const [row, col] = lexer.tell()
-        assertAssignable(dataType, result[result.length - 1], env, row, col, lexer)
+        assertAssignable(dataType, result[result.length - 1], env, oprRow, oprCol, lexer)
         result.push(
           lexer.eatIncrementDecrementOperator() == '++'
             ? IncrementDecrement.POST_INCREMENT
             : IncrementDecrement.POST_DECREMENT
         )
       } else if (lexer.matchDelimiter('[')) {
-        assertSubscriptable(dataType, lexer)
+        assertDereferencable(dataType, lexer, oprRow, oprCol)
         lexer.eatDelimiter('[')
         const [row, col] = lexer.tell()
         checkSubscriptType(
@@ -250,12 +242,12 @@ export class ExpressionParser {
         dataType = assertStructFieldExists(fieldName, dataType as StructType, lexer, row, col)
         result.push(fieldName, STRUCT_MEMBER_ACCESS_TAG)
       } else if (lexer.matchDelimiter('->')) {
-        assertSubscriptable(dataType, lexer)
-        assertIsStruct((dataType as SubscriptableType).dereference(), lexer)
+        assertDereferencable(dataType, lexer, oprRow, oprCol)
+        assertIsStruct((dataType as DereferencableType).dereference(), lexer)
         lexer.eatDelimiter('->')
         const [row, col] = lexer.tell()
         const fieldName = lexer.eatIdentifier()
-        const structType = (dataType as SubscriptableType).dereference() as StructType
+        const structType = (dataType as DereferencableType).dereference() as StructType
         dataType = assertStructFieldExists(fieldName, structType, lexer, row, col)
         result.push(DEREFERENCE_TAG, fieldName, STRUCT_MEMBER_ACCESS_TAG)
       } else {

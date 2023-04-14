@@ -2,11 +2,13 @@ import { Lexer } from '../../parser/lexer'
 import { DataType } from '../datatype/dataType'
 import { StructType } from '../datatype/structType'
 
-export function assertSubscriptable(type: DataType, lexer: Lexer) {
-  if (!type.isSubscriptable()) {
+export function assertDereferencable(type: DataType, lexer: Lexer, row: number, col: number) {
+  if (!type.isDereferencable()) {
     throw new Error(
       lexer.formatError(
-        "subscripted value is not an array or pointer, ('" + type.toString() + "' invalid)"
+        "dereference requires array or pointer type, ('" + type.toString() + "' invalid)",
+        row,
+        col
       )
     )
   }
