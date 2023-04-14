@@ -23,6 +23,23 @@ import {
   checkUnaryExpressionOperandType
 } from './typeCheck'
 
+function isAddressable(
+  ele: string | DataType | NumericLiteral | IncrementDecrement | FunctionCall | Jump,
+  env: Frame
+): boolean {
+  if (typeof ele != 'string') {
+    return false
+  } else if (
+    ele == STRUCT_MEMBER_ACCESS_TAG ||
+    ele == DEREFERENCE_TAG ||
+    (env.isDeclared(ele) && env.lookupType(ele) != PrimitiveTypes.function)
+  ) {
+    return true
+  } else {
+    return false
+  }
+}
+
 function assertAddressable(
   ele: string | DataType | NumericLiteral | IncrementDecrement | FunctionCall | Jump,
   env: Frame,
@@ -30,15 +47,7 @@ function assertAddressable(
   col: number,
   lexer: Lexer
 ) {
-  if (typeof ele != 'string') {
-    throw new Error(lexer.formatError('expression is not addressable', row, col))
-  } else if (
-    ele == STRUCT_MEMBER_ACCESS_TAG ||
-    ele == DEREFERENCE_TAG ||
-    (new Lexer(ele).matchIdentifier() && env.lookupType(ele) != PrimitiveTypes.function)
-  ) {
-    return
-  } else {
+  if (!isAddressable(ele, env)) {
     throw new Error(lexer.formatError('expression is not addressable', row, col))
   }
 }
@@ -51,15 +60,12 @@ function assertAssignable(
   col: number,
   lexer: Lexer
 ) {
-  if (currentDataType instanceof ArrayType || currentDataType instanceof StructType) {
-    throw new Error(lexer.formatError('expression is not assignable', row, col))
-  } else if (ele == STRUCT_MEMBER_ACCESS_TAG || ele == DEREFERENCE_TAG) {
-    return
-  } else if (
-    typeof ele != 'string' ||
-    !env.isDeclared(ele) ||
-    env.lookupType(ele) == PrimitiveTypes.function
-  ) {
+  if (currentDataType.isArrayType() || currentDataType instanceof StructType) {
+    throw new Error(
+      lexer.formatError("type '" + currentDataType.toString() + "' is not assignable", row, col)
+    )
+  }
+  if (!isAddressable(ele, env)) {
     throw new Error(lexer.formatError('expression is not assignable', row, col))
   }
 }
