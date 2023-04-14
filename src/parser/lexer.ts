@@ -187,10 +187,15 @@ export class Lexer {
         if (this.currentLine.length > 0 && !new RegExp(/^\s/).test(this.currentLine)) {
           throw new Error(this.formatError('expected a whitespace after the macro name'))
         }
-        if (this.currentLine.trim().length == 0) {
+        let expression = this.currentLine
+        if (expression.includes('//')) {
+          expression = expression.substring(0, expression.indexOf('//'))
+        }
+        expression = expression.trim()
+        if (expression.length == 0) {
           throw new Error(this.formatError('expected value or expression for macro definition'))
         }
-        this.macroDefinitions.set(constName, this.currentLine.trim())
+        this.macroDefinitions.set(constName, expression)
         this.col += this.currentLine.length
         this.currentLine = ''
         this.skipToNextLine()
