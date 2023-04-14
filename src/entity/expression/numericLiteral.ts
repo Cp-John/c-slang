@@ -1,11 +1,10 @@
-import { CHAR_MAX, CHAR_MIN, INT_MAX, INT_MIN, UINT_MAX } from '../../interpreter/builtins'
+import { CHAR_MAX, CHAR_MIN, INT_MAX, INT_MIN, UINT_MAX, UNARY_MINUS_TAG } from '../constant'
 import { Frame } from '../../interpreter/frame'
 import { ArrayType } from '../datatype/arrayType'
 import { DataType } from '../datatype/dataType'
 import { PointerType } from '../datatype/pointerType'
 import { PrimitiveTypes } from '../datatype/primitiveType'
 import { StructType } from '../datatype/structType'
-import { UNARY_MINUS_TAG } from './expressionParser'
 
 interface BinaryArithmeticOperator {
   (right: NumericLiteral, left: NumericLiteral): NumericLiteral

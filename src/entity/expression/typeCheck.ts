@@ -47,18 +47,6 @@ export function checkSubscriptType(type: DataType, row: number, col: number, lex
   }
 }
 
-export function checkUnaryMinusOperandType(type: DataType, row: number, col: number, lexer: Lexer) {
-  if (type.isPointerType()) {
-    throw new Error(
-      lexer.formatError(
-        "invalid argument type '" + type.toString() + "' to unary expression",
-        row,
-        col
-      )
-    )
-  }
-}
-
 export function checkTernaryOperandType(
   firstType: DataType,
   secondType: DataType,
@@ -152,6 +140,26 @@ export function checkBinaryExprssionOperandType(
     throw new Error(
       lexer.formatError(
         "invalid operand type to binary expression ('" + leftType + "' and '" + rightType + "')",
+        row,
+        col
+      )
+    )
+  }
+  return resultType
+}
+
+export function checkUnaryExpressionOperandType(
+  row: number,
+  col: number,
+  lexer: Lexer,
+  operandType: DataType,
+  opr: string,
+): DataType {
+  const resultType = operandType.applyUnaryOperator(opr)
+  if (resultType == undefined) {
+    throw new Error(
+      lexer.formatError(
+        "invalid argument type '" + operandType.toString() +  "' to unary expression",
         row,
         col
       )

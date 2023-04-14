@@ -1,7 +1,7 @@
-import { PLACEHOLDER_REGEX } from '../../interpreter/builtins'
 import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
+import { PLACEHOLDER_REGEX } from '../constant'
 import { DataType } from '../datatype/dataType'
 import { PointerType } from '../datatype/pointerType'
 import { PrimitiveTypes } from '../datatype/primitiveType'

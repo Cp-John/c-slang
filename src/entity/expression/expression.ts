@@ -1,10 +1,10 @@
 import { CProgramContext } from '../../interpreter/cProgramContext'
 import { Frame } from '../../interpreter/frame'
+import { DEREFERENCE_TAG, STRUCT_MEMBER_ACCESS_TAG } from '../constant'
 import { DataType } from '../datatype/dataType'
 import { PointerType } from '../datatype/pointerType'
 import { PrimitiveType, PrimitiveTypes } from '../datatype/primitiveType'
 import { StructType } from '../datatype/structType'
-import { DEREFERENCE_TAG, STRUCT_MEMBER_ACCESS_TAG } from './expressionParser'
 import { FunctionCall } from './functionCall'
 import { NumericLiteral } from './numericLiteral'
 

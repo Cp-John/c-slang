@@ -1,5 +1,6 @@
 import { Frame } from '../../interpreter/frame'
 import { Lexer } from '../../parser/lexer'
+import { DEREFERENCE_TAG, STRUCT_MEMBER_ACCESS_TAG, UNARY_MINUS_TAG } from '../constant'
 import { ArrayType } from '../datatype/arrayType'
 import { DataType } from '../datatype/dataType'
 import { PointerType } from '../datatype/pointerType'
@@ -19,7 +20,7 @@ import {
   checkSubscriptType,
   checkTernaryOperandType,
   checkTypeCastType,
-  checkUnaryMinusOperandType
+  checkUnaryExpressionOperandType,
 } from './typeCheck'
 
 function assertAddressable(
@@ -41,10 +42,6 @@ function assertAddressable(
     throw new Error(lexer.formatError('expression is not addressable', row, col))
   }
 }
-
-export const DEREFERENCE_TAG = '$DEREFERENCE'
-export const UNARY_MINUS_TAG = '$UNARY_MINUS'
-export const STRUCT_MEMBER_ACCESS_TAG = '$STRUCT_MEMBER_ACCESS_TAG'
 
 function assertAssignable(
   currentDataType: DataType,
@@ -85,26 +82,24 @@ export class ExpressionParser {
     let dataType: DataType
     if (lexer.matchDelimiter('!')) {
       lexer.eatDelimiter('!')
-      this.recurParseNumericTerm(env, lexer, result, false, isConstantExpression)
+      dataType = this.recurParseNumericTerm(env, lexer, result, false, isConstantExpression)
       result.push('!')
-      dataType = PrimitiveTypes.int
+      dataType = checkUnaryExpressionOperandType(termRow, termCol, lexer, dataType, '!')
     } else if (lexer.matchDelimiter('&')) {
-      const [row, col] = lexer.tell()
       lexer.eatDelimiter('&')
       const type = this.recurParseNumericTerm(env, lexer, result, false, isConstantExpression)
-      assertAddressable(result[result.length - 1], env, row, col, lexer)
+      assertAddressable(result[result.length - 1], env, termRow, termCol, lexer)
       result.push('&')
       dataType = new PointerType(type)
     } else if (lexer.matchDelimiter('*')) {
-      const [row, col] = lexer.tell()
       lexer.eatDelimiter('*')
       const type = this.recurParseNumericTerm(env, lexer, result, false, isConstantExpression)
       if (!type.isSubscriptable()) {
         throw new Error(
           lexer.formatError(
             "indirection requires pointer operand, ('" + type + "' invalid)",
-            row,
-            col
+            termRow,
+            termCol
           )
         )
       }
@@ -138,22 +133,20 @@ export class ExpressionParser {
       if (isConstantExpression) {
         throw new Error(lexer.formatError('expected a constant expression'))
       }
-      const [row, col] = lexer.tell()
       const opr =
         lexer.eatIncrementDecrementOperator() == '++'
           ? IncrementDecrement.PRE_INCREMENT
           : IncrementDecrement.PRE_DECREMENT
       dataType = this.recurParseNumericTerm(env, lexer, result, false, isConstantExpression)
-      assertAssignable(dataType, result[result.length - 1], env, row, col, lexer)
+      assertAssignable(dataType, result[result.length - 1], env, termRow, termCol, lexer)
       result.push(opr)
     } else if (lexer.matchUnaryPlusMinus()) {
-      const [row, col] = lexer.tell()
       const opr = lexer.eatUnaryPlusMinus()
       dataType = this.recurParseNumericTerm(env, lexer, result, false, isConstantExpression)
       if (opr == '-') {
-        checkUnaryMinusOperandType(dataType, row, col, lexer)
         result.push(UNARY_MINUS_TAG)
       }
+      dataType = checkUnaryExpressionOperandType(termRow, termCol, lexer, dataType, '-')
     } else if (lexer.matchKeyword('NULL')) {
       lexer.eatKeyword('NULL')
       dataType = new PointerType(PrimitiveTypes.void)
@@ -200,15 +193,14 @@ export class ExpressionParser {
       if (isConstantExpression) {
         throw new Error(lexer.formatError('expected a constant expression'))
       }
-      const [row, col] = lexer.tell()
       const identifier = lexer.eatIdentifier()
       result.push(identifier)
-      assertIsDeclared(identifier, env, row, col, lexer)
+      assertIsDeclared(identifier, env, termRow, termCol, lexer)
       const type = env.lookupType(identifier)
       if (type != PrimitiveTypes.function) {
         dataType = type
         if (lexer.matchDelimiter('(')) {
-          throw new Error(lexer.formatError('called object type is not a function', row, col))
+          throw new Error(lexer.formatError('called object type is not a function', termRow, termCol))
         }
       } else {
         const functionName = String(result.pop())
@@ -216,8 +208,8 @@ export class ExpressionParser {
           env,
           functionName,
           env.lookupFunction(functionName).parseActualParameters(env, lexer),
-          row,
-          col
+          termRow,
+          termCol
         )
         result.push(functionCall)
         dataType = functionCall.getReturnType()

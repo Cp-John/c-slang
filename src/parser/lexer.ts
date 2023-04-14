@@ -11,7 +11,7 @@ import {
   M_PI,
   RAND_MAX,
   UINT_MAX
-} from '../interpreter/builtins'
+} from '../entity/constant'
 import { Frame } from '../interpreter/frame'
 
 const PREPROCESSOR_DIRECTIVEG =
@@ -26,7 +26,7 @@ const PRIORITIZED_ARITHMETIC_OPERATOR_REGEX = /^[*\/%](?!=)/
 const ARITHMETIC_OPERATOR_REGEX = /^[*\/%\+](?!=)|^-(?![=|>])/
 const INCREMENT_DECREMENT_REGEX = /^\+\+|^--/
 const UNARY_PLUS_MINUS = /^\+(?!\+)|^-(?!-)/
-export const RELATIONAL_OPERATOR_RETEX = /^>=|^<=|^>|^<|^==|^!=/
+const RELATIONAL_OPERATOR_RETEX = /^>=|^<=|^>|^<|^==|^!=/
 const PRIORITIZED_RELATIONAL_OPERATOR_REGEX = /^>=|^<=|^>|^</
 const ASSIGNMENT_OPERATOR_REGEX = /^\+=|^-=|^\*=|^\/=|^%=|^=/
 

@@ -1,4 +1,5 @@
-import { DataType, RELATIONAL_OPERATORS } from './dataType'
+import { RELATIONAL_OPERATORS } from '../constant'
+import { DataType } from './dataType'
 
 export abstract class PrimitiveType extends DataType {
   private repr: string
@@ -6,6 +7,15 @@ export abstract class PrimitiveType extends DataType {
   constructor(repr: string, size: number) {
     super(size)
     this.repr = repr
+  }
+
+  override applyUnaryOperator(operator: string): DataType | undefined {
+    if (operator == '!') {
+      return PrimitiveTypes.int
+    } else if (operator == '-' || operator == '+') {
+      return this
+    }
+    return undefined
   }
 
   toString(): string {
@@ -107,6 +117,10 @@ class VoidType extends PrimitiveType {
   override applyBinaryOperator(operator: string, rightType: DataType): DataType | undefined {
     return undefined
   }
+
+  override applyUnaryOperator(operator: string): DataType | undefined {
+    return undefined
+  }
 }
 
 class FunctionType extends PrimitiveType {
@@ -123,6 +137,10 @@ class FunctionType extends PrimitiveType {
   }
 
   override applyBinaryOperator(operator: string, rightType: DataType): DataType | undefined {
+    return undefined
+  }
+
+  override applyUnaryOperator(operator: string): DataType | undefined {
     return undefined
   }
 }

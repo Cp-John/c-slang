@@ -141,6 +141,10 @@ export class StructType extends DataType {
     return undefined
   }
 
+  override applyUnaryOperator(operator: string): DataType | undefined {
+    return undefined
+  }
+
   toString(): string {
     return 'struct ' + this.tag
   }

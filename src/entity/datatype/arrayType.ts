@@ -52,6 +52,10 @@ export class ArrayType extends SubscriptableType {
     return this.toPointerType().applyBinaryOperator(operator, rightType)
   }
 
+  override applyUnaryOperator(operator: string): DataType | undefined {
+    return undefined
+  }
+
   override dereference(): DataType {
     if (this.dimension == 1) {
       return this.eleType

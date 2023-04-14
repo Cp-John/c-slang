@@ -1,23 +1,11 @@
+import { INT_MAX, PLACEHOLDER_REGEX } from '../entity/constant'
 import { PointerType } from '../entity/datatype/pointerType'
-import { PrimitiveType, PrimitiveTypes } from '../entity/datatype/primitiveType'
+import { PrimitiveTypes } from '../entity/datatype/primitiveType'
 import { NumericLiteral } from '../entity/expression/numericLiteral'
 import { BuiltinFunction, RealBuiltinFunction } from '../entity/function/builtinFunction'
 import { Lexer } from '../parser/lexer'
 import { CProgramContext } from './cProgramContext'
 import { Frame } from './frame'
-
-export const RAND_MAX = 2147483647
-export const INT_MAX = 2147483647
-export const INT_MIN = -2147483648
-
-export const CHAR_MAX = 127
-export const CHAR_MIN = -128
-
-export const UINT_MAX = 4294967295
-
-export const M_PI = 3.14159265359
-
-export const PRIMITIVE_TYPES = Object.values(PrimitiveType)
 
 const rand: RealBuiltinFunction = (
   env: Frame,
@@ -34,8 +22,6 @@ const time: RealBuiltinFunction = (
 ): NumericLiteral => {
   return NumericLiteral.new(Math.floor(Date.now() / 1000)).castToType(PrimitiveTypes.int)
 }
-
-export const PLACEHOLDER_REGEX = /%d|%ld|%f|%lf|%s|%c|%p/
 
 const printf: RealBuiltinFunction = (
   env: Frame,

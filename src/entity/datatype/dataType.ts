@@ -1,5 +1,3 @@
-export const RELATIONAL_OPERATORS = new Set<string>(['==', '!=', '>=', '>', '<=', '<'])
-
 export abstract class DataType {
   protected size: number
 
@@ -38,6 +36,8 @@ export abstract class DataType {
   abstract canExplicitCastTo(targetType: DataType): boolean
 
   abstract applyBinaryOperator(operator: string, rightType: DataType): DataType | undefined
+
+  abstract applyUnaryOperator(operator: string): DataType | undefined
 
   getResultType(operator: string, rightType: DataType): DataType {
     const resultType = this.applyBinaryOperator(operator, rightType)

@@ -1,5 +1,6 @@
+import { RELATIONAL_OPERATORS } from '../constant'
 import { ArrayType } from './arrayType'
-import { DataType, RELATIONAL_OPERATORS } from './dataType'
+import { DataType } from './dataType'
 import { PrimitiveTypes } from './primitiveType'
 import { SubscriptableType } from './subscriptableType'
 
@@ -25,6 +26,13 @@ export class PointerType extends SubscriptableType {
     } else {
       return operator == '-' && rightTypeStr == this.toString() ? PrimitiveTypes.int : undefined
     }
+  }
+
+  override applyUnaryOperator(operator: string): DataType | undefined {
+    if (operator == '!') {
+      return PrimitiveTypes.int
+    }
+    return undefined
   }
 
   override isPointerType(): boolean {
