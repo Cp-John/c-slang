@@ -1,17 +1,9 @@
+import { CHAR_MAX, CHAR_MIN, INT_MAX, INT_MIN, M_PI, RAND_MAX, UINT_MAX } from '../entity/constant'
 import { ElementType, NonPointerLikeType } from '../entity/datatype/arrayType'
 import { PointerType } from '../entity/datatype/pointerType'
 import { PrimitiveType, PrimitiveTypes } from '../entity/datatype/primitiveType'
 import { StructType } from '../entity/datatype/structType'
 import { NumericLiteral } from '../entity/expression/numericLiteral'
-import {
-  CHAR_MAX,
-  CHAR_MIN,
-  INT_MAX,
-  INT_MIN,
-  M_PI,
-  RAND_MAX,
-  UINT_MAX
-} from '../entity/constant'
 import { Frame } from '../interpreter/frame'
 
 const PREPROCESSOR_DIRECTIVEG =

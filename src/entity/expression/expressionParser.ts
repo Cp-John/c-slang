@@ -20,7 +20,7 @@ import {
   checkSubscriptType,
   checkTernaryOperandType,
   checkTypeCastType,
-  checkUnaryExpressionOperandType,
+  checkUnaryExpressionOperandType
 } from './typeCheck'
 
 function assertAddressable(
@@ -200,7 +200,9 @@ export class ExpressionParser {
       if (type != PrimitiveTypes.function) {
         dataType = type
         if (lexer.matchDelimiter('(')) {
-          throw new Error(lexer.formatError('called object type is not a function', termRow, termCol))
+          throw new Error(
+            lexer.formatError('called object type is not a function', termRow, termCol)
+          )
         }
       } else {
         const functionName = String(result.pop())

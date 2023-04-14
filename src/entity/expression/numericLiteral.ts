@@ -1,5 +1,5 @@
-import { CHAR_MAX, CHAR_MIN, INT_MAX, INT_MIN, UINT_MAX, UNARY_MINUS_TAG } from '../constant'
 import { Frame } from '../../interpreter/frame'
+import { CHAR_MAX, CHAR_MIN, INT_MAX, INT_MIN, UINT_MAX, UNARY_MINUS_TAG } from '../constant'
 import { ArrayType } from '../datatype/arrayType'
 import { DataType } from '../datatype/dataType'
 import { PointerType } from '../datatype/pointerType'

@@ -153,13 +153,13 @@ export function checkUnaryExpressionOperandType(
   col: number,
   lexer: Lexer,
   operandType: DataType,
-  opr: string,
+  opr: string
 ): DataType {
   const resultType = operandType.applyUnaryOperator(opr)
   if (resultType == undefined) {
     throw new Error(
       lexer.formatError(
-        "invalid argument type '" + operandType.toString() +  "' to unary expression",
+        "invalid argument type '" + operandType.toString() + "' to unary expression",
         row,
         col
       )
