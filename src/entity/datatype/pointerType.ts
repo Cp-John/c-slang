@@ -22,6 +22,8 @@ export class PointerType extends DereferencableType {
         rightTypeStr == new PointerType(PrimitiveTypes.void).toString()
         ? PrimitiveTypes.int
         : undefined
+    } else if (operator == '||' || operator == '&&') {
+      return (rightType.isDereferencable() || rightType.isArithPrimitiveType()) ? PrimitiveTypes.int : undefined
     } else if (operator != '+' && operator != '-') {
       return undefined
     } else if (rightType.isWholePrimitiveType()) {

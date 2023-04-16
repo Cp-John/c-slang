@@ -30,7 +30,7 @@ abstract class ArithPrimitiveType extends PrimitiveType {
 
   override applyBinaryOperator(operator: string, rightType: DataType): DataType | undefined {
     if (!rightType.isArithPrimitiveType()) {
-      return rightType.applyBinaryOperator(operator, this)
+      return operator == '-' ? undefined : rightType.applyBinaryOperator(operator, this)
     } else if (RELATIONAL_OPERATORS.has(operator) || operator == '&&' || operator == '||') {
       return PrimitiveTypes.int
     } else if (this instanceof FloatType || rightType instanceof FloatType) {
