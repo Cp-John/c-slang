@@ -46,8 +46,12 @@ export class FunctionCall {
     this.actualParameterList = actualParameterList
   }
 
+  isTerminatingBlock(): boolean {
+    return this.functionObj.isTerminatingBlock()
+  }
+
   getReturnType(): DataType {
-    return this.functionObj.returnType
+    return this.functionObj.getReturnType()
   }
 
   execute(env: Frame, context: CProgramContext): void | NumericLiteral {
@@ -55,6 +59,6 @@ export class FunctionCall {
     this.actualParameterList.forEach(expr =>
       parameters.push(expr.evaluate(env, context) as NumericLiteral)
     )
-    return env.lookupFunction(this.functionObj.functionName).call(env, context, parameters)
+    return env.lookupFunction(this.functionObj.getFunctionName()).call(env, context, parameters)
   }
 }

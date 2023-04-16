@@ -47,6 +47,10 @@ export class BuiltinFunction extends Function {
     return true
   }
 
+  override isTerminatingBlock(): boolean {
+    return this.functionName == 'exit'
+  }
+
   private parseFormatStringParameters(
     env: Frame,
     lexer: Lexer,

@@ -6,9 +6,9 @@ import { PrimitiveTypes } from '../datatype/primitiveType'
 import { Expression } from '../expression/expression'
 import { ExpressionParser } from '../expression/expressionParser'
 import { NumericLiteral } from '../expression/numericLiteral'
-import { Statement } from './statement'
+import { TerminatingStatement } from './simpleStatement'
 
-export class Return extends Statement {
+export class Return extends TerminatingStatement {
   private expression: Expression | null
   private evaluated: NumericLiteral | undefined
   private returnType: DataType

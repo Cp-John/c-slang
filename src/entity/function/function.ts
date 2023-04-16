@@ -6,8 +6,8 @@ import { Expression } from '../expression/expression'
 import { NumericLiteral } from '../expression/numericLiteral'
 
 export abstract class Function {
-  returnType: DataType
-  functionName: string
+  protected returnType: DataType
+  protected functionName: string
 
   constructor(returnType: DataType, functionName: string) {
     this.returnType = returnType
@@ -22,10 +22,22 @@ export abstract class Function {
 
   abstract isDefined(): boolean
 
+  isTerminatingBlock(): boolean {
+    return false
+  }
+
   protected checkTooFewArguments(lexer: Lexer) {
     if (lexer.matchDelimiter(')')) {
       throw new Error(lexer.formatError("too few arguments in call to '" + this.functionName + "'"))
     }
+  }
+
+  getReturnType(): DataType {
+    return this.returnType
+  }
+
+  getFunctionName(): string {
+    return this.functionName
   }
 
   abstract parseActualParameters(env: Frame, lexer: Lexer): Expression[]

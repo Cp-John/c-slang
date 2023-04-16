@@ -17,6 +17,10 @@ export class ExpressionStatement extends Statement {
     this.expression.evaluate(env, context)
   }
 
+  override isTerminatingBlock(): boolean {
+    return this.expression.isTerminatingBlock()
+  }
+
   static parse(env: Frame, lexer: Lexer) {
     const expressionStatement = new ExpressionStatement(
       ExpressionParser.parse(env, lexer, true, false, null, false)

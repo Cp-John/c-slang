@@ -68,6 +68,10 @@ export abstract class Statement {
     context.checkTimeout()
     this.doExecute(env, context)
   }
+
+  isTerminatingBlock(): boolean {
+    return false
+  }
 }
 
 import { CProgramContext } from '../../interpreter/cProgramContext'

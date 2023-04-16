@@ -2,8 +2,6 @@ import { CProgramContext } from '../interpreter/cProgramContext'
 import { Frame } from '../interpreter/frame'
 import { Lexer } from '../parser/lexer'
 import { DataType } from './datatype/dataType'
-import { Return } from './statement/return'
-import { Break, Continue } from './statement/simpleStatement'
 import { Statement } from './statement/statement'
 
 export class Block {
@@ -13,6 +11,10 @@ export class Block {
   constructor(content: (Statement | Block)[], isFunctionBody: boolean = false) {
     this.content = content
     this.isFunctionBody = isFunctionBody
+  }
+
+  isTerminatingBlock(): boolean {
+    return this.content.length > 0 && this.content[this.content.length - 1].isTerminatingBlock()
   }
 
   static parse(
@@ -35,7 +37,9 @@ export class Block {
     lexer.eatDelimiter('{')
     while (lexer.hasNext() && !lexer.matchDelimiter('}')) {
       if (!reachable) {
-        throw new Error(lexer.formatError('unreachable statements'))
+        throw new Error(
+          lexer.formatError('unreachable ' + (lexer.matchDelimiter('{') ? 'block' : 'statement'))
+        )
       }
       if (lexer.matchDelimiter('{')) {
         content.push(Block.parse(newEnv, lexer, allowBreak, allowContinue, returnType))
@@ -43,13 +47,8 @@ export class Block {
         Statement.parse(newEnv, lexer, allowBreak, allowContinue, returnType).forEach(statement =>
           content.push(statement)
         )
-        const lastStatement = content[content.length - 1]
-        reachable = !(
-          lastStatement instanceof Return ||
-          lastStatement instanceof Break ||
-          lastStatement instanceof Continue
-        )
       }
+      reachable = !content[content.length - 1].isTerminatingBlock()
     }
     lexer.eatDelimiter('}')
     return new Block(content, isFunctionBody)

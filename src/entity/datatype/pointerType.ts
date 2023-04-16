@@ -18,7 +18,10 @@ export class PointerType extends DereferencableType {
       rightTypeStr = (rightType as ArrayType).toPointerType().toString()
     }
     if (RELATIONAL_OPERATORS.has(operator)) {
-      return rightTypeStr == this.toString() ? PrimitiveTypes.int : undefined
+      return rightTypeStr == this.toString() ||
+        rightTypeStr == new PointerType(PrimitiveTypes.void).toString()
+        ? PrimitiveTypes.int
+        : undefined
     } else if (operator != '+' && operator != '-') {
       return undefined
     } else if (rightType.isWholePrimitiveType()) {

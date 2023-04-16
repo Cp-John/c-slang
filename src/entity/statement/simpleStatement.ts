@@ -4,7 +4,13 @@ import { Lexer } from '../../parser/lexer'
 import { DataType } from '../datatype/dataType'
 import { Statement } from './statement'
 
-export class Break extends Statement {
+export abstract class TerminatingStatement extends Statement {
+  override isTerminatingBlock(): boolean {
+    return true
+  }
+}
+
+export class Break extends TerminatingStatement {
   static parse(
     env: Frame,
     lexer: Lexer,
@@ -25,7 +31,7 @@ export class Break extends Statement {
   }
 }
 
-export class Continue extends Statement {
+export class Continue extends TerminatingStatement {
   static parse(
     env: Frame,
     lexer: Lexer,

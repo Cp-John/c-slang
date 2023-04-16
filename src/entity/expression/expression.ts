@@ -87,12 +87,20 @@ export class Expression {
     return this.elements[0] as string
   }
 
-  private static toNumberLiteral(val: NumericLiteral | undefined, env: Frame): NumericLiteral {
+  private static toNumberLiteral(val: NumericLiteral | undefined): NumericLiteral {
     if (val == undefined) {
       throw new Error('undefined operand')
     } else {
       return val
     }
+  }
+
+  isTerminatingBlock(): boolean {
+    return (
+      this.elements.length == 1 &&
+      this.elements[0] instanceof FunctionCall &&
+      this.elements[0].isTerminatingBlock()
+    )
   }
 
   evaluate(env: Frame, context: CProgramContext): NumericLiteral | undefined {
@@ -106,8 +114,7 @@ export class Expression {
           jump.condition == undefined ||
           jump.condition ==
             Expression.toNumberLiteral(
-              jump.consume ? result.pop() : result[result.length - 1],
-              env
+              jump.consume ? result.pop() : result[result.length - 1]
             ).toBoolean()
         ) {
           i = jump.toPosition
@@ -121,13 +128,13 @@ export class Expression {
       } else if (ele instanceof NumericLiteral) {
         result.push(ele)
       } else if (ele instanceof DataType) {
-        result.push(Expression.toNumberLiteral(result.pop(), env).castToType(ele))
+        result.push(Expression.toNumberLiteral(result.pop()).castToType(ele))
       } else if (ele.startsWith('"')) {
         result.push(env.allocateStringLiteral(ele))
       } else if (ele == '&') {
-        result.push(Expression.toNumberLiteral(result.pop(), env).toAddress())
+        result.push(Expression.toNumberLiteral(result.pop()).toAddress())
       } else if (ele == DEREFERENCE_TAG) {
-        result.push(env.dereference(Expression.toNumberLiteral(result.pop(), env)))
+        result.push(env.dereference(Expression.toNumberLiteral(result.pop())))
       } else if (ele in Expression.INCREMENT_DECREMENT_OPERATORS) {
         result.push(Expression.INCREMENT_DECREMENT_OPERATORS[ele](result.pop(), env))
       } else if (NumericLiteral.BINARY_ARITHMETIC_OPERATORS.has(ele)) {
@@ -137,8 +144,8 @@ export class Expression {
         }
         result.push(
           operator(
-            Expression.toNumberLiteral(result.pop(), env),
-            Expression.toNumberLiteral(result.pop(), env)
+            Expression.toNumberLiteral(result.pop()),
+            Expression.toNumberLiteral(result.pop())
           )
         )
       } else if (NumericLiteral.UNARY_ARITHMETIC_OPERATORS.has(ele)) {
@@ -146,13 +153,13 @@ export class Expression {
         if (!operator) {
           throw new Error('impossible execution path')
         }
-        result.push(operator(Expression.toNumberLiteral(result.pop(), env)))
+        result.push(operator(Expression.toNumberLiteral(result.pop())))
       } else if (Expression.ASSIGNMENT_OPERATORS.has(ele)) {
         const right = result.pop()
         result.push(
-          Expression.toNumberLiteral(result.pop(), env).assign(
+          Expression.toNumberLiteral(result.pop()).assign(
             env,
-            Expression.toNumberLiteral(right, env),
+            Expression.toNumberLiteral(right),
             ele
           )
         )
